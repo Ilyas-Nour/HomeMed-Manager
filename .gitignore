@@ -1,0 +1,28 @@
+# Dépendances
+node_modules/
+vendor/
+
+# Variables d'environnement
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Build
+frontend/dist/
+
+# Laravel
+backend/storage/logs/*.log
+backend/bootstrap/cache/*.php
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
