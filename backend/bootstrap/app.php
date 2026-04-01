@@ -22,9 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Configurer les domaines autorisés pour les cookies de session Sanctum
-        // (utilisé pour les requêtes SPA depuis le frontend React)
-        $middleware->statefulApi();
+        // Nous n'utilisons pas statefulApi ici pour éviter les erreurs CSRF 
+        // lors de l'utilisation de Bearer Tokens avec React.
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

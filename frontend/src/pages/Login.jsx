@@ -21,10 +21,14 @@ const Login = () => {
             await login(email, password);
             navigate('/dashboard');
         } catch (err) {
-            setError(
-                err.response?.data?.message || 
-                "Une erreur est survenue lors de la connexion."
-            );
+            console.error(err);
+            if (err.code === 'ERR_NETWORK') {
+                setError("Notre serveur est momentanément indisponible. Merci de réessayer.");
+            } else if (err.response?.status === 401) {
+                setError("Oups ! Vos identifiants de connexion semblent incorrects.");
+            } else {
+                setError("Une petite erreur technique est survenue lors de la connexion.");
+            }
         } finally {
             setLoading(false);
         }

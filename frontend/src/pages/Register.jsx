@@ -26,19 +26,31 @@ const Register = () => {
         setLoading(true);
 
         try {
-            await register({
+            const response = await register({
                 name,
                 email,
                 password,
                 password_confirmation: passwordConfirm
             });
+            console.log("Inscription réussie !", response);
             navigate('/dashboard');
         } catch (err) {
+            console.error("Détails de l'erreur d'inscription :", err);
+            
             if (err.response?.status === 422) {
-                // Erreurs de validation Laravel
+                // Erreurs de validation (déjà gérées champ par champ)
                 setErrors(err.response.data.errors);
+            } else if (err.code === 'ERR_NETWORK') {
+                setErrors({ general: ["Oups ! Notre serveur semble hors ligne. Merci de réessayer dans un instant."] });
+            } else if (err.response?.status === 419 || err.response?.data?.message?.includes('CSRF')) {
+                setErrors({ general: ["Session expirée. Un petit rafraîchissement de la page (F5) et tout ira mieux !"] });
             } else {
-                setErrors({ general: ["Une erreur est survenue lors de l'inscription."] });
+                const msg = err.response?.data?.message || "";
+                if (msg.includes('Duplicate entry') || msg.includes('unique')) {
+                    setErrors({ general: ["Cette adresse e-mail est déjà associée à un compte HomeMed."] });
+                } else {
+                    setErrors({ general: ["Une petite erreur technique est survenue. Merci de réessayer."] });
+                }
             }
         } finally {
             setLoading(false);

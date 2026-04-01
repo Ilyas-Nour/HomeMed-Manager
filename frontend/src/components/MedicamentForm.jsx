@@ -16,6 +16,7 @@ const MedicamentForm = ({ isOpen, onClose, profilId, medicamentToEdit, onSuccess
     });
     
     const [errors, setErrors] = useState(null);
+    const [success, setSuccess] = useState(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -39,6 +40,7 @@ const MedicamentForm = ({ isOpen, onClose, profilId, medicamentToEdit, onSuccess
             });
         }
         setErrors(null);
+        setSuccess(null);
     }, [medicamentToEdit, isOpen]);
 
     if (!isOpen) return null;
@@ -52,6 +54,7 @@ const MedicamentForm = ({ isOpen, onClose, profilId, medicamentToEdit, onSuccess
         e.preventDefault();
         setLoading(true);
         setErrors(null);
+        setSuccess(null);
 
         // Nettoyer les champs vides pour ne pas envoyer de chaînes vides aux dates
         const dataToSend = { ...formData };
@@ -61,16 +64,21 @@ const MedicamentForm = ({ isOpen, onClose, profilId, medicamentToEdit, onSuccess
         try {
             if (medicamentToEdit) {
                 await api.patch(`/profils/${profilId}/medicaments/${medicamentToEdit.id}`, dataToSend);
+                setSuccess("Le médicament a été mis à jour avec succès !");
             } else {
                 await api.post(`/profils/${profilId}/medicaments`, dataToSend);
+                setSuccess("Super ! Le nouveau médicament est ajouté à votre armoire.");
             }
+            
             onSuccess();
-            onClose();
+            setTimeout(() => {
+                onClose();
+            }, 1500);
         } catch (error) {
             if (error.response?.status === 422) {
                 setErrors(error.response.data.errors);
             } else {
-                alert("Une erreur inattendue s'est produite.");
+                setErrors({ general: ["Une petite erreur technique est survenue. Merci de réessayer."] });
             }
         } finally {
             setLoading(false);
@@ -90,6 +98,22 @@ const MedicamentForm = ({ isOpen, onClose, profilId, medicamentToEdit, onSuccess
                 </div>
 
                 <div className="overflow-y-auto p-6">
+                    {/* Messages de succès ou d'erreur générale */}
+                    {success && (
+                        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="bg-green-100 p-1 rounded-full text-green-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                            <span className="font-medium">{success}</span>
+                        </div>
+                    )}
+                    
+                    {errors?.general && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <span className="font-medium">{errors.general[0]}</span>
+                        </div>
+                    )}
+
                     <form id="medForm" onSubmit={handleSubmit} className="space-y-6">
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

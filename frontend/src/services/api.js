@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8000/api', // L'URL de notre backend Laravel
+    baseURL: 'http://127.0.0.1:8000/api', // Utiliser l'IP directe
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
