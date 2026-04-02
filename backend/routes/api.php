@@ -55,4 +55,17 @@ Route::middleware('auth:sanctum')->group(function () {
         // Supprimer un médicament
         Route::delete('/{medicamentId}', [MedicamentController::class, 'destroy']);
     });
+
+    // ——————————————————————————————————————————
+    // Rappels & Suivi des Prises (Phase 2)
+    // ——————————————————————————————————————————
+    
+    // Gestion des rappels par médicament
+    Route::get('medicaments/{medicament}/rappels', [App\Http\Controllers\RappelController::class, 'index']);
+    Route::post('medicaments/{medicament}/rappels', [App\Http\Controllers\RappelController::class, 'store']);
+    Route::delete('rappels/{rappel}', [App\Http\Controllers\RappelController::class, 'destroy']);
+
+    // Suivi quotidien des prises
+    Route::get('profils/{profil}/timeline', [App\Http\Controllers\PriseController::class, 'index']);
+    Route::post('rappels/{rappel}/toggle', [App\Http\Controllers\PriseController::class, 'toggle']);
 });

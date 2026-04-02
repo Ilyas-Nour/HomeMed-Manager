@@ -1,120 +1,126 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Lock, Mail, ArrowRight, Pill } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, LogIn, ArrowRight, Pill, ShieldCheck, Heart, Eye, EyeOff } from 'lucide-react';
+import logo from '/HomeMed-Logo.png';
 
-const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-    
-    const { login } = useAuth();
-    const navigate = useNavigate();
+/**
+ * Login Premium — "Perfect White & Emerald"
+ */
+export default function Login() {
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const { login }               = useAuth();
+  const navigate                = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
-        setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) { 
+      setError(err.response?.data?.message || 'Identifiants incorrects. Veuillez réessayer.'); 
+    }
+    finally { setLoading(false); }
+  };
 
-        try {
-            await login(email, password);
-            navigate('/dashboard');
-        } catch (err) {
-            console.error(err);
-            if (err.code === 'ERR_NETWORK') {
-                setError("Notre serveur est momentanément indisponible. Merci de réessayer.");
-            } else if (err.response?.status === 401) {
-                setError("Oups ! Vos identifiants de connexion semblent incorrects.");
-            } else {
-                setError("Une petite erreur technique est survenue lors de la connexion.");
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] p-6 lg:p-12 relative overflow-hidden font-sans">
+      
+      {/* Clean Slate Background */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-slate-200" />
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
-                <div className="p-8">
-                    <div className="flex justify-center mb-6">
-                        <div className="bg-blue-600 p-3 rounded-full shadow-lg shadow-blue-200">
-                            <Pill size={32} className="text-white" />
-                        </div>
-                    </div>
-                    <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Bon retour !</h2>
-                    <p className="text-center text-gray-500 mb-8">Gérez vos médicaments en toute simplicité.</p>
+      <div className="w-full max-w-md relative z-10 animate-fade-up">
+        
+        {/* Brand Identity */}
+        <div className="flex flex-col items-center mb-10">
+            <div className="w-16 h-16 bg-white rounded-xl p-3 border border-slate-200 flex items-center justify-center mb-6">
+                <img src={logo} alt="HomeMed" className="w-14 h-14 object-contain" />
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight text-center mb-2">Connectez-vous</h1>
+            <p className="text-slate-400 font-medium text-sm text-center">Accédez à votre espace de suivi thérapeutique.</p>
+        </div>
 
-                    {error && (
-                        <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm mb-6 border border-red-200">
-                            {error}
-                        </div>
-                    )}
+        {/* Card Container */}
+        <div className="hm-card p-8 sm:p-10">
+          
+          {error && (
+            <div className="mb-8 p-4 bg-red-50/50 border border-red-100/50 text-red-600 rounded-2xl text-[11px] font-bold flex items-center gap-3 animate-fade-up">
+               <ShieldCheck size={16} /> {error}
+            </div>
+          )}
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700 block" htmlFor="email">
-                                Adresse e-mail
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <Mail size={18} />
-                                </div>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    required
-                                    className="pl-10 w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
-                                    placeholder="vous@exemple.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </div>
-                        </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-1.5">
+              <label className="hm-label">E-mail Professionnel</label>
+              <div className="relative group">
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+                <input
+                  type="email" required placeholder="nom@exemple.com"
+                  value={email} onChange={e => setEmail(e.target.value)}
+                  className="hm-input pl-12 h-12"
+                />
+              </div>
+            </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700 block" htmlFor="password">
-                                Mot de passe
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <Lock size={18} />
-                                </div>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    required
-                                    className="pl-10 w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                            </div>
-                        </div>
+            <div className="space-y-1.5">
+              <label className="hm-label">Mot de passe</label>
+              <div className="relative group">
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+                <input
+                  type={showPassword ? "text" : "password"} required placeholder="••••••••"
+                  value={password} onChange={e => setPassword(e.target.value)}
+                  className="hm-input pl-12 pr-12 h-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-emerald-500 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <p className="text-right"><a href="#" className="text-[10px] font-bold text-slate-400 hover:text-emerald-600 transition-colors uppercase tracking-widest">Oublié ?</a></p>
+            </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 mt-4 disabled:opacity-70 shadow-md shadow-blue-200"
-                        >
-                            {loading ? 'Connexion...' : 'Se connecter'}
-                            {!loading && <ArrowRight size={18} />}
-                        </button>
-                    </form>
-                </div>
-                
-                <div className="bg-gray-50 border-t border-gray-100 p-6 text-center">
-                    <p className="text-sm text-gray-600">
-                        Pas encore de compte ?{' '}
-                        <Link to="/register" className="text-blue-600 font-semibold hover:text-blue-800 transition-colors">
-                            S'inscrire
-                        </Link>
-                    </p>
-                </div>
+            <button
+              type="submit" disabled={loading}
+              className="w-full hm-btn h-14 text-base shadow-emerald-500/10 group transition-all"
+            >
+              {loading ? 'Connexion...' : (
+                <>SE CONNECTER <ArrowRight size={18} className="transition-transform group-hover:translate-x-1 ml-2" /></>
+              )}
+            </button>
+          </form>
+
+          {/* Social Proof Divider */}
+          <div className="my-10 flex items-center gap-4">
+              <div className="h-[1px] flex-1 bg-slate-100" />
+              <span className="text-[9px] font-extrabold text-slate-300 tracking-[0.2em] uppercase">Nouveau ici ?</span>
+              <div className="h-[1px] flex-1 bg-slate-100" />
+          </div>
+          
+          <Link to="/register" className="w-full hm-btn-secondary h-12">
+            Créer un compte
+          </Link>
+        </div>
+
+        {/* Footer Support */}
+        <div className="mt-12 flex items-center justify-center gap-6">
+            <div className="flex items-center gap-2 text-slate-300">
+                <ShieldCheck size={14} /> <span className="text-[10px] font-bold tracking-widest uppercase">Sécurisé SSL</span>
+            </div>
+            <div className="w-1 h-1 bg-slate-200 rounded-full" />
+            <div className="flex items-center gap-2 text-slate-300">
+                <Heart size={14} className="text-red-400" /> <span className="text-[10px] font-bold tracking-widest uppercase">Fait avec soin</span>
             </div>
         </div>
-    );
-};
-
-export default Login;
+      </div>
+    </div>
+  );
+}

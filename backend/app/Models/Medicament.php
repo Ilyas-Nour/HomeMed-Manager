@@ -93,4 +93,12 @@ class Medicament extends Model
         return $this->date_debut->lte($now) &&
                ($this->date_fin === null || $this->date_fin->gte($now));
     }
+
+    /**
+     * Relation : Un médicament peut avoir plusieurs rappels.
+     */
+    public function rappels(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Rappel::class, 'medicament_id');
+    }
 }

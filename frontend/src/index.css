@@ -1,19 +1,148 @@
+/* 
+ * HomeMed Manager — "Shadcn Edge" Design System
+ * Aesthetic : Ultra-Clean Minimalism · Perfect White · High Contrast
+ * Version   : Tailwind CSS v4 Utility First
+ */
+
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-secondary: #059669;
-  --color-secondary-hover: #047857;
-  --color-background: #f3f4f6;
+  --color-primary: #0f172a; /* script-950 */
+  --color-primary-hover: #334155; 
+  --color-secondary: #f8fafc; /* slate-50 */
+  --color-accent: #10b981; /* Emerald-500 */
+  --color-danger: #ef4444; /* Rose-500 */
   --color-surface: #ffffff;
-  --color-text: #1f2937;
-  --color-text-light: #6b7280;
+  --color-background: #fafafa;
 }
 
 @layer base {
-  body {
-    background-color: var(--color-background);
-    color: var(--color-text);
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
+
+  body {
+    @apply bg-slate-50 text-slate-950;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100dvh;
+  }
+
+  /* Thin scrollbar for a premium look */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.06) transparent;
+  }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.16); }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  input[type="date"]:hover::-webkit-calendar-picker-indicator { opacity: 0.8; }
+}
+
+@layer components {
+
+  /* ---- SHADCN UI COMPONENT PRIMITIVES ---- */
+  
+  /* Primary Button (Black/Dark Slate) */
+  .hm-btn {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2 gap-2;
+  }
+
+  /* Secondary/Outline Button */
+  .hm-btn-secondary {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 gap-2;
+  }
+
+  /* Ghost Button */
+  .hm-btn-ghost {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 gap-2;
+  }
+
+  /* Shadcn Card */
+  .hm-card {
+    @apply rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm transition-all duration-200;
+  }
+  .hm-card:hover {
+    @apply shadow-md border-slate-300;
+  }
+
+  /* Form Inputs Shadcn style */
+  .hm-input {
+    @apply flex h-10 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .hm-label {
+    @apply block text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-900 mb-2 mt-4;
+  }
+
+  /* Section Titles */
+  .hm-section-title {
+    @apply text-lg font-bold tracking-tight text-slate-900;
+  }
+
+  /* Sidebar Navigation Items */
+  .hm-nav {
+    @apply flex items-center gap-3 w-full px-3 py-2 text-sm font-medium text-slate-600 rounded-md transition-colors hover:bg-slate-100 hover:text-slate-900;
+  }
+  .hm-nav.active {
+    @apply bg-slate-100 text-slate-900 font-semibold;
+  }
+
+  /* ── Status Badges ── */
+  .hm-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5
+           text-xs font-semibold transition-colors
+           focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2
+           border rounded-full shadow-sm;
+  }
+  .hm-badge-emerald { @apply border-transparent bg-emerald-100 text-emerald-800; }
+  .hm-badge-blue    { @apply border-transparent bg-blue-100    text-blue-800; }
+  .hm-badge-amber   { @apply border-transparent bg-amber-100   text-amber-800; }
+  .hm-badge-slate   { @apply border-transparent bg-slate-100   text-slate-900; }
+
+  /* ── Modal Design ── */
+  .hm-modal-backdrop {
+    @apply fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm 
+           flex items-center justify-center p-4 overflow-y-auto;
+  }
+  
+  .hm-modal-content {
+    @apply relative w-full bg-white rounded-lg
+           shadow-lg border border-slate-200 
+           overflow-hidden;
+  }
+
+  /* ── Layout Utilities ── */
+  .hm-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .hm-grid-layout {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-up { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
 }

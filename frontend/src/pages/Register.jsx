@@ -1,187 +1,158 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Lock, Mail, User, ArrowRight, Pill } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, User, UserPlus, ArrowRight, ShieldCheck, Heart, Info, ClipboardList, Eye, EyeOff } from 'lucide-react';
+import logo from '/HomeMed-Logo.png';
 
-const Register = () => {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [passwordConfirm, setPasswordConfirm] = useState('');
-    const [errors, setErrors] = useState(null);
-    const [loading, setLoading] = useState(false);
-    
-    const { register } = useAuth();
-    const navigate = useNavigate();
+/**
+ * Register Premium — "Perfect White & Emerald"
+ * Design : Épuré, Spacieux, Expérience de bienvenue fluide.
+ */
+export default function Register() {
+  const [name, setName]         = useState('');
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
+  const [password_confirmation, setPasswordConfirmation] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const { register }             = useAuth();
+  const navigate                = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setErrors(null);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await register({ name, email, password, password_confirmation });
+      navigate('/dashboard');
+    } catch (err) { 
+      setError(err.response?.data?.message || "Une erreur s'est produite lors de l'inscription."); 
+    }
+    finally { setLoading(false); }
+  };
 
-        if (password !== passwordConfirm) {
-            setErrors({ password_confirmation: ["Les mots de passe ne correspondent pas."] });
-            return;
-        }
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] p-6 lg:p-12 relative overflow-hidden font-sans">
+      
+      {/* Clean Slate Background */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-slate-200" />
 
-        setLoading(true);
+      <div className="w-full max-w-lg relative z-10 animate-fade-up">
+        
+        {/* Brand Identity */}
+        <div className="flex flex-col items-center mb-10">
+            <div className="w-16 h-16 bg-white rounded-xl p-3 border border-slate-200 flex items-center justify-center mb-6">
+                <img src={logo} alt="HomeMed" className="w-14 h-14 object-contain" />
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight text-center mb-2">Rejoignez HomeMed</h1>
+            <p className="text-slate-400 font-medium text-sm text-center">Commencez dès aujourd'hui votre suivi médical intelligent.</p>
+        </div>
 
-        try {
-            const response = await register({
-                name,
-                email,
-                password,
-                password_confirmation: passwordConfirm
-            });
-            console.log("Inscription réussie !", response);
-            navigate('/dashboard');
-        } catch (err) {
-            console.error("Détails de l'erreur d'inscription :", err);
-            
-            if (err.response?.status === 422) {
-                // Erreurs de validation (déjà gérées champ par champ)
-                setErrors(err.response.data.errors);
-            } else if (err.code === 'ERR_NETWORK') {
-                setErrors({ general: ["Oups ! Notre serveur semble hors ligne. Merci de réessayer dans un instant."] });
-            } else if (err.response?.status === 419 || err.response?.data?.message?.includes('CSRF')) {
-                setErrors({ general: ["Session expirée. Un petit rafraîchissement de la page (F5) et tout ira mieux !"] });
-            } else {
-                const msg = err.response?.data?.message || "";
-                if (msg.includes('Duplicate entry') || msg.includes('unique')) {
-                    setErrors({ general: ["Cette adresse e-mail est déjà associée à un compte HomeMed."] });
-                } else {
-                    setErrors({ general: ["Une petite erreur technique est survenue. Merci de réessayer."] });
-                }
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
+        {/* Card Container */}
+        <div className="hm-card p-6 sm:p-10">
+          
+          {error && (
+            <div className="mb-6 p-4 bg-red-50/50 border border-red-100/50 text-red-600 rounded-2xl text-[11px] font-bold flex items-center gap-3 animate-fade-up">
+               <Info size={16} /> {error}
+            </div>
+          )}
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
-                <div className="p-8">
-                    <div className="flex justify-center mb-6">
-                        <div className="bg-green-600 p-3 rounded-full shadow-lg shadow-green-200">
-                            <Pill size={32} className="text-white" />
-                        </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                    <label className="hm-label">Votre Nom Complet</label>
+                    <div className="relative group">
+                        <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+                        <input
+                            type="text" required placeholder="Jean Dupont"
+                            value={name} onChange={e => setName(e.target.value)}
+                            className="hm-input pl-12 h-12"
+                        />
                     </div>
-                    <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Rejoignez HomeMed</h2>
-                    <p className="text-center text-gray-500 mb-8">Créez votre compte pour gérer vos traitements.</p>
-
-                    {errors?.general && (
-                        <div className="bg-red-50 text-red-600 p-4 rounded-lg text-sm mb-6 border border-red-200">
-                            {errors.general[0]}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700 block" htmlFor="name">
-                                Nom complet
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <User size={18} />
-                                </div>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    required
-                                    className={`pl-10 w-full rounded-lg border ${errors?.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'} px-4 py-2.5 outline-none focus:ring-2 transition-shadow`}
-                                    placeholder="Jean Dupont"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                />
-                            </div>
-                            {errors?.name && <p className="text-red-500 text-xs mt-1">{errors.name[0]}</p>}
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700 block" htmlFor="email">
-                                Adresse e-mail
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <Mail size={18} />
-                                </div>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    required
-                                    className={`pl-10 w-full rounded-lg border ${errors?.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'} px-4 py-2.5 outline-none focus:ring-2 transition-shadow`}
-                                    placeholder="vous@exemple.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </div>
-                            {errors?.email && <p className="text-red-500 text-xs mt-1">{errors.email[0]}</p>}
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700 block" htmlFor="password">
-                                Mot de passe
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <Lock size={18} />
-                                </div>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    required
-                                    className={`pl-10 w-full rounded-lg border ${errors?.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'} px-4 py-2.5 outline-none focus:ring-2 transition-shadow`}
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                            </div>
-                            {errors?.password && <p className="text-red-500 text-xs mt-1">{errors.password[0]}</p>}
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-gray-700 block" htmlFor="passwordConfirm">
-                                Confirmer mot de passe
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <Lock size={18} />
-                                </div>
-                                <input
-                                    id="passwordConfirm"
-                                    type="password"
-                                    required
-                                    className={`pl-10 w-full rounded-lg border ${errors?.password_confirmation ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500'} px-4 py-2.5 outline-none focus:ring-2 transition-shadow`}
-                                    placeholder="••••••••"
-                                    value={passwordConfirm}
-                                    onChange={(e) => setPasswordConfirm(e.target.value)}
-                                />
-                            </div>
-                            {errors?.password_confirmation && <p className="text-red-500 text-xs mt-1">{errors.password_confirmation[0]}</p>}
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 mt-6 disabled:opacity-70 shadow-md shadow-green-200"
-                        >
-                            {loading ? 'Création en cours...' : 'S\'inscrire'}
-                            {!loading && <ArrowRight size={18} />}
-                        </button>
-                    </form>
                 </div>
-                
-                <div className="bg-gray-50 border-t border-gray-100 p-6 text-center">
-                    <p className="text-sm text-gray-600">
-                        Vous avez déjà un compte ?{' '}
-                        <Link to="/login" className="text-green-600 font-semibold hover:text-green-800 transition-colors">
-                            Se connecter
-                        </Link>
-                    </p>
+                <div className="space-y-1.5">
+                    <label className="hm-label">Adresse E-mail</label>
+                    <div className="relative group">
+                        <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+                        <input
+                            type="email" required placeholder="nom@exemple.com"
+                            value={email} onChange={e => setEmail(e.target.value)}
+                            className="hm-input pl-12 h-12"
+                        />
+                    </div>
                 </div>
             </div>
-        </div>
-    );
-};
 
-export default Register;
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label className="hm-label">Mot de passe</label>
+                <div className="relative group">
+                  <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+                  <input
+                    type={showPassword ? "text" : "password"} required placeholder="••••••••"
+                    value={password} onChange={e => setPassword(e.target.value)}
+                    className="hm-input pl-12 pr-12 h-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-emerald-500 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="hm-label">Confirmez</label>
+                <div className="relative group">
+                  <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+                  <input
+                    type={showPassword ? "text" : "password"} required placeholder="••••••••"
+                    value={password_confirmation} onChange={e => setPasswordConfirmation(e.target.value)}
+                    className="hm-input pl-12 pr-12 h-12"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2">
+                <button
+                    type="submit" disabled={loading}
+                    className="w-full hm-btn h-14 text-base shadow-emerald-500/10 group transition-all"
+                >
+                    {loading ? 'Création...' : (
+                        <>CRÉER MON ESPACE <UserPlus size={18} className="transition-transform group-hover:scale-110 ml-2" /></>
+                    )}
+                </button>
+            </div>
+          </form>
+
+          {/* Social Proof Divider */}
+          <div className="my-8 flex items-center gap-4">
+              <div className="h-[1px] flex-1 bg-slate-100" />
+              <span className="text-[9px] font-extrabold text-slate-300 tracking-[0.2em] uppercase">Déjà inscrit ?</span>
+              <div className="h-[1px] flex-1 bg-slate-100" />
+          </div>
+          
+          <Link to="/login" className="w-full hm-btn-secondary h-12">
+            Se Connecter <ArrowRight size={16} className="ml-2" />
+          </Link>
+        </div>
+
+        {/* Footer Support */}
+        <div className="mt-12 flex flex-col items-center gap-4">
+            <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 text-slate-300">
+                    <ShieldCheck size={14} /> <span className="text-[10px] font-bold tracking-widest uppercase">Protection des données</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-300">
+                    <ClipboardList size={14} /> <span className="text-[10px] font-bold tracking-widest uppercase">Conforme RGPD</span>
+                </div>
+            </div>
+            <p className="text-[10px] text-slate-300 font-medium">© 2026 HomeMed Manager. Tous droits réservés.</p>
+        </div>
+      </div>
+    </div>
+  );
+}

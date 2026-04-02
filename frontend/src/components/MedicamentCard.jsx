@@ -1,87 +1,128 @@
-import React from 'react';
-import { Pill, Activity, AlertTriangle, Calendar, ArchiveX } from 'lucide-react';
+import React, { useState } from 'react';
+import { Pill, Clock, Edit3, Trash2, ChevronRight, AlertTriangle, Calendar } from 'lucide-react';
 import api from '../services/api';
+import ConfirmModal from './ConfirmModal';
 
-const MedicamentCard = ({ medicament, onEdit, onDelete, profilId }) => {
-    
-    const handleDelete = async () => {
-        if(window.confirm(`Voulez-vous vraiment supprimer le médicament ${medicament.nom} ?`)) {
-            try {
-                await api.delete(`/profils/${profilId}/medicaments/${medicament.id}`);
-                onDelete(medicament.id);
-            } catch (error) {
-                console.error("Erreur de suppression", error);
-                alert("Erreur lors de la suppression.");
-            }
-        }
-    };
+/**
+ * MedicamentCard — Classic Layout
+ */
+export default function MedicamentCard({ medicament, profilId, onEdit, onDelete, onViewDetails }) {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-    return (
-        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 border border-gray-100 flex flex-col h-full relative overflow-hidden group">
-            
-            {/* Status indicators */}
-            <div className="absolute top-0 left-0 w-2 h-full" style={{
-                backgroundColor: medicament.expire ? '#ef4444' : (medicament.stock_faible ? '#f59e0b' : '#10b981')
-            }} />
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await api.delete(`/profils/${profilId}/medicaments/${medicament.id}`);
+      onDelete();
+    } catch (err) { 
+      console.error('Erreur suppression', err); 
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
+  };
 
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg bg-gray-50 flex items-center justify-center`}>
-                        <Pill size={24} className="text-gray-600" />
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-lg text-gray-800 leading-tight">{medicament.nom}</h3>
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{medicament.type}</span>
-                    </div>
-                </div>
-                
-                <div className="flex gap-2">
-                    <button onClick={() => onEdit(medicament)} className="text-gray-400 hover:text-blue-600 transition-colors p-1" title="Modifier">
-                        <Activity size={18} />
-                    </button>
-                    <button onClick={handleDelete} className="text-gray-400 hover:text-red-600 transition-colors p-1" title="Supprimer">
-                        <ArchiveX size={18} />
-                    </button>
-                </div>
-            </div>
+  const isExpired = medicament.date_expiration && new Date(medicament.date_expiration) < new Date();
+  const isStockLow = medicament.quantite <= (medicament.seuil_alerte || 5);
 
-            <div className="space-y-3 flex-grow">
-                <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100 italic">
-                    {medicament.posologie}
-                </div>
-                
-                <div className="flex flex-wrap gap-y-2 mt-4 text-sm text-gray-600">
-                    <div className="w-1/2 flex items-center gap-1.5" title="Quantité restante">
-                        <span className="font-medium text-gray-800">{medicament.quantite}</span> en stock
-                    </div>
-                    
-                    <div className="w-1/2 flex items-center gap-1.5" title="Date de fin">
-                        <Calendar size={14} className="text-gray-400" />
-                        <span>{medicament.date_fin ? new Date(medicament.date_fin).toLocaleDateString('fr-FR') : 'En cours'}</span>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="hm-card p-5 flex flex-col h-full relative overflow-hidden group">
+      {/* Barre latérale d'état */}
+      <div className={`absolute top-0 left-0 w-1 h-full transition-colors ${isExpired ? 'bg-red-500' : isStockLow ? 'bg-amber-500' : 'bg-emerald-500'}`} />
 
-            {/* Badges */}
-            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-2">
-                {medicament.expire && (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-700 px-2.5 py-1 rounded-full border border-red-200">
-                        <AlertTriangle size={12} /> Expiré
-                    </span>
-                )}
-                {medicament.stock_faible && !medicament.expire && (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full border border-amber-200">
-                        <AlertTriangle size={12} /> Stock faible
-                    </span>
-                )}
-                {medicament.traitement_actif && !medicament.expire && (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-50 text-green-700 px-2.5 py-1 rounded-full border border-green-200">
-                        En cours
-                    </span>
-                )}
-            </div>
+      {/* En-tête : Icône, Titre & Boutons d'Action Clairs */}
+      <div className="flex items-start justify-between mb-4 pl-1">
+        <div className="flex items-center gap-3">
+          <div className={`h-10 w-10 flex flex-shrink-0 items-center justify-center rounded-md border ${isExpired ? 'bg-red-50 text-red-600 border-red-100' : 'bg-slate-50 text-slate-900 border-slate-200'}`}>
+            <Pill size={20} />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-slate-950 leading-none mb-1.5">
+              {medicament.nom}
+            </h3>
+            <span className="hm-badge hm-badge-slate text-[10px]">
+              {medicament.type}
+            </span>
+          </div>
         </div>
-    );
-};
 
-export default MedicamentCard;
+        {/* Boutons d'édition et de suppression : IMMANQUABLES et côte à côte */}
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={onEdit} 
+            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors" 
+            title="Modifier"
+          >
+            <Edit3 size={16} />
+          </button>
+          <button 
+            onClick={() => setIsDeleteModalOpen(true)} 
+            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" 
+            title="Supprimer"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Info Body */}
+      <div className="space-y-4 pl-1 mb-5 flex-1">
+        <div className="flex items-start gap-3">
+          <Clock size={14} className="text-slate-400 mt-0.5" />
+          <div>
+             <p className="text-xs font-semibold text-slate-500 leading-none mb-1">Posologie</p>
+             <p className="text-sm text-slate-700 line-clamp-2 leading-snug">{medicament.posologie}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 bg-slate-50 rounded-md border border-slate-100">
+            <p className="text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Stock</p>
+            <p className={`text-xl font-bold ${isStockLow ? 'text-amber-600' : 'text-slate-900'}`}>{medicament.quantite}</p>
+          </div>
+          <div className="p-3 bg-slate-50 rounded-md border border-slate-100 flex flex-col justify-center">
+            <p className="text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Expiration</p>
+            <p className={`text-sm font-semibold ${isExpired ? 'text-red-500' : 'text-slate-900'}`}>
+              {medicament.date_expiration ? new Date(medicament.date_expiration).toLocaleDateString('fr-FR', {month:'short', year:'numeric'}) : '—'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div className="pt-4 border-t border-slate-100 flex items-center justify-between pl-1">
+        <button 
+          onClick={onViewDetails} 
+          className="text-sm font-medium text-slate-900 hover:underline underline-offset-4 flex items-center transition-all group-hover:text-emerald-600"
+        >
+          Détails complets
+        </button>
+
+        <div className="flex items-center gap-2">
+          {isStockLow && !isExpired && (
+            <div className="flex items-center gap-1.5 text-amber-600">
+              <AlertTriangle size={14} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Alerte</span>
+            </div>
+          )}
+          {isExpired && (
+            <div className="flex items-center gap-1.5 text-red-600">
+              <AlertTriangle size={14} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Expiré</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <ConfirmModal 
+        isOpen={isDeleteModalOpen}
+        title="Supprimer ce médicament ?"
+        message={`Voulez-vous vraiment retirer ${medicament.nom} de votre inventaire ?`}
+        onConfirm={handleDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        loading={isDeleting}
+      />
+    </div>
+  );
+}
