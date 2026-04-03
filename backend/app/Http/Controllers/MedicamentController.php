@@ -8,6 +8,8 @@ use App\Models\Profil;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use App\Http\Resources\MedicamentResource;
+
 /**
  * Contrôleur des médicaments.
  *
@@ -20,35 +22,25 @@ class MedicamentController extends Controller
     /**
      * Lister tous les médicaments d'un profil.
      *
-     * Vérifie que le profil appartient à l'utilisateur connecté,
-     * puis retourne la liste de ses médicaments triés par nom.
-     *
      * @param Request $request
      * @param int $profilId Identifiant du profil
      * @return JsonResponse Liste des médicaments
      */
     public function index(Request $request, int $profilId): JsonResponse
     {
-        // Récupérer le profil et vérifier qu'il appartient à l'utilisateur connecté
         $profil = Profil::where('id', $profilId)
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        // Récupérer les médicaments avec les indicateurs calculés
+        // On récupère les médicaments triés. 
+        // Note: Les attributs calculés (stock_faible, expire) sont gérés par MedicamentResource.
         $medicaments = $profil->medicaments()
             ->orderBy('nom')
-            ->get()
-            ->map(function (Medicament $med) {
-                return array_merge($med->toArray(), [
-                    'stock_faible'      => $med->stock_faible,
-                    'expire'            => $med->expire,
-                    'traitement_actif'  => $med->traitement_actif,
-                ]);
-            });
+            ->get();
 
         return response()->json([
             'profil'       => $profil->only(['id', 'nom', 'relation']),
-            'medicaments'  => $medicaments,
+            'medicaments'  => MedicamentResource::collection($medicaments),
             'total'        => $medicaments->count(),
         ]);
     }
@@ -69,6 +61,8 @@ class MedicamentController extends Controller
 
         // Créer le médicament associé au profil
         $medicament = $profil->medicaments()->create($request->validated());
+
+        \App\Models\ActivityLog::log('MED_ADD', "Médicament ajouté : {$medicament->nom} pour {$profil->nom}");
 
         return response()->json([
             'message'     => 'Médicament ajouté avec succès.',
@@ -147,6 +141,8 @@ class MedicamentController extends Controller
         $medicament = $profil->medicaments()->findOrFail($medicamentId);
         $nomMedicament = $medicament->nom;
         $medicament->delete();
+
+        \App\Models\ActivityLog::log('MED_DELETE', "Médicament supprimé : {$nomMedicament}");
 
         return response()->json([
             'message' => "Le médicament \"{$nomMedicament}\" a été supprimé avec succès.",

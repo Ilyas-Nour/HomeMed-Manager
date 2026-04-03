@@ -101,4 +101,12 @@ class Medicament extends Model
     {
         return $this->hasMany(Rappel::class, 'medicament_id');
     }
+
+    /**
+     * Relation : Un médicament peut avoir plusieurs enregistrements d'achats.
+     */
+    public function achats(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Achat::class, 'medicament_id');
+    }
 }
