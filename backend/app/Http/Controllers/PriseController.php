@@ -18,13 +18,16 @@ class PriseController extends Controller
     {
         $today = Carbon::today()->toDateString();
         
-        // On récupère tous les rappels des médicaments de ce profil
+        // On récupère tous les rappels des médicaments de ce profil avec chargement optimisé
         $rappels = Rappel::whereHas('medicament', function($q) use ($profil) {
             $q->where('profil_id', $profil->id);
         })
-        ->with(['medicament', 'prises' => function($q) use ($today) {
-            $q->where('date_prise', $today);
-        }])
+        ->with([
+            'medicament:id,nom,type', 
+            'prises' => function($q) use ($today) {
+                $q->where('date_prise', $today)->select('id', 'rappel_id', 'pris', 'date_prise');
+            }
+        ])
         ->get()
         ->map(function ($rappel) {
             $prise = $rappel->prises->first();
@@ -62,8 +65,10 @@ class PriseController extends Controller
         if ($oldStatus !== $newStatus) {
             if ($newStatus) {
                 $medicament->decrement('quantite');
+                \App\Models\ActivityLog::log('PRISE_CHECK', "Prise validée : {$medicament->nom}");
             } else {
                 $medicament->increment('quantite');
+                \App\Models\ActivityLog::log('PRISE_CANCEL', "Prise annulée : {$medicament->nom}");
             }
         }
 
