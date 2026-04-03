@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Récupérer les informations de l'utilisateur connecté
     Route::get('/auth/moi', [AuthController::class, 'moi']);
+    Route::patch('/auth/update', [AuthController::class, 'updateAccount']);
 
     // ——————————————————————————————————————————
     // Médicaments — CRUD scopé par profil
@@ -68,4 +69,31 @@ Route::middleware('auth:sanctum')->group(function () {
     // Suivi quotidien des prises
     Route::get('profils/{profil}/timeline', [App\Http\Controllers\PriseController::class, 'index']);
     Route::post('rappels/{rappel}/toggle', [App\Http\Controllers\PriseController::class, 'toggle']);
+
+    // ——————————————————————————————————————————
+    // Profils (Phase 3)
+    // ——————————————————————————————————————————
+    Route::apiResource('profils', App\Http\Controllers\ProfilController::class)->only(['store', 'update', 'destroy']);
+
+    // ——————————————————————————————————————————
+    // Gestion des Achats (Requirement 3.6)
+    // ——————————————————————————————————————————
+    Route::get('achats', [App\Http\Controllers\AchatController::class, 'index']);
+    Route::post('achats', [App\Http\Controllers\AchatController::class, 'store']);
+    Route::delete('achats/{achat}', [App\Http\Controllers\AchatController::class, 'destroy']);
+
+    // ——————————————————————————————————————————
+    // Administration & Supervision (Requirement 4)
+    // ——————————————————————————————————————————
+    Route::get('admin/stats', [App\Http\Controllers\AdminController::class, 'stats']);
+    Route::get('admin/users', [App\Http\Controllers\AdminController::class, 'users']);
+
+    // ——————————————————————————————————————————
+    // Groupes Collaboratifs (Phase 3)
+    // ——————————————————————————————————————————
+    Route::get('groupes', [App\Http\Controllers\GroupeController::class, 'index']);
+    Route::post('groupes', [App\Http\Controllers\GroupeController::class, 'store']);
+    Route::get('groupes/{groupe}', [App\Http\Controllers\GroupeController::class, 'show']);
+    Route::delete('groupes/{groupe}', [App\Http\Controllers\GroupeController::class, 'destroy']);
+    Route::post('groupes/{groupe}/add-user', [App\Http\Controllers\GroupeController::class, 'addUser']);
 });

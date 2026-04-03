@@ -91,6 +91,7 @@ export const AuthProvider = ({ children }) => {
         token,
         profilActif,
         loading,
+        fetchUser,
         login,
         register,
         logout,
