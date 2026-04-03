@@ -121,4 +121,40 @@ class AuthController extends Controller
             'utilisateur' => $request->user()->load('profils'),
         ]);
     }
+
+    /**
+     * Mettre à jour les informations de compte (Email, Nom, Mot de passe).
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateAccount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name'     => 'sometimes|required|string|max:255',
+            'email'    => 'sometimes|required|email|unique:users,email,' . $user->id,
+            'password' => 'sometimes|nullable|string|min:8|confirmed',
+        ]);
+
+        if (isset($validated['name'])) {
+            $user->name = $validated['name'];
+        }
+
+        if (isset($validated['email'])) {
+            $user->email = $validated['email'];
+        }
+
+        if (isset($validated['password']) && !empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message'     => 'Compte mis à jour avec succès.',
+            'utilisateur' => $user->load('profils'),
+        ]);
+    }
 }

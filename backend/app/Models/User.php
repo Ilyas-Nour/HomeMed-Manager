@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,10 +18,18 @@ use Laravel\Sanctum\HasApiTokens;
  * Représente un compte utilisateur sur HomeMed Manager.
  * Un utilisateur peut avoir plusieurs profils (soi-même, famille, etc.)
  */
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * Vérifier si l'utilisateur peut accéder au panel Filament.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->role === 'admin';
+    }
 
     /**
      * Champs autorisés à l'assignation de masse.
@@ -30,6 +40,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -52,7 +63,16 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'role'              => 'string',
         ];
+    }
+
+    /**
+     * Vérifier si l'utilisateur est administrateur.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 
     /**
@@ -61,5 +81,13 @@ class User extends Authenticatable
     public function profils(): HasMany
     {
         return $this->hasMany(Profil::class, 'user_id');
+    }
+
+    /**
+     * Relation : Un utilisateur appartient à plusieurs groupes (collaboratifs).
+     */
+    public function groupes()
+    {
+        return $this->belongsToMany(Groupe::class, 'groupe_user')->withPivot('role')->withTimestamps();
     }
 }
