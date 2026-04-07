@@ -1,128 +1,108 @@
-import React, { useState } from 'react';
-import { Pill, Clock, Edit3, Trash2, ChevronRight, AlertTriangle, Calendar } from 'lucide-react';
-import api from '../services/api';
-import ConfirmModal from './ConfirmModal';
+import React from 'react';
+import { 
+  Pill, Edit2, Trash2, ArrowRight,
+  Package, Clock
+} from 'lucide-react';
 
 /**
- * MedicamentCard — Classic Layout
+ * MedicamentCard — Mobile-First · Product Precision
  */
-export default function MedicamentCard({ medicament, profilId, onEdit, onDelete, onViewDetails }) {
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+export default function MedicamentCard({ medicament, isCompact, onEdit, onDelete, onDetails }) {
+  if (!medicament) return null;
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await api.delete(`/profils/${profilId}/medicaments/${medicament.id}`);
-      onDelete();
-    } catch (err) { 
-      console.error('Erreur suppression', err); 
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteModalOpen(false);
-    }
-  };
-
-  const isExpired = medicament.date_expiration && new Date(medicament.date_expiration) < new Date();
+  const isExpired  = medicament.date_expiration && new Date(medicament.date_expiration) < new Date();
   const isStockLow = medicament.quantite <= (medicament.seuil_alerte || 5);
 
-  return (
-    <div className="hm-card p-5 flex flex-col h-full relative overflow-hidden group">
-      {/* Barre latérale d'état */}
-      <div className={`absolute top-0 left-0 w-1 h-full transition-colors ${isExpired ? 'bg-red-500' : isStockLow ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+  const statusColor = isExpired
+    ? 'bg-red-50 text-red-600 border-red-100'
+    : isStockLow
+    ? 'bg-amber-50 text-amber-600 border-amber-100'
+    : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-brand-blue group-hover:text-white group-hover:border-brand-blue/30';
 
-      {/* En-tête : Icône, Titre & Boutons d'Action Clairs */}
-      <div className="flex items-start justify-between mb-4 pl-1">
-        <div className="flex items-center gap-3">
-          <div className={`h-10 w-10 flex flex-shrink-0 items-center justify-center rounded-md border ${isExpired ? 'bg-red-50 text-red-600 border-red-100' : 'bg-slate-50 text-slate-900 border-slate-200'}`}>
-            <Pill size={20} />
+  const dotColor = isExpired ? 'bg-red-500' : isStockLow ? 'bg-amber-500' : 'bg-brand-green';
+  const statusLabel = isExpired ? 'Expiré' : isStockLow ? 'Stock Faible' : 'Optimal';
+
+  return (
+    <div className={`
+      group relative bg-white border border-slate-200
+      transition-colors duration-200 hover:border-brand-blue/30 overflow-hidden
+      ${isCompact ? 'p-4' : 'p-5 flex flex-col h-full'}
+    `}>
+      {/* Alert strip */}
+      {(isExpired || isStockLow) && (
+        <div className={`absolute top-0 left-0 right-0 h-0.5 ${isExpired ? 'bg-red-400' : 'bg-amber-400'}`} />
+      )}
+
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`h-10 w-10 flex-shrink-0 flex items-center justify-center border shadow-sm transition-all ${statusColor}`}>
+            <Pill size={18} strokeWidth={2.5} />
           </div>
-          <div>
-            <h3 className="text-base font-semibold text-slate-950 leading-none mb-1.5">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-slate-900 truncate group-hover:text-brand-blue transition-colors">
               {medicament.nom}
             </h3>
-            <span className="hm-badge hm-badge-slate text-[10px]">
-              {medicament.type}
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <div className={`h-1.5 w-1.5 ${dotColor}`} />
+              <span className="text-xs font-medium text-slate-500">{statusLabel}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions — always visible on mobile, hover on desktop */}
+        <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-all shrink-0">
+          <button
+            onClick={() => onEdit && onEdit(medicament)}
+            className="p-2 text-slate-300 hover:text-brand-blue hover:bg-blue-50 transition-all"
+          >
+            <Edit2 size={14} />
+          </button>
+          <button
+            onClick={() => onDelete && onDelete(medicament.id)}
+            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Data */}
+      <div className="flex-1 grid grid-cols-2 gap-2">
+        <div className="p-3 bg-slate-50 border border-slate-100">
+          <span className="text-xs font-medium text-slate-500 block mb-1">Stock</span>
+          <div className="flex items-center gap-1.5">
+            <Package size={14} className="text-slate-400 shrink-0" />
+            <span className={`text-sm font-semibold ${isStockLow ? 'text-amber-600' : 'text-slate-900'}`}>
+              {medicament.quantite} unités
             </span>
           </div>
         </div>
-
-        {/* Boutons d'édition et de suppression : IMMANQUABLES et côte à côte */}
-        <div className="flex items-center gap-1">
-          <button 
-            onClick={onEdit} 
-            className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors" 
-            title="Modifier"
-          >
-            <Edit3 size={16} />
-          </button>
-          <button 
-            onClick={() => setIsDeleteModalOpen(true)} 
-            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" 
-            title="Supprimer"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Info Body */}
-      <div className="space-y-4 pl-1 mb-5 flex-1">
-        <div className="flex items-start gap-3">
-          <Clock size={14} className="text-slate-400 mt-0.5" />
-          <div>
-             <p className="text-xs font-semibold text-slate-500 leading-none mb-1">Posologie</p>
-             <p className="text-sm text-slate-700 line-clamp-2 leading-snug">{medicament.posologie}</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 bg-slate-50 rounded-md border border-slate-100">
-            <p className="text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Stock</p>
-            <p className={`text-xl font-bold ${isStockLow ? 'text-amber-600' : 'text-slate-900'}`}>{medicament.quantite}</p>
-          </div>
-          <div className="p-3 bg-slate-50 rounded-md border border-slate-100 flex flex-col justify-center">
-            <p className="text-[10px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Expiration</p>
-            <p className={`text-sm font-semibold ${isExpired ? 'text-red-500' : 'text-slate-900'}`}>
-              {medicament.date_expiration ? new Date(medicament.date_expiration).toLocaleDateString('fr-FR', {month:'short', year:'numeric'}) : '—'}
-            </p>
+        <div className="p-3 bg-slate-50 border border-slate-100">
+          <span className="text-xs font-medium text-slate-500 block mb-1">Expiration</span>
+          <div className="flex items-center gap-1.5">
+            <Clock size={14} className="text-slate-400 shrink-0" />
+            <span className={`text-sm font-semibold ${isExpired ? 'text-red-600' : 'text-slate-900'}`}>
+              {medicament.date_expiration
+                ? new Date(medicament.date_expiration).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+                : 'N/A'}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Footer Actions */}
-      <div className="pt-4 border-t border-slate-100 flex items-center justify-between pl-1">
-        <button 
-          onClick={onViewDetails} 
-          className="text-sm font-medium text-slate-900 hover:underline underline-offset-4 flex items-center transition-all group-hover:text-emerald-600"
+      {/* Footer */}
+      <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+        <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-medium">
+          {medicament.type}
+        </span>
+        <button
+          onClick={() => onDetails && onDetails(medicament)}
+          className="flex items-center gap-1 text-sm font-medium text-brand-blue hover:text-blue-700 transition-colors group/btn"
         >
-          Détails complets
+          Détails <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
         </button>
-
-        <div className="flex items-center gap-2">
-          {isStockLow && !isExpired && (
-            <div className="flex items-center gap-1.5 text-amber-600">
-              <AlertTriangle size={14} />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Alerte</span>
-            </div>
-          )}
-          {isExpired && (
-            <div className="flex items-center gap-1.5 text-red-600">
-              <AlertTriangle size={14} />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Expiré</span>
-            </div>
-          )}
-        </div>
       </div>
-
-      <ConfirmModal 
-        isOpen={isDeleteModalOpen}
-        title="Supprimer ce médicament ?"
-        message={`Voulez-vous vraiment retirer ${medicament.nom} de votre inventaire ?`}
-        onConfirm={handleDelete}
-        onCancel={() => setIsDeleteModalOpen(false)}
-        loading={isDeleting}
-      />
     </div>
   );
 }
