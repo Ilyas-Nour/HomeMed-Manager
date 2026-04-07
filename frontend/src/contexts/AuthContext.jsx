@@ -1,18 +1,15 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
 
 const AuthContext = createContext();
-
-export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('token') || null);
     const [loading, setLoading] = useState(true);
-    const [profilActif, setProfilActif] = useState(null); // Par défaut null, le 1er profil sera sélectionné au chargement
+    const [profilActif, setProfilActif] = useState(null); 
 
     useEffect(() => {
-        // Au chargement, si on a un token, on récupère le profil utilisateur Backend
         if (token) {
             fetchUser();
         } else {
@@ -25,13 +22,20 @@ export const AuthProvider = ({ children }) => {
             const response = await api.get('/auth/moi');
             const userData = response.data.utilisateur;
             setUser(userData);
-            // Si l'utilisateur a des profils, sélectionner le premier (le "Moi-même" par défaut)
-            if (userData.profils && userData.profils.length > 0 && !profilActif) {
-                setProfilActif(userData.profils[0]);
+            
+            if (userData.profils && userData.profils.length > 0) {
+                const storedId = localStorage.getItem('profil_actif_id');
+                const savedProfil = storedId ? userData.profils.find(p => p.id === parseInt(storedId)) : null;
+                
+                if (savedProfil) {
+                    setProfilActif(savedProfil);
+                } else {
+                    setProfilActif(userData.profils[0]);
+                    localStorage.setItem('profil_actif_id', userData.profils[0].id);
+                }
             }
         } catch (error) {
             console.error("Erreur de récupération de l'utilisateur", error);
-            // Le token est expiré ou invalide, l'intercepteur API va gérer ça (supprimer le token)
             setUser(null);
             setProfilActif(null);
         } finally {
@@ -72,6 +76,7 @@ export const AuthProvider = ({ children }) => {
             console.error(error);
         } finally {
             localStorage.removeItem('token');
+            localStorage.removeItem('profil_actif_id');
             setToken(null);
             setUser(null);
             setProfilActif(null);
@@ -83,6 +88,7 @@ export const AuthProvider = ({ children }) => {
         const newProfil = user.profils.find(p => p.id === parseInt(profilId, 10));
         if (newProfil) {
             setProfilActif(newProfil);
+            localStorage.setItem('profil_actif_id', newProfil.id);
         }
     };
 
@@ -102,11 +108,13 @@ export const AuthProvider = ({ children }) => {
     return (
         <AuthContext.Provider value={value}>
             {loading ? (
-                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-4"></div>
-                    <p className="text-gray-600 font-medium animate-pulse">Chargement de HomeMed...</p>
+                <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+                    <div className="h-12 w-12 border-b-2 border-brand-blue mb-4 animate-spin"></div>
+                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-tight animate-pulse">Session Sécurisée HomeMed...</p>
                 </div>
             ) : children}
         </AuthContext.Provider>
     );
 };
+
+export { AuthContext };
