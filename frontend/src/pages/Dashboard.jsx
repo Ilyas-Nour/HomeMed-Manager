@@ -10,6 +10,8 @@ import MedicamentForm from '../components/MedicamentForm';
 import FamilyMode from '../components/FamilyMode';
 import GroupsView from '../components/GroupsView';
 import SettingsView from '../components/SettingsView';
+import ReportsView from '../components/ReportsView';
+import PlanningView from '../components/PlanningView';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import MedicamentDetailsModal from '../components/MedicamentDetailsModal';
@@ -184,7 +186,7 @@ export default function Dashboard() {
                     searchTerm={searchTerm}
                     events={timelineEvents}
                     onTogglePrise={handleTogglePrise}
-                    onViewAll={() => showToast('Le planning complet sera bientôt disponible.')}
+                    onViewAll={() => setCurrentView('planning')}
                   />
                 </div>
               </div>
@@ -246,6 +248,18 @@ export default function Dashboard() {
         return (
           <div className="animate-fade-up">
             <GroupsView onProfileSwitch={changerProfil} setCurrentView={setCurrentView} />
+          </div>
+        );
+
+      case 'planning':
+        return (
+          <div className="animate-fade-up">
+            <PlanningView
+              events={timelineEvents}
+              onTogglePrise={handleTogglePrise}
+              setCurrentView={setCurrentView}
+              showToast={showToast}
+            />
           </div>
         );
 

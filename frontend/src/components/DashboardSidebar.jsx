@@ -50,8 +50,8 @@ export default function DashboardSidebar({
           onClick={() => handleNav('overview')}
           className="flex items-center gap-3 group"
         >
-          <div className="w-8 h-8 bg-brand-blue flex items-center justify-center">
-            <span className="text-white font-bold text-sm">H</span>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <img src="/HomeMed-Logo.png" alt="HomeMed Logo" className="w-full h-full object-contain" />
           </div>
           <div className="text-left">
             <p className="text-white font-bold text-sm leading-none">HomeMed</p>

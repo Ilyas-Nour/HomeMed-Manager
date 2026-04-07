@@ -83,12 +83,14 @@ export default function Timeline({ searchTerm = '', events = [], onTogglePrise, 
         )}
       </div>
 
-      <button
-        onClick={() => onViewAll && onViewAll()}
-        className="w-full h-10 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
-      >
-        Planning Complet <ArrowRight size={16} strokeWidth={2} />
-      </button>
+      {onViewAll && (
+        <button
+          onClick={() => onViewAll()}
+          className="w-full h-10 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors"
+        >
+          Planning Complet <ArrowRight size={16} strokeWidth={2} />
+        </button>
+      )}
     </div>
   );
 }
