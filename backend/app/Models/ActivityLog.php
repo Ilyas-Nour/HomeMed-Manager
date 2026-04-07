@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ActivityLog extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['user_id', 'action', 'description', 'metadata'];
 
     protected $casts = [
@@ -23,10 +26,10 @@ class ActivityLog extends Model
     public static function log($action, $description = null, $metadata = null)
     {
         return self::create([
-            'user_id'     => auth()->id(),
-            'action'      => $action,
+            'user_id' => auth()->id(),
+            'action' => $action,
             'description' => $description,
-            'metadata'    => $metadata,
+            'metadata' => $metadata,
         ]);
     }
 }

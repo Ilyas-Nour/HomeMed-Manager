@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Groupe;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class GroupeController extends Controller
      */
     public function index(Request $request)
     {
-        return response()->json($request->user()->groupes()->with('membres:id,name,email')->get());
+        return response()->json($request->user()->participatedGroups()->with('participants:id,name,email')->get());
     }
 
     /**
@@ -26,14 +27,16 @@ class GroupeController extends Controller
         ]);
 
         $groupe = Groupe::create([
-            'nom'             => $validated['nom'],
+            'nom' => $validated['nom'],
             'proprietaire_id' => $request->user()->id,
         ]);
 
         // Attacher le propriétaire en tant que rôle 'proprietaire'
-        $groupe->membres()->attach($request->user()->id, ['role' => 'proprietaire']);
+        $groupe->participants()->attach($request->user()->id, ['role' => 'proprietaire']);
 
-        return response()->json($groupe->load('membres:id,name,email'), 201);
+        ActivityLog::log('GROUP_ADD', "Groupe créé : {$groupe->nom}");
+
+        return response()->json($groupe->load('participants:id,name,email'), 201);
     }
 
     /**
@@ -42,7 +45,8 @@ class GroupeController extends Controller
      */
     public function show(Request $request, $id)
     {
-        $groupe = $request->user()->groupes()->with('membres.profils.medicaments')->findOrFail($id);
+        $groupe = $request->user()->participatedGroups()->with('participants.profils.medicaments')->findOrFail($id);
+
         return response()->json($groupe);
     }
 
@@ -51,7 +55,7 @@ class GroupeController extends Controller
      */
     public function addUser(Request $request, $id)
     {
-        $groupe = $request->user()->groupes()->wherePivot('role', 'proprietaire')->findOrFail($id);
+        $groupe = $request->user()->participatedGroups()->wherePivot('role', 'proprietaire')->findOrFail($id);
 
         $validated = $request->validate([
             'email' => 'required|email|exists:users,email',
@@ -59,13 +63,19 @@ class GroupeController extends Controller
 
         $userToAdd = User::where('email', $validated['email'])->first();
 
-        if ($groupe->membres()->where('user_id', $userToAdd->id)->exists()) {
+        if ($userToAdd->id === auth()->id()) {
+            return response()->json(['message' => 'Vous ne pouvez pas vous ajouter vous-même'], 400);
+        }
+
+        if ($groupe->participants()->where('users.id', $userToAdd->id)->exists()) {
             return response()->json(['message' => 'Utilisateur déjà dans le groupe'], 400);
         }
 
-        $groupe->membres()->attach($userToAdd->id, ['role' => 'membre']);
+        $groupe->participants()->attach($userToAdd->id, ['role' => 'membre']);
 
-        return response()->json(['message' => 'Utilisateur ajouté au groupe avec succès.', 'groupe' => $groupe->load('membres:id,name,email')]);
+        ActivityLog::log('GROUP_MEMBER_ADD', "Membre ajouté au groupe {$groupe->nom} : {$userToAdd->name}");
+
+        return response()->json(['message' => 'Utilisateur ajouté au groupe avec succès.', 'groupe' => $groupe->load('participants:id,name,email')]);
     }
 
     /**
@@ -73,8 +83,12 @@ class GroupeController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $groupe = $request->user()->groupes()->wherePivot('role', 'proprietaire')->findOrFail($id);
+        $groupe = $request->user()->participatedGroups()->wherePivot('role', 'proprietaire')->findOrFail($id);
+        $nom = $groupe->nom;
         $groupe->delete();
+
+        ActivityLog::log('GROUP_DELETE', "Groupe supprimé : {$nom}");
+
         return response()->json(['message' => 'Groupe supprimé avec succès.']);
     }
 }

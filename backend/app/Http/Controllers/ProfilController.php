@@ -8,6 +8,16 @@ use Illuminate\Http\Request;
 class ProfilController extends Controller
 {
     /**
+     * Display a listing of the user's profils.
+     */
+    public function index(Request $request)
+    {
+        $profils = $request->user()->profils()->orderBy('nom')->get();
+
+        return response()->json($profils);
+    }
+
+    /**
      * Store a newly created profil.
      */
     public function store(Request $request)

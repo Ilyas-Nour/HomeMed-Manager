@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\MedicamentRequest;
-use App\Models\Medicament;
+use App\Http\Resources\MedicamentResource;
+use App\Models\ActivityLog;
 use App\Models\Profil;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
-use App\Http\Resources\MedicamentResource;
 
 /**
  * Contrôleur des médicaments.
@@ -22,8 +21,7 @@ class MedicamentController extends Controller
     /**
      * Lister tous les médicaments d'un profil.
      *
-     * @param Request $request
-     * @param int $profilId Identifiant du profil
+     * @param  int  $profilId  Identifiant du profil
      * @return JsonResponse Liste des médicaments
      */
     public function index(Request $request, int $profilId): JsonResponse
@@ -32,24 +30,24 @@ class MedicamentController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        // On récupère les médicaments triés. 
-        // Note: Les attributs calculés (stock_faible, expire) sont gérés par MedicamentResource.
+        // Optimisation : Eager Loading des rappels pour éviter le N+1 au chargement de l'inventaire
         $medicaments = $profil->medicaments()
+            ->with(['rappels'])
             ->orderBy('nom')
             ->get();
 
         return response()->json([
-            'profil'       => $profil->only(['id', 'nom', 'relation']),
-            'medicaments'  => MedicamentResource::collection($medicaments),
-            'total'        => $medicaments->count(),
+            'profil' => $profil->only(['id', 'nom', 'relation']),
+            'medicaments' => MedicamentResource::collection($medicaments),
+            'total' => $medicaments->count(),
         ]);
     }
 
     /**
      * Créer un nouveau médicament pour un profil.
      *
-     * @param MedicamentRequest $request Données validées du médicament
-     * @param int $profilId Identifiant du profil
+     * @param  MedicamentRequest  $request  Données validées du médicament
+     * @param  int  $profilId  Identifiant du profil
      * @return JsonResponse Le médicament créé
      */
     public function store(MedicamentRequest $request, int $profilId): JsonResponse
@@ -62,20 +60,19 @@ class MedicamentController extends Controller
         // Créer le médicament associé au profil
         $medicament = $profil->medicaments()->create($request->validated());
 
-        \App\Models\ActivityLog::log('MED_ADD', "Médicament ajouté : {$medicament->nom} pour {$profil->nom}");
+        ActivityLog::log('MED_ADD', "Médicament ajouté : {$medicament->nom} pour {$profil->nom}");
 
         return response()->json([
-            'message'     => 'Médicament ajouté avec succès.',
-            'medicament'  => $medicament,
+            'message' => 'Médicament ajouté avec succès.',
+            'medicament' => $medicament,
         ], 201);
     }
 
     /**
      * Afficher les détails d'un médicament spécifique.
      *
-     * @param Request $request
-     * @param int $profilId Identifiant du profil
-     * @param int $medicamentId Identifiant du médicament
+     * @param  int  $profilId  Identifiant du profil
+     * @param  int  $medicamentId  Identifiant du médicament
      * @return JsonResponse Détail du médicament
      */
     public function show(Request $request, int $profilId, int $medicamentId): JsonResponse
@@ -85,14 +82,16 @@ class MedicamentController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        // Récupérer le médicament appartenant à ce profil
-        $medicament = $profil->medicaments()->findOrFail($medicamentId);
+        // Récupérer le médicament appartenant à ce profil avec ses relations
+        $medicament = $profil->medicaments()
+            ->with(['rappels', 'achats'])
+            ->findOrFail($medicamentId);
 
         return response()->json([
             'medicament' => array_merge($medicament->toArray(), [
-                'stock_faible'      => $medicament->stock_faible,
-                'expire'            => $medicament->expire,
-                'traitement_actif'  => $medicament->traitement_actif,
+                'stock_faible' => $medicament->stock_faible,
+                'expire' => $medicament->expire,
+                'traitement_actif' => $medicament->traitement_actif,
             ]),
         ]);
     }
@@ -100,9 +99,9 @@ class MedicamentController extends Controller
     /**
      * Mettre à jour un médicament existant.
      *
-     * @param MedicamentRequest $request Données validées (partielles acceptées)
-     * @param int $profilId Identifiant du profil
-     * @param int $medicamentId Identifiant du médicament
+     * @param  MedicamentRequest  $request  Données validées (partielles acceptées)
+     * @param  int  $profilId  Identifiant du profil
+     * @param  int  $medicamentId  Identifiant du médicament
      * @return JsonResponse Le médicament mis à jour
      */
     public function update(MedicamentRequest $request, int $profilId, int $medicamentId): JsonResponse
@@ -116,18 +115,19 @@ class MedicamentController extends Controller
         $medicament = $profil->medicaments()->findOrFail($medicamentId);
         $medicament->update($request->validated());
 
+        ActivityLog::log('MED_UPDATE', "Médicament mis à jour : {$medicament->nom}");
+
         return response()->json([
-            'message'     => 'Médicament mis à jour avec succès.',
-            'medicament'  => $medicament->fresh(),
+            'message' => 'Médicament mis à jour avec succès.',
+            'medicament' => $medicament->fresh(),
         ]);
     }
 
     /**
      * Supprimer un médicament.
      *
-     * @param Request $request
-     * @param int $profilId Identifiant du profil
-     * @param int $medicamentId Identifiant du médicament
+     * @param  int  $profilId  Identifiant du profil
+     * @param  int  $medicamentId  Identifiant du médicament
      * @return JsonResponse Confirmation de suppression
      */
     public function destroy(Request $request, int $profilId, int $medicamentId): JsonResponse
@@ -142,7 +142,7 @@ class MedicamentController extends Controller
         $nomMedicament = $medicament->nom;
         $medicament->delete();
 
-        \App\Models\ActivityLog::log('MED_DELETE', "Médicament supprimé : {$nomMedicament}");
+        ActivityLog::log('MED_DELETE', "Médicament supprimé : {$nomMedicament}");
 
         return response()->json([
             'message' => "Le médicament \"{$nomMedicament}\" a été supprimé avec succès.",

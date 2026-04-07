@@ -62,8 +62,8 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'role'              => 'string',
+            'password' => 'hashed',
+            'role' => 'string',
         ];
     }
 
@@ -84,9 +84,22 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Relation : Un utilisateur possède plusieurs médicaments à travers ses profils.
+     */
+    public function medicaments()
+    {
+        return $this->hasManyThrough(Medicament::class, Profil::class);
+    }
+
+    public function ownedGroups(): HasMany
+    {
+        return $this->hasMany(Groupe::class, 'proprietaire_id');
+    }
+
+    /**
      * Relation : Un utilisateur appartient à plusieurs groupes (collaboratifs).
      */
-    public function groupes()
+    public function participatedGroups()
     {
         return $this->belongsToMany(Groupe::class, 'groupe_user')->withPivot('role')->withTimestamps();
     }

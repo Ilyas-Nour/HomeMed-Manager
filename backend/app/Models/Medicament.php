@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Modèle Médicament.
@@ -17,9 +19,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $nom
  * @property string $type
  * @property string $posologie
- * @property \Carbon\Carbon $date_debut
- * @property \Carbon\Carbon|null $date_fin
- * @property \Carbon\Carbon|null $date_expiration
+ * @property Carbon $date_debut
+ * @property Carbon|null $date_fin
+ * @property Carbon|null $date_expiration
  * @property int $quantite
  * @property int $seuil_alerte
  * @property string|null $notes
@@ -53,11 +55,11 @@ class Medicament extends Model
      * Conversion automatique des types de champs.
      */
     protected $casts = [
-        'date_debut'       => 'date',
-        'date_fin'         => 'date',
-        'date_expiration'  => 'date',
-        'quantite'         => 'integer',
-        'seuil_alerte'     => 'integer',
+        'date_debut' => 'date',
+        'date_fin' => 'date',
+        'date_expiration' => 'date',
+        'quantite' => 'integer',
+        'seuil_alerte' => 'integer',
     ];
 
     /**
@@ -90,6 +92,7 @@ class Medicament extends Model
     public function getTraitementActifAttribute(): bool
     {
         $now = now();
+
         return $this->date_debut->lte($now) &&
                ($this->date_fin === null || $this->date_fin->gte($now));
     }
@@ -97,7 +100,7 @@ class Medicament extends Model
     /**
      * Relation : Un médicament peut avoir plusieurs rappels.
      */
-    public function rappels(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function rappels(): HasMany
     {
         return $this->hasMany(Rappel::class, 'medicament_id');
     }
@@ -105,7 +108,7 @@ class Medicament extends Model
     /**
      * Relation : Un médicament peut avoir plusieurs enregistrements d'achats.
      */
-    public function achats(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function achats(): HasMany
     {
         return $this->hasMany(Achat::class, 'medicament_id');
     }

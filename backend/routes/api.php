@@ -1,7 +1,14 @@
 <?php
 
+use App\Http\Controllers\AchatController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GroupeController;
+use App\Http\Controllers\MasterMedicamentController;
 use App\Http\Controllers\MedicamentController;
+use App\Http\Controllers\PriseController;
+use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\RappelController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,9 +44,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/moi', [AuthController::class, 'moi']);
     Route::patch('/auth/update', [AuthController::class, 'updateAccount']);
 
-    // ——————————————————————————————————————————
-    // Médicaments — CRUD scopé par profil
-    // ——————————————————————————————————————————
+    // Médicaments — CRUD scopé par profil / Suggestions
+    Route::get('/master-medicaments', [MasterMedicamentController::class, 'index']);
     Route::prefix('profils/{profilId}/medicaments')->group(function () {
         // Liste des médicaments du profil
         Route::get('/', [MedicamentController::class, 'index']);
@@ -60,40 +66,42 @@ Route::middleware('auth:sanctum')->group(function () {
     // ——————————————————————————————————————————
     // Rappels & Suivi des Prises (Phase 2)
     // ——————————————————————————————————————————
-    
+
     // Gestion des rappels par médicament
-    Route::get('medicaments/{medicament}/rappels', [App\Http\Controllers\RappelController::class, 'index']);
-    Route::post('medicaments/{medicament}/rappels', [App\Http\Controllers\RappelController::class, 'store']);
-    Route::delete('rappels/{rappel}', [App\Http\Controllers\RappelController::class, 'destroy']);
+    Route::get('medicaments/{medicament}/rappels', [RappelController::class, 'index']);
+    Route::post('medicaments/{medicament}/rappels', [RappelController::class, 'store']);
+    Route::delete('rappels/{rappel}', [RappelController::class, 'destroy']);
 
     // Suivi quotidien des prises
-    Route::get('profils/{profil}/timeline', [App\Http\Controllers\PriseController::class, 'index']);
-    Route::post('rappels/{rappel}/toggle', [App\Http\Controllers\PriseController::class, 'toggle']);
+    Route::get('profils/{profil}/timeline', [PriseController::class, 'index']);
+    Route::post('rappels/{rappel}/toggle', [PriseController::class, 'toggle']);
 
     // ——————————————————————————————————————————
     // Profils (Phase 3)
     // ——————————————————————————————————————————
-    Route::apiResource('profils', App\Http\Controllers\ProfilController::class)->only(['store', 'update', 'destroy']);
+    Route::apiResource('profils', ProfilController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // ——————————————————————————————————————————
     // Gestion des Achats (Requirement 3.6)
     // ——————————————————————————————————————————
-    Route::get('achats', [App\Http\Controllers\AchatController::class, 'index']);
-    Route::post('achats', [App\Http\Controllers\AchatController::class, 'store']);
-    Route::delete('achats/{achat}', [App\Http\Controllers\AchatController::class, 'destroy']);
+    Route::get('achats', [AchatController::class, 'index']);
+    Route::post('achats', [AchatController::class, 'store']);
+    Route::delete('achats/{achat}', [AchatController::class, 'destroy']);
 
     // ——————————————————————————————————————————
     // Administration & Supervision (Requirement 4)
     // ——————————————————————————————————————————
-    Route::get('admin/stats', [App\Http\Controllers\AdminController::class, 'stats']);
-    Route::get('admin/users', [App\Http\Controllers\AdminController::class, 'users']);
+    Route::middleware('admin')->prefix('admin')->group(function () {
+        Route::get('/stats', [AdminController::class, 'stats']);
+        Route::get('/users', [AdminController::class, 'users']);
+    });
 
     // ——————————————————————————————————————————
     // Groupes Collaboratifs (Phase 3)
     // ——————————————————————————————————————————
-    Route::get('groupes', [App\Http\Controllers\GroupeController::class, 'index']);
-    Route::post('groupes', [App\Http\Controllers\GroupeController::class, 'store']);
-    Route::get('groupes/{groupe}', [App\Http\Controllers\GroupeController::class, 'show']);
-    Route::delete('groupes/{groupe}', [App\Http\Controllers\GroupeController::class, 'destroy']);
-    Route::post('groupes/{groupe}/add-user', [App\Http\Controllers\GroupeController::class, 'addUser']);
+    Route::get('groupes', [GroupeController::class, 'index']);
+    Route::post('groupes', [GroupeController::class, 'store']);
+    Route::get('groupes/{groupe}', [GroupeController::class, 'show']);
+    Route::delete('groupes/{groupe}', [GroupeController::class, 'destroy']);
+    Route::post('groupes/{groupe}/add-user', [GroupeController::class, 'addUser']);
 });

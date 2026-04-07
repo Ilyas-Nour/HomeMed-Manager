@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Medicament;
 use App\Models\Achat;
+use App\Models\Medicament;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -14,15 +14,11 @@ class AdminController extends Controller
      */
     public function stats(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Accès refusé'], 403);
-        }
-
         return response()->json([
-            'users_count'       => User::count(),
-            'meds_count'        => Medicament::count(),
-            'low_stock_count'   => Medicament::whereColumn('quantite', '<=', 'seuil_alerte')->count(),
-            'total_purchases'   => Achat::sum('prix'),
+            'users_count' => User::count(),
+            'meds_count' => Medicament::count(),
+            'low_stock_count' => Medicament::whereColumn('quantite', '<=', 'seuil_alerte')->count(),
+            'total_purchases' => Achat::sum('prix'),
         ]);
     }
 
@@ -31,10 +27,6 @@ class AdminController extends Controller
      */
     public function users(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Accès refusé'], 403);
-        }
-
         return response()->json(User::withCount('profils')->get());
     }
 }

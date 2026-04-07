@@ -85,22 +85,22 @@ class MedicamentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nom.required'              => 'Le nom du médicament est obligatoire.',
-            'nom.min'                   => 'Le nom doit contenir au moins 2 caractères.',
-            'type.required'             => 'Le type du médicament est obligatoire.',
-            'type.in'                   => 'Le type sélectionné est invalide. Types acceptés : comprimé, sirop, injection, crème, gouttes, patch, suppositoire, autre.',
-            'posologie.required'        => 'La posologie est obligatoire.',
-            'posologie.min'             => 'La posologie doit contenir au moins 5 caractères.',
-            'date_debut.required'       => 'La date de début du traitement est obligatoire.',
-            'date_debut.date'           => 'La date de début n\'est pas valide.',
-            'date_fin.date'             => 'La date de fin n\'est pas valide.',
-            'date_fin.after_or_equal'   => 'La date de fin doit être égale ou postérieure à la date de début.',
-            'date_expiration.date'      => 'La date d\'expiration n\'est pas valide.',
-            'quantite.required'         => 'La quantité disponible est obligatoire.',
-            'quantite.integer'          => 'La quantité doit être un nombre entier.',
-            'quantite.min'              => 'La quantité ne peut pas être négative.',
-            'seuil_alerte.min'          => 'Le seuil d\'alerte ne peut pas être négatif.',
-            'notes.max'                 => 'Les notes ne peuvent pas dépasser 2000 caractères.',
+            'nom.required' => 'Le nom du médicament est obligatoire.',
+            'nom.min' => 'Le nom doit contenir au moins 2 caractères.',
+            'type.required' => 'Le type du médicament est obligatoire.',
+            'type.in' => 'Le type sélectionné est invalide. Types acceptés : comprimé, sirop, injection, crème, gouttes, patch, suppositoire, autre.',
+            'posologie.required' => 'La posologie est obligatoire.',
+            'posologie.min' => 'La posologie doit contenir au moins 5 caractères.',
+            'date_debut.required' => 'La date de début du traitement est obligatoire.',
+            'date_debut.date' => 'La date de début n\'est pas valide.',
+            'date_fin.date' => 'La date de fin n\'est pas valide.',
+            'date_fin.after_or_equal' => 'La date de fin doit être égale ou postérieure à la date de début.',
+            'date_expiration.date' => 'La date d\'expiration n\'est pas valide.',
+            'quantite.required' => 'La quantité disponible est obligatoire.',
+            'quantite.integer' => 'La quantité doit être un nombre entier.',
+            'quantite.min' => 'La quantité ne peut pas être négative.',
+            'seuil_alerte.min' => 'Le seuil d\'alerte ne peut pas être négatif.',
+            'notes.max' => 'Les notes ne peuvent pas dépasser 2000 caractères.',
         ];
     }
 }

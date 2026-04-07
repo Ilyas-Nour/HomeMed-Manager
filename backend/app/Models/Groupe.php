@@ -11,7 +11,7 @@ class Groupe extends Model
 
     protected $fillable = [
         'nom',
-        'proprietaire_id'
+        'proprietaire_id',
     ];
 
     public function proprietaire()
@@ -19,7 +19,7 @@ class Groupe extends Model
         return $this->belongsTo(User::class, 'proprietaire_id');
     }
 
-    public function membres()
+    public function participants()
     {
         return $this->belongsToMany(User::class, 'groupe_user')->withPivot('role')->withTimestamps();
     }

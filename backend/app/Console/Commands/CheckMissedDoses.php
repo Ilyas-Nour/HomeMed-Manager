@@ -2,12 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-
-use App\Models\Rappel;
-use App\Models\Prise;
 use App\Models\ActivityLog;
+use App\Models\Prise;
+use App\Models\Rappel;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class CheckMissedDoses extends Command
 {
@@ -32,7 +31,7 @@ class CheckMissedDoses extends Command
     {
         $now = Carbon::now();
         $today = $now->toDateString();
-        
+
         // On récupère les rappels de la journée qui ont plus d'une heure de retard
         $rappels = Rappel::whereTime('heure', '<=', $now->subHour()->toTimeString())->get();
 
@@ -42,21 +41,21 @@ class CheckMissedDoses extends Command
                 ->where('date_prise', $today)
                 ->first();
 
-            if (!$prise) {
+            if (! $prise) {
                 // Log de l'oubli si pas déjà loggé
                 $exists = ActivityLog::where('action', 'PRISE_MISSED')
                     ->where('metadata->rappel_id', $rappel->id)
                     ->whereDate('created_at', $today)
                     ->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     ActivityLog::create([
-                        'user_id'     => $rappel->medicament->profil->user_id,
-                        'action'      => 'PRISE_MISSED',
+                        'user_id' => $rappel->medicament->profil->user_id,
+                        'action' => 'PRISE_MISSED',
                         'description' => "Dose oubliée : {$rappel->medicament->nom} à {$rappel->heure}",
-                        'metadata'    => ['rappel_id' => $rappel->id, 'medicament_id' => $rappel->medicament_id]
+                        'metadata' => ['rappel_id' => $rappel->id, 'medicament_id' => $rappel->medicament_id],
                     ]);
-                    
+
                     $this->info("Oubli enregistré pour : {$rappel->medicament->nom}");
                 }
             }

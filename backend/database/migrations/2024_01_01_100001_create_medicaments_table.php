@@ -21,8 +21,8 @@ return new class extends Migration
 
             // Référence vers le profil auquel appartient ce médicament
             $table->foreignId('profil_id')
-                  ->constrained('profils')
-                  ->cascadeOnDelete();
+                ->constrained('profils')
+                ->cascadeOnDelete();
 
             // Nom commercial ou générique du médicament
             $table->string('nom');

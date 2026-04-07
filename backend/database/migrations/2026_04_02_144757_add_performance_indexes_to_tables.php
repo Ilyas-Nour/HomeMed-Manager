@@ -45,12 +45,26 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('profils', function (Blueprint $table) { $table->dropIndex(['user_id']); });
-        Schema::table('medicaments', function (Blueprint $table) { $table->dropIndex(['profil_id']); });
-        Schema::table('rappels', function (Blueprint $table) { $table->dropIndex(['medicament_id']); });
-        Schema::table('prises', function (Blueprint $table) { $table->dropIndex(['rappel_id', 'date_prise']); });
-        Schema::table('achats', function (Blueprint $table) { $table->dropIndex(['medicament_id']); });
-        Schema::table('groupes', function (Blueprint $table) { $table->dropIndex(['proprietaire_id']); });
-        Schema::table('groupe_user', function (Blueprint $table) { $table->dropIndex(['groupe_id', 'user_id']); });
+        Schema::table('profils', function (Blueprint $table) {
+            $table->dropIndex(['user_id']);
+        });
+        Schema::table('medicaments', function (Blueprint $table) {
+            $table->dropIndex(['profil_id']);
+        });
+        Schema::table('rappels', function (Blueprint $table) {
+            $table->dropIndex(['medicament_id']);
+        });
+        Schema::table('prises', function (Blueprint $table) {
+            $table->dropIndex(['rappel_id', 'date_prise']);
+        });
+        Schema::table('achats', function (Blueprint $table) {
+            $table->dropIndex(['medicament_id']);
+        });
+        Schema::table('groupes', function (Blueprint $table) {
+            $table->dropIndex(['proprietaire_id']);
+        });
+        Schema::table('groupe_user', function (Blueprint $table) {
+            $table->dropIndex(['groupe_id', 'user_id']);
+        });
     }
 };

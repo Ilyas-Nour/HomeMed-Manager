@@ -20,21 +20,23 @@ return new class extends Migration
 
             // Référence vers l'utilisateur propriétaire du profil
             $table->foreignId('user_id')
-                  ->constrained('users')
-                  ->cascadeOnDelete();
+                ->constrained('users')
+                ->cascadeOnDelete();
 
             // Nom affiché du profil (ex: "Papa", "Maman", "Moi-même")
             $table->string('nom');
 
             // Relation de l'utilisateur avec ce profil
             $table->enum('relation', [
-                'soi-même',
-                'père',
-                'mère',
-                'enfant',
-                'conjoint',
-                'autre',
-            ])->default('soi-même');
+                'Lui-même',
+                'Enfant',
+                'Conjoint',
+                'Parent',
+                'Autre',
+            ])->default('Lui-même');
+
+            $table->date('date_naissance')->nullable();
+            $table->string('photo')->nullable();
 
             $table->timestamps();
         });
