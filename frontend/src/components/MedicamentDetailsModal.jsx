@@ -1,120 +1,150 @@
 import React from 'react';
-import { X, Pill, Clock, Calendar, AlertTriangle, Info, MapPin } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, Pill, Clock, Calendar, AlertTriangle, ShieldCheck, ArrowRight, Package } from 'lucide-react';
 
 /**
- * MedicamentDetailsModal — Vue Premium en Lecture Seule
+ * MedicamentDetailsModal — Mobile-First bottom-sheet on mobile, centered modal on desktop
  */
 export default function MedicamentDetailsModal({ isOpen, onClose, medicament }) {
   if (!isOpen || !medicament) return null;
 
-  const isExpired = medicament.date_expiration && new Date(medicament.date_expiration) < new Date();
+  const isExpired  = medicament.date_expiration && new Date(medicament.date_expiration) < new Date();
   const isStockLow = medicament.quantite <= (medicament.seuil_alerte || 5);
 
-  return (
-    <div className="hm-modal-backdrop !z-[200]">
-      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md animate-fade-in" onClick={onClose} />
-      
-      <div className="hm-modal-content max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-fade-up">
-        {/* En-tête du Modal */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white/50 backdrop-blur-xl shrink-0">
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-sm ${isExpired ? 'bg-red-50 text-red-500 border-red-100' : isStockLow ? 'bg-amber-50 text-amber-500 border-amber-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-              <Pill size={24} />
+  const iconClass = isExpired
+    ? 'bg-red-50 text-red-500 border-red-100'
+    : isStockLow
+    ? 'bg-amber-50 text-amber-500 border-amber-100'
+    : 'bg-brand-blue/5 text-brand-blue border-brand-blue/10';
+
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-fade-in"
+        onClick={onClose}
+      />
+
+      {/* Sheet / Modal */}
+      <div className="relative w-full sm:max-w-lg sm:mx-4 bg-white shadow-2xl overflow-hidden animate-fade-up flex flex-col max-h-[92vh] sm:max-h-[88vh]">
+
+        {/* Mobile drag handle */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 bg-slate-200" />
+        </div>
+
+        {/* Header */}
+        <div className="px-5 sm:px-7 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className={`h-11 w-11 sm:h-12 sm:w-12 flex items-center justify-center border shadow-sm shrink-0 ${iconClass}`}>
+              <Pill size={20} strokeWidth={2.5} />
             </div>
-            <div>
-              <h2 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2 uppercase">
-                {medicament.nom}
-              </h2>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{medicament.type}</span>
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 uppercase tracking-tight truncate">{medicament.nom}</h2>
+              <div className="flex items-center gap-2 mt-0.5">
+                <div className={`h-1.5 w-1.5 ${isExpired ? 'bg-red-500' : isStockLow ? 'bg-amber-500' : 'bg-brand-green'}`} />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight truncate">{medicament.type}</p>
+              </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl transition-all">
-            <X size={20} />
+          <button
+            onClick={onClose}
+            className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all shrink-0"
+          >
+            <X size={18} />
           </button>
         </div>
 
-        {/* Corps - Défilement Scrollable */}
-        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-8 bg-slate-50/30">
-          
-          {/* Section: Posologie & Prises */}
-          <div>
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <Clock size={12} className="text-emerald-500" /> Posologie & Indications
-            </h3>
-            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-              <p className="text-sm font-semibold text-slate-700 leading-relaxed italic">
-                "{medicament.posologie || 'Aucune consigne spécifique assignée.'}"
-              </p>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6 no-scrollbar">
+
+          {/* Posologie */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Posologie</p>
+            <div className="p-4 bg-slate-50 border border-slate-100 text-sm text-slate-700 leading-relaxed font-medium italic shadow-inner">
+              "{medicament.posologie || 'Aucune instruction consignée.'}"
             </div>
           </div>
 
-          {/* Section: Stats & Inventaire (Grid) */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
-              <div className={`absolute top-0 left-0 w-1 h-full ${isStockLow ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Info size={12}/> Quantité Restante</p>
-              <div className="flex items-baseline gap-2">
-                <p className={`text-3xl font-black tracking-tighter ${isStockLow ? 'text-amber-600' : 'text-slate-800'}`}>{medicament.quantite}</p>
-                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">unités</span>
-              </div>
-              {isStockLow && <p className="text-[10px] font-bold text-amber-500 uppercase tracking-tighter mt-2 animate-pulse flex items-center gap-1"><AlertTriangle size={12}/> Stock Critique</p>}
-            </div>
-
-            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
-              <div className={`absolute top-0 left-0 w-1 h-full ${isExpired ? 'bg-red-500' : 'bg-emerald-500'}`} />
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Calendar size={12}/> Expiration</p>
-              <p className={`text-xl font-black tracking-tight ${isExpired ? 'text-red-500' : 'text-slate-800'}`}>
-                {medicament.date_expiration ? new Date(medicament.date_expiration).toLocaleDateString('fr-FR') : 'Non définie'}
+          {/* Metrics grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-4 bg-white border border-slate-100 hover:border-brand-blue/20 transition-all group">
+              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-tight mb-3 flex items-center gap-1.5 group-hover:text-brand-blue transition-colors">
+                <Package size={12} strokeWidth={2.5} /> Inventaire
               </p>
-              {isExpired && <p className="text-[10px] font-bold text-red-500 uppercase tracking-tighter mt-1 flex items-center gap-1"><AlertTriangle size={12}/> Expiré !</p>}
-            </div>
-          </div>
-
-          {/* Section: Timeline Traitement */}
-          {(medicament.date_debut || medicament.date_fin) && (
-            <div>
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <Calendar size={12} className="text-emerald-500" /> Période de Traitement
-              </h3>
-              <div className="bg-white p-1.5 rounded-3xl border border-slate-100 shadow-sm flex items-center text-sm font-semibold text-slate-600">
-                <div className="flex-1 text-center py-2 px-3 rounded-2xl bg-slate-50/50">
-                    <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Début</span>
-                    {medicament.date_debut ? new Date(medicament.date_debut).toLocaleDateString('fr-FR') : '—'}
+              <span className={`text-2xl sm:text-3xl font-bold tracking-tighter ${isStockLow ? 'text-amber-500' : 'text-slate-900'}`}>
+                {medicament.quantite}
+              </span>
+              <span className="text-[10px] font-bold text-slate-300 ml-1">unités</span>
+              {isStockLow && (
+                <div className="mt-2 inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 border border-amber-100 uppercase tracking-tight">
+                  <AlertTriangle size={10} strokeWidth={3} /> Critique
                 </div>
-                <div className="w-8 h-[1px] bg-slate-200" />
-                <div className="flex-1 text-center py-2 px-3 rounded-2xl bg-slate-50/50">
-                    <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Fin Prévue</span>
-                    {medicament.date_fin ? new Date(medicament.date_fin).toLocaleDateString('fr-FR') : 'Continu'}
+              )}
+            </div>
+
+            <div className="p-4 bg-white border border-slate-100 hover:border-brand-blue/20 transition-all group">
+              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-tight mb-3 flex items-center gap-1.5 group-hover:text-brand-blue transition-colors">
+                <Calendar size={12} strokeWidth={2.5} /> Validité
+              </p>
+              <span className={`text-sm sm:text-base font-bold tracking-tight uppercase ${isExpired ? 'text-red-500' : 'text-slate-800'}`}>
+                {medicament.date_expiration
+                  ? new Date(medicament.date_expiration).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                  : '—'}
+              </span>
+              {isExpired && (
+                <div className="mt-2 inline-flex items-center gap-1 text-[9px] font-bold text-red-600 bg-red-50 px-2 py-0.5 border border-red-100 uppercase tracking-tight">
+                  <AlertTriangle size={10} strokeWidth={3} /> Expiré
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Dates cycle */}
+          {(medicament.date_debut || medicament.date_fin) && (
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Chronologie</p>
+              <div className="flex items-center gap-2 bg-slate-50 p-3 border border-slate-100">
+                <div className="flex-1 bg-white p-3 border border-slate-100 text-center">
+                  <p className="text-[9px] font-bold text-slate-300 uppercase tracking-tight mb-1">Début</p>
+                  <p className="text-xs font-bold text-slate-700">
+                    {medicament.date_debut ? new Date(medicament.date_debut).toLocaleDateString('fr-FR') : '—'}
+                  </p>
+                </div>
+                <ArrowRight size={14} className="text-brand-blue shrink-0" strokeWidth={2.5} />
+                <div className="flex-1 bg-white p-3 border border-slate-100 text-center">
+                  <p className="text-[9px] font-bold text-slate-300 uppercase tracking-tight mb-1">Fin</p>
+                  <p className="text-xs font-bold text-slate-700">
+                    {medicament.date_fin ? new Date(medicament.date_fin).toLocaleDateString('fr-FR') : 'N/D'}
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Section: Notes */}
+          {/* Notes */}
           {medicament.notes && (
-             <div>
-               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                 <Info size={12} className="text-emerald-500" /> Notes Supplémentaires
-               </h3>
-               <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-                 <p className="text-sm font-medium text-slate-600 leading-relaxed">
-                   {medicament.notes}
-                 </p>
-               </div>
-             </div>
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Notes Cliniques</p>
+              <div className="p-4 bg-slate-50 border border-slate-100">
+                <p className="text-xs font-medium text-slate-500 leading-relaxed italic">{medicament.notes}</p>
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Pied de Modal */}
-        <div className="p-4 border-t border-slate-100 bg-white shrink-0">
-          <button 
-            onClick={onClose} 
-            className="w-full hm-btn h-12 text-sm font-extrabold shadow-emerald-500/10 hover:shadow-emerald-500/20"
+        {/* Footer */}
+        <div className="px-5 sm:px-7 py-4 sm:py-5 border-t border-slate-100 bg-white">
+          <button
+            onClick={onClose}
+            className="med-btn-primary w-full h-12 text-sm font-bold flex items-center justify-center gap-2"
           >
-            Fermer les détails
+            <ShieldCheck size={17} strokeWidth={2.5} />
+            Fermer
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,127 +1,147 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, UserPlus, ArrowRight, ShieldCheck } from 'lucide-react';
-import logo from '/HomeMed-Logo.png';
+import api from '../services/api';
+import { ShieldCheck, Mail, Lock, User, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
+/**
+ * Register — Product Precision "Sleek & Clean"
+ * Design professionnel · Épuré · Haute Sécurité.
+ */
 export default function Register() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: ''
-  });
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
-  const { register }          = useAuth();
-  const navigate              = useNavigate();
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', password_confirmation: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState('');
+  const navigate                = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
-    if (formData.password !== formData.password_confirmation) {
-      setError('Les mots de passe ne correspondent pas.');
-      setLoading(false);
-      return;
-    }
-
     try {
-      await register(formData);
-      navigate('/dashboard');
+      await api.post('/register', formData);
+      navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || "Erreur lors de l'inscription.");
+      setError(err.response?.data?.message || 'Erreur lors de la création du compte.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 font-sans selection:bg-emerald-500/20 selection:text-emerald-900 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans selection:bg-brand-blue/10 py-12 px-4 relative overflow-hidden">
       
-      <div className="max-w-md w-full space-y-10 bg-white p-8 sm:p-12 rounded-[40px] shadow-xl shadow-slate-200/50 border border-slate-100 transition-all">
+      {/* ── Background minimal ── */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
+         <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:3rem_3rem]" />
+      </div>
+
+      <div className="w-full max-w-[400px] relative z-10 animate-fade-up space-y-8">
         
-        <div className="space-y-4 text-center">
-           <div className="flex justify-center mb-8">
-             <img src={logo} alt="HomeMed" className="h-12 object-contain" />
+        {/* ── Logo ── */}
+        <div className="flex flex-col items-center gap-4 text-center">
+           <div className="h-14 w-14 bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+              <img src="/HomeMed-Logo.png" alt="HomeMed" className="h-10 w-auto object-contain" />
            </div>
-           <h1 className="text-3xl font-extrabold text-slate-950 tracking-tight leading-tight">Commencer l'aventure.</h1>
-           <p className="text-slate-500 font-medium leading-relaxed mt-2 text-sm">Créez votre compte en quelques secondes et rejoignez la révolution de la santé connectée.</p>
+           <div className="space-y-1">
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Créer un Dossier</h1>
+              <p className="text-sm text-slate-500 font-medium">Rejoignez la plateforme de gestion santé.</p>
+           </div>
         </div>
 
-        <div className="space-y-6">
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-[11px] font-bold flex items-center gap-3 animate-shake">
-               <ShieldCheck size={16} /> {error}
-            </div>
-          )}
+        {/* ── Carte d'Inscription ── */}
+        <div className="bg-white border border-slate-200 p-8 shadow-sm space-y-6">
+           {error && (
+             <div className="p-3 bg-red-50 border border-red-100 flex items-center gap-2 text-red-600 text-xs font-bold">
+                <AlertCircle size={14} /> {error}
+             </div>
+           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5 focus-within:scale-[1.01] transition-transform">
-              <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest pl-1">Nom Complet</label>
-              <div className="relative">
-                <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none transition-colors" />
-                <input
-                  type="text" required placeholder="Jean Dupont"
-                  value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full h-14 pl-12 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-semibold text-slate-900 outline-none focus:bg-white focus:border-emerald-500/30 transition-all duration-300"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5 focus-within:scale-[1.01] transition-transform">
-              <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest pl-1">E-mail</label>
-              <div className="relative">
-                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none transition-colors" />
-                <input
-                  type="email" required placeholder="jean@exemple.fr"
-                  value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
-                  className="w-full h-14 pl-12 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-semibold text-slate-900 outline-none focus:bg-white focus:border-emerald-500/30 transition-all duration-300"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5 focus-within:scale-[1.01] transition-transform">
-                  <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest pl-1">Mot de passe</label>
-                  <div className="relative">
-                    <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none transition-colors" />
+           <form onSubmit={handleSubmit} className="space-y-4">
+              
+              <div className="med-form-field">
+                 <label className="med-form-label">Nom complet</label>
+                 <div className="relative group">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-blue transition-colors">
+                       <User size={16} />
+                    </div>
                     <input
-                      type="password" required placeholder="••••••••"
-                      value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})}
-                      className="w-full h-14 pl-12 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-semibold text-slate-900 outline-none focus:bg-white focus:border-emerald-500/30 transition-all duration-300"
+                      type="text" required placeholder="Dr. Jean Dupont"
+                      value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/5 outline-none transition-all"
                     />
-                  </div>
-                </div>
-                <div className="space-y-1.5 focus-within:scale-[1.01] transition-transform">
-                  <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest pl-1">Confirmation</label>
-                  <div className="relative">
-                    <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none transition-colors" />
-                    <input
-                      type="password" required placeholder="••••••••"
-                      value={formData.password_confirmation} onChange={e => setFormData({...formData, password_confirmation: e.target.value})}
-                      className="w-full h-14 pl-12 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-semibold text-slate-900 outline-none focus:bg-white focus:border-emerald-500/30 transition-all duration-300"
-                    />
-                  </div>
-                </div>
-            </div>
+                 </div>
+              </div>
 
-            <button
-              type="submit" disabled={loading}
-              className="w-full h-14 bg-slate-950 text-white rounded-2xl font-bold text-sm tracking-wide shadow-2xl shadow-slate-950/20 hover:bg-emerald-600 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 group mt-4"
-            >
-              {loading ? <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>CRÉER MON COMPTE <UserPlus size={18} /></>}
-            </button>
-          </form>
+              <div className="med-form-field">
+                 <label className="med-form-label">Adresse email</label>
+                 <div className="relative group">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-blue transition-colors">
+                       <Mail size={16} />
+                    </div>
+                    <input
+                      type="email" required placeholder="nom@exemple.com"
+                      value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/5 outline-none transition-all"
+                    />
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                 <div className="med-form-field">
+                    <label className="med-form-label">Mot de passe</label>
+                    <div className="relative group">
+                       <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-blue transition-colors">
+                          <Lock size={16} />
+                       </div>
+                       <input
+                         type={showPassword ? "text" : "password"} required placeholder="••••••••••••"
+                         value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })}
+                         className="w-full h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/5 outline-none transition-all"
+                       />
+                       <button 
+                         type="button"
+                         onClick={() => setShowPassword(!showPassword)}
+                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors"
+                       >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                       </button>
+                    </div>
+                 </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full h-11 bg-brand-blue hover:bg-blue-700 text-white text-sm font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center gap-3 pt-1"
+              >
+                {loading ? 'Création...' : "Créer le compte"}
+                {!loading && <CheckCircle2 size={16} />}
+              </button>
+           </form>
+
+           <div className="relative flex items-center justify-center py-1">
+              <div className="w-full h-px bg-slate-100" />
+              <span className="absolute px-3 bg-white text-[10px] font-bold text-slate-300 uppercase tracking-tight">OU</span>
+           </div>
+
+           <div className="text-center space-y-4">
+              <p className="text-xs font-medium text-slate-500">
+                 Déjà membre ?{' '}
+                 <Link to="/login" className="text-brand-blue font-bold hover:underline transition-all">
+                    Se connecter
+                 </Link>
+              </p>
+           </div>
         </div>
 
-        <div className="pt-6 text-center">
-           <p className="text-sm font-medium text-slate-500">
-              Déjà inscrit ? <Link to="/login" className="text-slate-900 font-bold hover:text-emerald-600 underline underline-offset-4 decoration-2">Connectez-vous</Link>
+        {/* ── Footer ── */}
+        <div className="text-center space-y-4 opacity-40">
+           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight leading-relaxed">
+              Données Patient Chiffrées AES-256 <br />
+              © 2026 HomeMed Suite Pro
            </p>
         </div>
-
       </div>
     </div>
   );

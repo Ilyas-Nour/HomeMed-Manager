@@ -1,37 +1,56 @@
 import React, { useEffect } from 'react';
-import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 /**
- * Toast Component — Luxe Top-Center Notification
- * @param {string} message - Text to display
- * @param {string} type - 'success' | 'error' | 'warning'
- * @param {function} onClose - callback to close
+ * Toast — Mobile-first, positioned above mobile bottom nav
  */
 export default function Toast({ message, type = 'success', onClose }) {
   useEffect(() => {
-    const timer = setTimeout(onClose, 4000);
+    const timer = setTimeout(onClose, 4500);
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const styles = {
-    success: 'bg-white border-emerald-100 text-emerald-800 shadow-emerald-500/10',
-    error:   'bg-white border-red-100 text-red-800 shadow-red-500/10',
-    warning: 'bg-white border-amber-100 text-amber-800 shadow-amber-500/10'
+  const variants = {
+    success: {
+      border: 'border-brand-green/20',
+      icon: <CheckCircle2 className="text-brand-green" size={20} strokeWidth={2.5} />,
+      label: 'Succès'
+    },
+    error: {
+      border: 'border-red-200',
+      icon: <AlertCircle className="text-red-500" size={20} strokeWidth={2.5} />,
+      label: 'Erreur'
+    },
+    warning: {
+      border: 'border-amber-200',
+      icon: <Info className="text-brand-amber" size={20} strokeWidth={2.5} />,
+      label: 'Attention'
+    },
+    info: {
+      border: 'border-brand-blue/20',
+      icon: <Info className="text-brand-blue" size={20} strokeWidth={2.5} />,
+      label: 'Info'
+    }
   };
 
-  const icons = {
-    success: <CheckCircle className="text-emerald-500" size={18} />,
-    error:   <AlertCircle className="text-red-500" size={18} />,
-    warning: <Info className="text-amber-500" size={18} />
-  };
+  const v = variants[type] || variants.success;
 
   return (
-    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] w-full max-w-sm px-4 animate-fade-up">
-      <div className={`p-4 rounded-2xl border shadow-2xl flex items-center gap-3 ${styles[type]} backdrop-blur-xl bg-white/90`}>
-        <div className="shrink-0">{icons[type]}</div>
-        <p className="flex-1 text-[13px] font-bold leading-tight tracking-tight uppercase">{message}</p>
-        <button onClick={onClose} className="p-1 hover:bg-slate-50 rounded-lg transition-colors text-slate-400">
-          <X size={14} />
+    /* On mobile: show above bottom nav (bottom-20). On desktop: top-6 centered */
+    <div className="fixed bottom-20 lg:bottom-auto lg:top-6 left-1/2 -translate-x-1/2 z-[300] w-[calc(100%-2rem)] max-w-sm animate-fade-up">
+      <div className={`flex items-center gap-4 px-4 py-3.5 bg-white border-2 ${v.border} shadow-xl shadow-slate-900/10 ring-1 ring-black/5 flex items-center`}>
+        <div className="shrink-0 h-9 w-9 bg-slate-50 border border-slate-100 flex items-center justify-center">
+          {v.icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] font-bold uppercase tracking-tight text-slate-400">{v.label}</p>
+          <p className="text-sm font-bold text-slate-800 leading-tight truncate">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-2 text-slate-300 hover:text-slate-700 hover:bg-slate-50 transition-all shrink-0"
+        >
+          <X size={15} strokeWidth={3} />
         </button>
       </div>
     </div>

@@ -3,47 +3,58 @@ import { createPortal } from 'react-dom';
 import { AlertTriangle, X } from 'lucide-react';
 
 /**
- * ConfirmModal — Luxe deletion confirmation (Portal to prevent CSS wrapping)
+ * ConfirmModal — Mobile-first bottom-sheet on mobile
  */
-export default function ConfirmModal({ isOpen, title, message, onConfirm, onCancel, confirmText = "Supprimer", loading = false }) {
+export default function ConfirmModal({ isOpen, title, message, onConfirm, onCancel, confirmText = 'Supprimer', loading = false }) {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="hm-modal-backdrop !z-[210]">
-      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md animate-fade-in" onClick={onCancel} />
-      
-      <div className="hm-modal-content max-w-sm animate-fade-up relative z-10 w-full mx-4">
-        <div className="h-1.5 bg-red-500" />
-        
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="h-10 w-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center border border-red-100/50">
-              <AlertTriangle size={20} />
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-fade-in" onClick={onCancel} />
+
+      <div className="relative w-full sm:max-w-sm sm:mx-4 bg-white shadow-2xl overflow-hidden animate-fade-up">
+        {/* Danger accent */}
+        <div className="h-1 bg-gradient-to-r from-red-400 to-red-500 w-full" />
+
+        {/* Mobile drag handle */}
+        <div className="flex justify-center pt-3 sm:hidden">
+          <div className="w-10 h-1 bg-slate-200" />
+        </div>
+
+        <div className="p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-5">
+            <div className="h-11 w-11 sm:h-12 sm:w-12 bg-red-50 text-red-500 flex items-center justify-center border border-red-100 shadow-sm">
+              <AlertTriangle size={22} strokeWidth={2.5} />
             </div>
-            <button onClick={onCancel} className="hm-btn-ghost"><X size={18} /></button>
+            <button
+              onClick={onCancel}
+              className="h-8 w-8 flex items-center justify-center text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <div className="space-y-2 mb-8">
-            <h3 className="text-lg font-semibold text-slate-900 tracking-tight">{title}</h3>
-            <p className="text-sm text-slate-500">{message}</p>
+          <div className="space-y-2 mb-7">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">{title}</h3>
+            <p className="text-sm text-slate-500 font-medium leading-relaxed">{message}</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-end mt-4">
-            <button 
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
               onClick={onCancel}
               disabled={loading}
-              className="hm-btn-secondary"
+              className="med-btn-secondary flex-1 h-12 sm:h-11 text-sm font-bold"
             >
               Annuler
             </button>
-            <button 
+            <button
               onClick={onConfirm}
               disabled={loading}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:opacity-50 bg-red-600 text-slate-50 hover:bg-red-600/90 h-9 px-4 py-2"
+              className="flex-1 h-12 sm:h-11 bg-red-500 text-white text-sm font-bold hover:bg-red-600 active:scale-95 transition-all shadow-md shadow-red-200/50 disabled:opacity-50 flex items-center justify-center"
             >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : confirmText}
+              {loading
+                ? <div className="w-5 h-5 border-2 border-white/30 border-t-white animate-spin" />
+                : confirmText}
             </button>
           </div>
         </div>
