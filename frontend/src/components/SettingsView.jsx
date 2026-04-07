@@ -299,144 +299,6 @@ function NotificationsPanel({ onBack, showToast }) {
   );
 }
 
-/* ─── Sub‑panel: Sécurité / 2FA ─── */
-function SecurityPanel({ onBack, showToast }) {
-  const [twoFa, setTwoFa] = useState(false);
-  const [sessions] = useState([
-    { device: 'Chrome · Windows', location: 'Alger, DZ', current: true, time: "Maintenant" },
-    { device: 'Safari · iPhone', location: 'Alger, DZ', current: false, time: "Il y a 2 jours" },
-  ]);
-
-  return (
-    <PanelLayout title="Sécurité" icon={<Shield size={20} className="text-brand-green" />} onBack={onBack}>
-      <div className="space-y-6">
-        {/* 2FA */}
-        <div className="bg-white border border-slate-100 overflow-hidden">
-          <div className="p-5 flex items-center justify-between">
-            <div className="space-y-0.5 mr-4">
-              <p className="text-sm font-bold text-slate-800">Authentification à deux facteurs</p>
-              <p className="text-xs text-slate-400">Ajoutez une couche de sécurité supplémentaire avec un code OTP.</p>
-            </div>
-            <Toggle enabled={twoFa} onToggle={() => { setTwoFa(!twoFa); showToast(twoFa ? '2FA désactivée.' : '2FA activée ! (Demo)'); }} />
-          </div>
-          {twoFa && (
-            <div className="mx-5 mb-5 p-4 bg-brand-green/5 border border-brand-green/20">
-              <p className="text-xs text-brand-green font-bold flex items-center gap-2">
-                <Check size={14} /> Authentification forte activée
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Sessions actives */}
-        <div className="bg-white border border-slate-100 overflow-hidden">
-          <div className="px-5 py-3 bg-slate-50 border-b border-slate-100">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-tight">Sessions Actives</h3>
-          </div>
-          <div className="divide-y divide-slate-50">
-            {sessions.map((s, i) => (
-              <div key={i} className="flex items-center justify-between px-5 py-4">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs font-bold text-slate-800">{s.device}</p>
-                    {s.current && (
-                      <span className="px-2 py-0.5 bg-brand-green/10 text-brand-green text-[10px] font-bold uppercase tracking-tight">Actuel</span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-slate-400">{s.location} · {s.time}</p>
-                </div>
-                {!s.current && (
-                  <button onClick={() => showToast('Session révoquée.')} className="text-[11px] font-bold text-red-400 hover:text-red-600 transition-colors">
-                    Révoquer
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </PanelLayout>
-  );
-}
-
-/* ─── Sub‑panel: Membre de la Famille ─── */
-function FamilyPanel({ onBack, setCurrentView }) {
-  const { user } = useAuth();
-  return (
-    <PanelLayout title="Famille" icon={<Users size={20} className="text-brand-blue" />} onBack={onBack}>
-      <div className="space-y-4">
-        <p className="text-sm text-slate-500">Gérez les profils médicaux des membres de votre famille.</p>
-        {user?.profils?.map(p => (
-          <div key={p.id} className="flex items-center gap-4 p-4 bg-white border border-slate-100">
-            <div className="h-10 w-10 bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm">
-              {p.nom.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-slate-900">{p.nom}</p>
-              <p className="text-xs text-slate-400">{p.relation}</p>
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-tight text-brand-green px-2 py-1 bg-brand-green/10">Actif</span>
-          </div>
-        ))}
-        <button
-          onClick={() => { onBack(); setCurrentView('family'); }}
-          className="med-btn-primary w-full h-12 text-sm font-bold"
-        >
-          <Users size={16} className="mr-2" /> Gérer les Profils Familiaux
-        </button>
-      </div>
-    </PanelLayout>
-  );
-}
-
-/* ─── Sub‑panel: Supprimer le compte ─── */
-function DeleteAccountPanel({ onBack, showToast }) {
-  const { logout } = useAuth();
-  const [confirm, setConfirm] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handle = async () => {
-    if (confirm !== 'SUPPRIMER') return;
-    setLoading(true);
-    try {
-      // endpoint not yet implemented — show graceful message
-      showToast('Demande envoyée. Un administrateur traitera votre demande.', 'info');
-      setTimeout(() => logout(), 2000);
-    } catch {
-      showToast('Erreur lors de la demande de suppression.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <PanelLayout title="Supprimer le Compte" icon={<Trash2 size={20} className="text-red-500" />} onBack={onBack}>
-      <div className="space-y-6">
-        <div className="p-5 bg-red-50 border border-red-100 space-y-2">
-          <p className="text-sm font-bold text-red-700">⚠️ Action irréversible</p>
-          <p className="text-xs text-red-600">Toutes vos données, profils familiaux et médicaments seront définitivement effacés. Cette action ne peut pas être annulée.</p>
-        </div>
-        <div className="med-form-field">
-          <label className="med-form-label">Tapez <span className="font-bold text-red-500">SUPPRIMER</span> pour confirmer</label>
-          <input
-            type="text"
-            value={confirm}
-            onChange={e => setConfirm(e.target.value)}
-            className="med-input"
-            placeholder="SUPPRIMER"
-          />
-        </div>
-        <button
-          onClick={handle}
-          disabled={confirm !== 'SUPPRIMER' || loading}
-          className="w-full h-12 text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-        >
-          {loading ? <Loader2 size={16} className="animate-spin" /> : <><Trash2 size={16} /> Supprimer définitivement</>}
-        </button>
-      </div>
-    </PanelLayout>
-  );
-}
 
 /* ─── Shared Panel Layout Wrapper ─── */
 function PanelLayout({ title, icon, onBack, children }) {
@@ -463,39 +325,16 @@ function PanelLayout({ title, icon, onBack, children }) {
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* ─── MAIN SettingsView ─── */
 /* ─────────────────────────────────────────────────────────────────────────── */
-export default function SettingsView({ showToast, setCurrentView }) {
+export default function SettingsView({ showToast }) {
   const { user, logout } = useAuth();
   const [activePanel, setActivePanel] = useState(null); // null = main list
 
   /* If a sub-panel is active, render it */
   if (activePanel === 'profile')       return <ProfilePanel onBack={() => setActivePanel(null)} showToast={showToast} />;
-  if (activePanel === 'family')        return <FamilyPanel  onBack={() => setActivePanel(null)} setCurrentView={setCurrentView} />;
   if (activePanel === 'notifications') return <NotificationsPanel onBack={() => setActivePanel(null)} showToast={showToast} />;
   if (activePanel === 'password')      return <PasswordPanel onBack={() => setActivePanel(null)} showToast={showToast} />;
-  if (activePanel === 'security')      return <SecurityPanel onBack={() => setActivePanel(null)} showToast={showToast} />;
-  if (activePanel === 'delete')        return <DeleteAccountPanel onBack={() => setActivePanel(null)} showToast={showToast} />;
 
   const sections = [
-    {
-      title: 'Paramètres du Profil',
-      icon: <User size={16} className="text-brand-blue" />,
-      items: [
-        {
-          id: 'profile',
-          label: 'Informations Personnelles',
-          desc: 'Nom, email et avatar de votre compte.',
-          badge: user?.name,
-          icon: <UserCircle size={18} className="text-brand-blue" />
-        },
-        {
-          id: 'family',
-          label: 'Membres de la Famille',
-          desc: 'Gérez les profils médicaux familiaux.',
-          badge: user?.profils?.length ? `${user.profils.length} profil(s)` : null,
-          icon: <Users size={18} className="text-slate-400" />
-        },
-      ]
-    },
     {
       title: 'Notifications',
       icon: <Bell size={16} className="text-brand-amber" />,
@@ -517,13 +356,7 @@ export default function SettingsView({ showToast, setCurrentView }) {
           label: 'Mot de Passe',
           desc: 'Changez le mot de passe de votre compte.',
           icon: <Key size={18} className="text-slate-400" />
-        },
-        {
-          id: 'security',
-          label: 'Authentification Forte',
-          desc: 'Sessions actives et protection 2FA.',
-          icon: <Shield size={18} className="text-brand-green" />
-        },
+        }
       ]
     },
   ];
@@ -597,12 +430,6 @@ export default function SettingsView({ showToast, setCurrentView }) {
           className="w-full flex items-center justify-center gap-2 h-12 bg-slate-100 text-slate-600 hover:bg-slate-200 text-sm font-bold transition-all"
         >
           <LogOut size={16} /> Se déconnecter
-        </button>
-        <button
-          onClick={() => setActivePanel('delete')}
-          className="w-full flex items-center justify-center gap-2 h-12 border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 text-sm font-bold transition-all"
-        >
-          <Trash2 size={16} /> Supprimer le Compte
         </button>
       </div>
     </div>
