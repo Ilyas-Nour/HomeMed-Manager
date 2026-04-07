@@ -19,8 +19,11 @@ export default function DashboardHeader({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notificationsRead, setNotificationsRead] = useState(false);
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
+  const notifRef = useRef(null);
 
   const safeMeds = Array.isArray(allMedicaments) ? allMedicaments : [];
 
@@ -43,6 +46,9 @@ export default function DashboardHeader({
       }
       if (mobileSearchRef.current && !mobileSearchRef.current.contains(event.target)) {
         setShowMobileSearch(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -132,10 +138,76 @@ export default function DashboardHeader({
           </button>
 
           {/* Notifications */}
-          <button className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all relative">
-            < Bell size={18} strokeWidth={2} />
-            <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-brand-green border border-white" />
-          </button>
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all relative"
+            >
+              <Bell size={18} strokeWidth={2} />
+              {!notificationsRead && (
+                <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-brand-green border border-white" />
+              )}
+            </button>
+
+            {isNotificationsOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 shadow-lg py-2 z-50 animate-fade-up">
+                <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between mb-1">
+                  <p className="text-sm font-bold text-slate-900">Notifications</p>
+                  <button 
+                    onClick={() => setIsNotificationsOpen(false)}
+                    className="text-slate-400 hover:text-slate-700 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                
+                <div className="max-h-[300px] overflow-y-auto no-scrollbar">
+                  {!notificationsRead ? (
+                    <>
+                      <div className="px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center text-red-500">
+                            <ArrowRight size={10} />
+                          </div>
+                          <p className="text-xs font-bold text-slate-800">Stock Faible</p>
+                        </div>
+                        <p className="text-sm text-slate-600">Plus que 5 comprimés de Doliprane pour Ilyass.</p>
+                        <p className="text-[10px] text-slate-400 mt-1 font-medium">Aujourd'hui · 09:41</p>
+                      </div>
+                      
+                      <div className="px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="h-5 w-5 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue">
+                            <Pill size={10} />
+                          </div>
+                          <p className="text-xs font-bold text-slate-800">Prise Médicamenteuse</p>
+                        </div>
+                        <p className="text-sm text-slate-600">N'oubliez pas l'Amoxicilline à 12:00.</p>
+                        <p className="text-[10px] text-slate-400 mt-1 font-medium">Aujourd'hui · 11:30</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-8 text-center text-slate-400 space-y-2">
+                      <Bell size={24} className="mx-auto opacity-20" />
+                      <p className="text-xs font-medium">Aucune nouvelle notification</p>
+                    </div>
+                  )}
+                </div>
+
+                {!notificationsRead && (
+                  <>
+                    <div className="h-px bg-slate-50 my-1" />
+                    <button
+                      onClick={() => setNotificationsRead(true)}
+                      className="w-full text-[10px] font-bold text-brand-blue uppercase tracking-tight py-2 hover:bg-brand-blue/5 transition-colors"
+                    >
+                      Tout marquer comme lu
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="h-4 w-px bg-slate-100 hidden sm:block" />
 
