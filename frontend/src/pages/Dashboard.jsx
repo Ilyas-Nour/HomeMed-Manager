@@ -4,7 +4,6 @@ import api from '../services/api';
 import DashboardSidebar from '../components/DashboardSidebar';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardStats from '../components/DashboardStats';
-import Timeline from '../components/Timeline';
 import Inventory from '../components/Inventory';
 import MedicamentForm from '../components/MedicamentForm';
 import FamilyMode from '../components/FamilyMode';
@@ -12,6 +11,7 @@ import GroupsView from '../components/GroupsView';
 import SettingsView from '../components/SettingsView';
 import ReportsView from '../components/ReportsView';
 import PlanningView from '../components/PlanningView';
+import AchatsView from '../components/AchatsView';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import MedicamentDetailsModal from '../components/MedicamentDetailsModal';
@@ -22,7 +22,8 @@ import {
 } from 'lucide-react';
 
 /**
- * Dashboard — Mobile-First · Product Precision
+ * Dashboard — Product Precision
+ * The central hub of the HomeMed Manager ecosystem.
  */
 export default function Dashboard() {
   const { user, profilActif, changerProfil } = useAuth();
@@ -41,26 +42,31 @@ export default function Dashboard() {
   const [medToDetail, setMedToDetail] = useState(null);
 
   const [allMedicaments, setAllMedicaments] = useState([]);
-  const [timelineEvents, setTimelineEvents] = useState([]);
+  const [adherenceData, setAdherenceData] = useState({ percentage: 0, stats: { taken: 0, total: 0 } });
 
   useEffect(() => {
     if (profilActif?.id) {
-      api.get(`/profils/${profilActif.id}/medicaments`)
-        .then(res => {
-          const data = res.data.medicaments || res.data || [];
-          setAllMedicaments(Array.isArray(data) ? data : []);
-        })
-        .catch(err => console.error('Erreur meds', err));
-
-      api.get(`/profils/${profilActif.id}/timeline`)
-        .then(res => setTimelineEvents(Array.isArray(res.data) ? res.data : []))
-        .catch(err => console.error('Erreur timeline', err));
+      refreshData();
     }
-    return () => {
-      setAllMedicaments([]);
-      setTimelineEvents([]);
-    };
-  }, [profilActif?.id]);
+  }, [profilActif?.id, currentView]);
+
+  const refreshData = async () => {
+    try {
+      // Fetch Meds
+      const medsRes = await api.get(`/profils/${profilActif.id}/medicaments`);
+      const medsData = medsRes.data.medicaments || medsRes.data || [];
+      setAllMedicaments(Array.isArray(medsData) ? medsData : []);
+
+      // Fetch Adherence
+      const planningRes = await api.get('/planning');
+      setAdherenceData({ 
+        percentage: planningRes.data.percentage, 
+        stats: planningRes.data.stats 
+      });
+    } catch (err) {
+      console.error('Erreur Refresh Data:', err);
+    }
+  };
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -88,134 +94,90 @@ export default function Dashboard() {
       showToast('Médicament supprimé');
       setIsConfirmDeleteOpen(false);
       setMedToDeleteId(null);
-      setAllMedicaments(prev => prev.filter(m => m.id !== medToDeleteId));
+      refreshData();
     } catch {
       showToast('Erreur lors de la suppression', 'error');
     }
   };
 
-  const handleTogglePrise = async (rappelId, isPris) => {
-    try {
-      const res = await api.post(`/rappels/${rappelId}/toggle`, { pris: isPris });
-      showToast(isPris ? 'Prise confirmée' : 'Prise annulée');
-      setTimelineEvents(prev => prev.map(e => e.id === rappelId ? { ...e, pris: res.data.pris } : e));
-      setAllMedicaments(prev => prev.map(m => {
-        const medName = timelineEvents.find(te => te.id === rappelId)?.nom;
-        if (m.nom === medName) return { ...m, quantite: res.data.quantite };
-        return m;
-      }));
-    } catch {
-      showToast('Erreur lors de la mise à jour', 'error');
-    }
-  };
-
-  const refreshMeds = () => {
-    if (profilActif?.id) {
-      api.get(`/profils/${profilActif.id}/medicaments`)
-        .then(res => {
-          const data = res.data.medicaments || res.data || [];
-          setAllMedicaments(Array.isArray(data) ? data : []);
-        })
-        .catch(e => console.error(e));
-    }
-  };
-
-  // Mobile bottom nav items
-  const mobileNavItems = [
-    { id: 'overview',    label: 'Accueil',    icon: <LayoutDashboard size={20} /> },
-    { id: 'medicaments', label: 'Pharmacie',  icon: <Pill size={20} /> },
-    { id: 'family',      label: 'Gérer',      icon: <Users size={20} /> },
-    { id: 'profiles',    label: 'Profils',    icon: (
-      <div className="relative">
-        <div className="h-6 w-6 bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-[10px] border border-slate-200">
-          {user?.profils?.find(p => p.id === profilActif?.id)?.nom?.charAt(0).toUpperCase() || 'M'}
-        </div>
-      </div>
-    ) },
-    { id: 'settings',    label: 'Réglages',   icon: <Settings size={20} /> },
-  ];
-
-  const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
-
   const renderContent = () => {
     switch (currentView) {
       case 'overview':
         return (
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-              <div className="space-y-0.5">
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Tableau de Bord</h1>
-                <p className="text-sm text-slate-500 font-medium">Gestion intelligente de vos traitements.</p>
+          <div className="space-y-8 animate-fade-up">
+            {/* Adherence & Stats Header */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-3">
+                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div className="space-y-1">
+                       <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bonjour, {user?.name.split(' ')[0]}</h1>
+                       <p className="text-sm font-medium text-slate-500">Voici l'état de santé de {profilActif?.nom} aujourd'hui.</p>
+                    </div>
+                    <button 
+                      onClick={() => { setMedicamentToEdit(null); setIsFormOpen(true); }}
+                      className="bg-brand-blue text-white h-11 px-6 text-sm font-bold shadow-lg shadow-brand-blue/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                    >
+                       <Plus size={18} /> Nouveau Médicament
+                    </button>
+                 </div>
+                 <DashboardStats medicaments={allMedicaments} timeline={[]} onCardClick={(v, f) => { if (v) setCurrentView(v); if (f) setInventoryFilter(f); }} />
               </div>
-              <button
-                onClick={() => { setMedicamentToEdit(null); setIsFormOpen(true); }}
-                className="med-btn-primary h-10 px-5 flex items-center gap-2 self-start sm:self-auto"
-              >
-                <Plus size={16} strokeWidth={2.5} />
-                <span className="text-sm font-semibold">Nouveau Médicament</span>
-              </button>
+              
+              {/* Radial Adherence Chart */}
+              <div className="bg-white border border-slate-100 p-8 flex flex-col items-center justify-center shadow-tiny group relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-24 h-24 bg-brand-blue/5 rounded-full -mr-12 -mt-12 group-hover:scale-125 transition-transform duration-700"></div>
+                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 relative">Observance</h3>
+                 <div className="relative h-28 w-28 flex items-center justify-center">
+                    <svg className="w-full h-full -rotate-90">
+                       <circle cx="56" cy="56" r="48" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-50" />
+                       <circle 
+                         cx="56" cy="56" r="48" fill="none" stroke="currentColor" strokeWidth="8" 
+                         strokeDasharray="301.6" 
+                         strokeDashoffset={301.6 - (301.6 * adherenceData.percentage) / 100} 
+                         className="text-brand-blue transition-all duration-1000 ease-out" 
+                         strokeLinecap="round"
+                       />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                       <span className="text-2xl font-black text-slate-900 tracking-tighter">{adherenceData.percentage}%</span>
+                    </div>
+                 </div>
+                 <p className="text-[10px] font-bold text-slate-500 mt-6 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full">
+                    {adherenceData.stats.taken}/{adherenceData.stats.total} Prises
+                 </p>
+              </div>
             </div>
 
-            {/* Stats */}
-            <DashboardStats
-              medicaments={allMedicaments}
-              timeline={timelineEvents}
-              onCardClick={(view, filter) => {
-                if (view) setCurrentView(view);
-                if (filter) setInventoryFilter(filter);
-              }}
-            />
-
-            {/* Grid: Timeline + Inventory */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Planning */}
-              <div className="lg:col-span-8 space-y-4">
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <Calendar size={17} className="text-brand-blue" />
-                    <h2 className="text-base font-bold">Planning du Jour</h2>
+            {/* Main Grid: Planning + Stock */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+               <div className="lg:col-span-8">
+                  <div className="flex items-center justify-between mb-4 px-1">
+                     <h2 className="text-[11px] font-black uppercase text-slate-900 tracking-widest">Planning du jour</h2>
+                     <button onClick={() => setCurrentView('planning')} className="text-[10px] font-bold text-brand-blue uppercase tracking-widest hover:underline">Voir tout le planning</button>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:block">
-                    {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' })}
-                  </span>
-                </div>
-                <div className="bg-white border border-slate-200 p-4 sm:p-6 shadow-tiny">
-                  <Timeline
-                    showToast={showToast}
-                    searchTerm={searchTerm}
-                    events={timelineEvents}
-                    onTogglePrise={handleTogglePrise}
-                    onViewAll={() => setCurrentView('planning')}
-                  />
-                </div>
-              </div>
+                  <PlanningView showToast={showToast} activeProfileId={profilActif?.id} />
+               </div>
 
-              {/* Pharmacie */}
-              <div className="lg:col-span-4 space-y-4">
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <AlertTriangle size={17} className="text-brand-amber" />
-                    <h2 className="text-base font-bold">Pharmacie</h2>
+               <div className="lg:col-span-4 space-y-6">
+                  <div className="space-y-4">
+                     <h2 className="text-[11px] font-black uppercase text-slate-900 tracking-widest px-1">Alertes Stock</h2>
+                     <Inventory 
+                       isCompact={true} 
+                       limit={3} 
+                       filter="low" 
+                       medicamentsData={allMedicaments} 
+                       onDetails={handleShowDetails} 
+                       showToast={showToast} 
+                     />
                   </div>
-                  <button onClick={() => setCurrentView('medicaments')} className="text-[10px] font-bold text-brand-blue hover:underline uppercase tracking-wider">
-                    Voir Tout
-                  </button>
-                </div>
-                <div className="bg-white border border-slate-200 p-4 sm:p-6 shadow-tiny">
-                  <Inventory
-                    isCompact={true}
-                    showToast={showToast}
-                    searchTerm={searchTerm}
-                    onEdit={handleEdit}
-                    onDelete={openDeleteConfirm}
-                    onDetails={handleShowDetails}
-                    filter={inventoryFilter}
-                    setFilter={setInventoryFilter}
-                    medicamentsData={allMedicaments}
-                  />
-                </div>
-              </div>
+                  <div className="p-6 bg-slate-900 text-white space-y-4 shadow-xl">
+                     <div className="flex items-center gap-2 text-brand-blue">
+                        <AlertTriangle size={18} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white">Rappel Système</span>
+                     </div>
+                     <p className="text-xs font-medium text-slate-300 leading-relaxed">Pensez à vérifier vos dates d'expiration avant de synchroniser vos stocks.</p>
+                  </div>
+               </div>
             </div>
           </div>
         );
@@ -237,6 +199,13 @@ export default function Dashboard() {
           </div>
         );
 
+      case 'planning':
+        return (
+          <div className="animate-fade-up">
+            <PlanningView showToast={showToast} activeProfileId={profilActif?.id} />
+          </div>
+        );
+
       case 'family':
         return (
           <div className="animate-fade-up">
@@ -251,14 +220,13 @@ export default function Dashboard() {
           </div>
         );
 
-      case 'planning':
+      case 'shopping':
         return (
           <div className="animate-fade-up">
-            <PlanningView
-              events={timelineEvents}
-              onTogglePrise={handleTogglePrise}
-              setCurrentView={setCurrentView}
-              showToast={showToast}
+            <AchatsView 
+              showToast={showToast} 
+              activeProfileId={profilActif?.id} 
+              medicamentsData={allMedicaments}
             />
           </div>
         );
@@ -278,13 +246,8 @@ export default function Dashboard() {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="flex h-screen overflow-hidden">
-
-        {/* ── Sidebar (desktop only) ── */}
-        <aside className={`
-          bg-slate-900 transition-all duration-300 ease-in-out z-50 fixed lg:static inset-y-0 left-0
-          w-64
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}>
+        {/* Sidebar */}
+        <aside className={`bg-slate-900 z-50 fixed lg:static inset-y-0 left-0 w-64 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} transition-all duration-300`}>
           <DashboardSidebar
             currentView={currentView}
             setCurrentView={(v) => { setCurrentView(v); setSidebarOpen(false); }}
@@ -297,18 +260,10 @@ export default function Dashboard() {
           />
         </aside>
 
-        {/* ── Sidebar mobile backdrop ── */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+        {sidebarOpen && <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        {/* ── Main ── */}
+        {/* Main */}
         <main className="flex-1 flex flex-col min-w-0 bg-white lg:bg-slate-50">
-
-          {/* Header */}
           <DashboardHeader
             setSidebarOpen={setSidebarOpen}
             searchTerm={searchTerm}
@@ -317,113 +272,18 @@ export default function Dashboard() {
             setIsProfileOpen={setIsProfileOpen}
             setCurrentView={setCurrentView}
             allMedicaments={allMedicaments}
-            onSelectMedicament={(med) => handleShowDetails(med)}
+            onSelectMedicament={handleShowDetails}
             activeProfileId={profilActif?.id}
             onProfileSwitch={changerProfil}
           />
 
-          {/* Content */}
           <div className="flex-1 overflow-y-auto no-scrollbar">
-            {/* Bottom padding accounts for mobile nav bar */}
             <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-24 lg:pb-10">
               {renderContent()}
             </div>
           </div>
         </main>
       </div>
-
-      {/* ── Mobile Bottom Navigation ── */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] safe-bottom bg-white border-t border-slate-200 shadow-[0_-1px_3px_rgba(0,0,0,0.02)]">
-        <div className="flex items-center justify-around h-16 px-2">
-          {mobileNavItems.map(item => {
-            const isActive = currentView === item.id || (item.id === 'profiles' && isProfileSheetOpen);
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.id === 'profiles') {
-                    setIsProfileSheetOpen(true);
-                  } else {
-                    setCurrentView(item.id);
-                    setIsProfileSheetOpen(false);
-                  }
-                }}
-                className={`flex flex-col items-center justify-center w-full h-full transition-all ${
-                  isActive ? 'text-brand-blue' : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                <div className={`p-1 ${isActive ? 'scale-110' : ''} transition-transform`}>
-                  {item.icon}
-                </div>
-                <span className="text-[10px] font-semibold mt-1 tracking-tight">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* ── Mobile Profile Switcher Sheet ── */}
-      {isProfileSheetOpen && (
-        <div className="lg:hidden fixed inset-0 z-[150] flex items-end">
-          <div 
-            className="absolute inset-0 bg-slate-900/60 transition-opacity animate-fade-in" 
-            onClick={() => setIsProfileSheetOpen(false)} 
-          />
-          <div className="relative w-full bg-white border-t border-slate-200 p-6 pb-12 animate-fade-up">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-bold text-slate-900">Changer de Profil</h3>
-              <button 
-                onClick={() => setIsProfileSheetOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-900"
-              >
-                <Plus className="rotate-45" size={20} />
-              </button>
-            </div>
-            <div className="space-y-2">
-              {user?.profils?.map(profil => (
-                <button
-                  key={profil.id}
-                  onClick={() => {
-                    changerProfil(profil.id);
-                    setIsProfileSheetOpen(false);
-                    showToast(`Profil : ${profil.nom}`);
-                  }}
-                  className={`w-full flex items-center gap-4 p-4 border transition-all ${
-                    profilActif?.id === profil.id 
-                      ? 'bg-brand-blue/[0.03] border-brand-blue text-brand-blue' 
-                      : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'
-                  }`}
-                >
-                  <div className={`h-10 w-10 flex items-center justify-center font-bold border ${
-                    profilActif?.id === profil.id ? 'bg-brand-blue text-white border-brand-blue' : 'bg-slate-50 border-slate-100 text-slate-400'
-                  }`}>
-                    {profil.nom.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="text-left flex-1">
-                    <p className="text-sm font-bold leading-none">{profil.nom}</p>
-                    <p className="text-[10px] mt-1 opacity-70 uppercase tracking-wider font-semibold">{profil.relation}</p>
-                  </div>
-                  {profilActif?.id === profil.id && (
-                    <div className="h-2 w-2 bg-brand-blue" />
-                  )}
-                </button>
-              ))}
-              <button
-                onClick={() => {
-                  setCurrentView('family');
-                  setIsProfileSheetOpen(false);
-                }}
-                className="w-full flex items-center gap-4 p-4 border border-dashed border-slate-200 text-slate-400 hover:border-brand-blue/30 hover:text-brand-blue transition-all"
-              >
-                <div className="h-10 w-10 flex items-center justify-center border border-dashed border-slate-200">
-                  <Plus size={18} />
-                </div>
-                <span className="text-sm font-bold">Gérer les profils</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modals */}
       <MedicamentForm
@@ -432,8 +292,8 @@ export default function Dashboard() {
         onSuccess={() => {
           setIsFormOpen(false);
           setMedicamentToEdit(null);
-          showToast(medicamentToEdit ? 'Médicament mis à jour' : 'Médicament ajouté');
-          refreshMeds();
+          showToast(medicamentToEdit ? 'Mis à jour' : 'Ajouté');
+          refreshData();
         }}
         showToast={showToast}
         profilId={profilActif?.id}
@@ -443,7 +303,7 @@ export default function Dashboard() {
       <ConfirmModal
         isOpen={isConfirmDeleteOpen}
         title="Suppression"
-        message="Voulez-vous vraiment supprimer ce médicament ? Cette action est irréversible."
+        message="Voulez-vous supprimer ce médicament ?"
         onConfirm={handleDelete}
         onCancel={() => setIsConfirmDeleteOpen(false)}
       />
