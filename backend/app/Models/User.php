@@ -84,6 +84,14 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Préférences de notifications de l'utilisateur.
+     */
+    public function notificationPreference()
+    {
+        return $this->hasOne(NotificationPreference::class);
+    }
+
+    /**
      * Relation : Un utilisateur possède plusieurs médicaments à travers ses profils.
      */
     public function medicaments()

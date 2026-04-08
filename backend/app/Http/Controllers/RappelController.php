@@ -33,7 +33,7 @@ class RappelController extends Controller
         }
 
         $validated = $request->validate([
-            'moment' => 'required|string|in:matin,midi,soir,apres-midi,coucher,libre',
+            'moment' => 'required|string',
             'heure' => 'required|date_format:H:i',
         ]);
 
@@ -42,6 +42,25 @@ class RappelController extends Controller
         ActivityLog::log('RAPPEL_ADD', "Rappel ajouté pour {$medicament->nom} ({$rappel->moment} à {$rappel->heure})");
 
         return response()->json($rappel, 201);
+    }
+
+    /**
+     * Mise à jour d'un rappel existant.
+     */
+    public function update(Request $request, Medicament $medicament, Rappel $rappel)
+    {
+        if ($rappel->medicament->profil->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Accès non autorisé'], 403);
+        }
+
+        $validated = $request->validate([
+            'moment' => 'required|string',
+            'heure' => 'required|date_format:H:i',
+        ]);
+
+        $rappel->update($validated);
+
+        return response()->json($rappel);
     }
 
     /**

@@ -6,10 +6,12 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GroupeController;
 use App\Http\Controllers\MasterMedicamentController;
 use App\Http\Controllers\MedicamentController;
+use App\Http\Controllers\NotificationPreferenceController;
 use App\Http\Controllers\PriseController;
-use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\RappelController;
 use App\Http\Controllers\PlanningController;
+use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -57,8 +59,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Détail d'un médicament
         Route::get('/{medicamentId}', [MedicamentController::class, 'show']);
 
-        // Mettre à jour un médicament (mise à jour partielle acceptée)
-        Route::patch('/{medicamentId}', [MedicamentController::class, 'update']);
+        // Mettre à jour un médicament (PUT ou PATCH acceptés)
+        Route::match(['PUT', 'PATCH'], '/{medicamentId}', [MedicamentController::class, 'update']);
 
         // Supprimer un médicament
         Route::delete('/{medicamentId}', [MedicamentController::class, 'destroy']);
@@ -71,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Gestion des rappels par médicament
     Route::get('medicaments/{medicament}/rappels', [RappelController::class, 'index']);
     Route::post('medicaments/{medicament}/rappels', [RappelController::class, 'store']);
+    Route::match(['PUT', 'PATCH'], 'medicaments/{medicament}/rappels/{rappel}', [RappelController::class, 'update']);
     Route::delete('rappels/{rappel}', [RappelController::class, 'destroy']);
 
     // Suivi quotidien des prises
@@ -108,5 +111,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('groupes/accept', [GroupeController::class, 'acceptInvite']);
     Route::get('groupes/{groupe}', [GroupeController::class, 'show']);
     Route::delete('groupes/{groupe}', [GroupeController::class, 'destroy']);
-    Route::post('groupes/{groupe}/add-user', [GroupeController::class, 'addUser']);
+    // ——————————————————————————————————————————
+    // Notification Preferences
+    // ——————————————————————————————————————————
+    Route::get('notifications/preferences', [NotificationPreferenceController::class, 'index']);
+    Route::patch('notifications/preferences', [NotificationPreferenceController::class, 'update']);
+
+    // ——————————————————————————————————————————
+    // Analytical Reports
+    // ——————————————————————————————————————————
+    Route::get('reports/summary', [ReportController::class, 'summary']);
+    Route::get('reports/history', [ReportController::class, 'history']);
 });
