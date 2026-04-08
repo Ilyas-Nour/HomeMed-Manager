@@ -3,12 +3,12 @@ import {
   Search, Bell, UserCircle, LogOut,
   ChevronDown, Command, Plus,
   Settings, PanelLeft,
-  Pill, ArrowRight, MousePointer2, Users, X
+  Pill, ArrowRight, MousePointer2, Users, X, AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 /**
- * DashboardHeader — Mobile-First · Product Precision
+ * DashboardHeader — Hub de Notifications et Recherche
  */
 export default function DashboardHeader({
   setSidebarOpen, searchTerm, setSearchTerm,
@@ -81,242 +81,131 @@ export default function DashboardHeader({
     setSelectedIndex(-1);
   };
 
+  // Logic pour les alertes réelles
+  const notifications = safeMeds.reduce((acc, med) => {
+    if (med.quantite < 5) {
+      acc.push({
+        id: `stock-${med.id}`,
+        title: 'Stock Critique',
+        message: `Plus que ${med.quantite} unité(s) de ${med.nom}.`,
+        icon: <AlertTriangle size={12} />,
+        color: 'text-red-500',
+        bg: 'bg-red-50'
+      });
+    }
+    if (med.date_expiration) {
+      const diff = Math.ceil((new Date(med.date_expiration) - new Date()) / (1000 * 60 * 60 * 24));
+      if (diff >= 0 && diff <= 30) {
+        acc.push({
+          id: `exp-${med.id}`,
+          title: 'Peremption Proche',
+          message: `${med.nom} expire dans ${diff} jours.`,
+          icon: <Pill size={12} />,
+          color: 'text-amber-500',
+          bg: 'bg-amber-50'
+        });
+      }
+    }
+    return acc;
+  }, []);
+
+  const hasUnread = notifications.length > 0 && !notificationsRead;
 
   return (
     <>
       <header className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-100 relative z-[60]">
-
-        {/* Left: hamburger + search */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 text-slate-500 hover:bg-slate-50 transition-all shrink-0"
-          >
-            <PanelLeft size={20} />
-          </button>
-
-          {/* Desktop search */}
+          <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-50 transition-all"><PanelLeft size={20} /></button>
+          
           <div className="relative group w-full max-w-md hidden sm:block" ref={searchRef}>
-            <div className="absolute left-3 top-1/2 -translate-y-1/2">
-              <Search size={14} className={`transition-colors ${showSuggestions ? 'text-brand-blue' : 'text-slate-400'}`} />
-            </div>
+            <div className="absolute left-3 top-1/2 -translate-y-1/2"><Search size={14} className="text-slate-400" /></div>
             <input
               type="text"
               value={searchTerm}
               onFocus={() => setShowSuggestions(true)}
-              onChange={(e) => { setSearchTerm(e.target.value); setShowSuggestions(true); setSelectedIndex(-1); }}
+              onChange={(e) => { setSearchTerm(e.target.value); setShowSuggestions(true); }}
               onKeyDown={handleKeyDown}
-              placeholder="Rechercher médicament, action..."
-              className="w-full h-9 pl-10 pr-12 bg-slate-50 border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-brand-blue focus:ring-0 outline-none transition-all"
+              placeholder="Rechercher..."
+              className="w-full h-9 pl-10 pr-12 bg-slate-50 border border-slate-200 text-sm focus:bg-white focus:border-brand-blue outline-none transition-all"
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1.5 py-0.5 border border-slate-200 bg-white text-[10px] font-bold text-slate-400 shadow-sm pointer-events-none">
-              <Command size={10} strokeWidth={3} /><span>K</span>
-            </div>
-
             {showSuggestions && (searchTerm.trim() !== '' || quickActions.length > 0) && (
-              <SuggestionsDropdown 
-                meds={filteredMeds} 
-                actions={quickActions} 
-                selectedIdx={selectedIndex} 
-                handleSelect={handleSelect}
-                setSelectedIndex={setSelectedIndex}
-              />
+              <SuggestionsDropdown meds={filteredMeds} actions={quickActions} selectedIdx={selectedIndex} handleSelect={handleSelect} setSelectedIndex={setSelectedIndex} />
             )}
           </div>
         </div>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-1 sm:gap-2 ml-3">
-
-          {/* Mobile search toggle */}
-          <button
-            onClick={() => setShowMobileSearch(true)}
-            className="sm:hidden p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all"
-          >
-            <Search size={18} />
-          </button>
-
-          {/* Notifications */}
+        <div className="flex items-center gap-2">
+          {/* Notifications Center */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all relative"
+              className="h-9 w-9 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all relative"
             >
-              <Bell size={18} strokeWidth={2} />
-              {!notificationsRead && (
-                <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-brand-green border border-white" />
-              )}
+              <Bell size={18} />
+              {hasUnread && <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white" />}
             </button>
 
             {isNotificationsOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 shadow-lg py-2 z-50 animate-fade-up">
-                <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between mb-1">
-                  <p className="text-sm font-bold text-slate-900">Notifications</p>
-                  <button 
-                    onClick={() => setIsNotificationsOpen(false)}
-                    className="text-slate-400 hover:text-slate-700 transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
+              <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 shadow-2xl py-2 z-50 animate-fade-up">
+                <div className="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">Alertes Médicales</h3>
+                  <button onClick={() => setIsNotificationsOpen(false)}><X size={14} className="text-slate-300" /></button>
                 </div>
-                
-                <div className="max-h-[300px] overflow-y-auto no-scrollbar">
-                  {!notificationsRead ? (
-                    <>
-                      <div className="px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center text-red-500">
-                            <ArrowRight size={10} />
-                          </div>
-                          <p className="text-xs font-bold text-slate-800">Stock Faible</p>
+                <div className="max-h-80 overflow-y-auto no-scrollbar">
+                  {notifications.length > 0 ? (
+                    notifications.map(n => (
+                      <div key={n.id} className="p-5 border-b border-slate-50 flex items-start gap-3 hover:bg-slate-50 transition-colors cursor-pointer group">
+                        <div className={`mt-1 h-7 w-7 flex items-center justify-center rounded-full ${n.bg} ${n.color} shadow-sm border border-white`}>{n.icon}</div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">{n.title}</p>
+                          <p className="text-sm font-bold text-slate-900 group-hover:text-brand-blue leading-tight transition-colors">{n.message}</p>
                         </div>
-                        <p className="text-sm text-slate-600">Plus que 5 comprimés de Doliprane pour Ilyass.</p>
-                        <p className="text-[10px] text-slate-400 mt-1 font-medium">Aujourd'hui · 09:41</p>
                       </div>
-                      
-                      <div className="px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="h-5 w-5 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue">
-                            <Pill size={10} />
-                          </div>
-                          <p className="text-xs font-bold text-slate-800">Prise Médicamenteuse</p>
-                        </div>
-                        <p className="text-sm text-slate-600">N'oubliez pas l'Amoxicilline à 12:00.</p>
-                        <p className="text-[10px] text-slate-400 mt-1 font-medium">Aujourd'hui · 11:30</p>
-                      </div>
-                    </>
+                    ))
                   ) : (
-                    <div className="py-8 text-center text-slate-400 space-y-2">
-                      <Bell size={24} className="mx-auto opacity-20" />
-                      <p className="text-xs font-medium">Aucune nouvelle notification</p>
+                    <div className="py-16 text-center text-slate-300">
+                      <Bell size={32} className="mx-auto opacity-20 mb-4" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">Tout est sous contrôle</p>
+                      <p className="text-[9px] font-bold opacity-60 mt-1">Aucune alerte de stock ou péremption.</p>
                     </div>
                   )}
                 </div>
-
-                {!notificationsRead && (
-                  <>
-                    <div className="h-px bg-slate-50 my-1" />
-                    <button
-                      onClick={() => setNotificationsRead(true)}
-                      className="w-full text-[10px] font-bold text-brand-blue uppercase tracking-tight py-2 hover:bg-brand-blue/5 transition-colors"
-                    >
-                      Tout marquer comme lu
-                    </button>
-                  </>
-                )}
               </div>
             )}
           </div>
 
-          <div className="h-4 w-px bg-slate-100 hidden sm:block" />
+          <div className="h-8 w-px bg-slate-100 mx-1 hidden sm:block" />
 
-          {/* Profile dropdown */}
+          {/* User Profile */}
           <div className="relative">
-            <button
+            <button 
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-2 p-1.5 sm:pr-2 hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100"
+              className="h-8 w-8 bg-slate-900 text-white flex items-center justify-center font-black text-[10px] shadow-sm hover:scale-105 transition-all"
             >
-              <div className="h-8 w-8 bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs">
-                {user?.name?.charAt(0).toUpperCase() || 'M'}
-              </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-xs font-bold text-slate-900 leading-none">{user?.name?.split(' ')[0] || 'Utilisateur'}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Membre Famille</p>
-              </div>
-              <ChevronDown size={14} className={`text-slate-400 transition-transform hidden sm:block ${isProfileOpen ? 'rotate-180' : ''}`} />
+              {user?.name?.charAt(0).toUpperCase() || 'H'}
             </button>
 
             {isProfileOpen && (
-              <>
-                <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 shadow-lg py-2 z-50">
-                  {/* User info */}
-                  <div className="px-4 py-3 border-b border-slate-50 mb-1">
-                    <p className="text-xs font-bold text-slate-900 truncate">{user?.name}</p>
-                    <p className="text-[10px] text-slate-400 truncate mt-0.5">{user?.email}</p>
-                  </div>
-                  <button
-                    onClick={() => { setCurrentView('settings'); setIsProfileOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-blue transition-all"
-                  >
-                    <UserCircle size={16} /><span>Mon Profil</span>
-                  </button>
-                  <button
-                    onClick={() => { setCurrentView('settings'); setIsProfileOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-brand-blue transition-all"
-                  >
-                    <Settings size={16} /><span>Paramètres</span>
-                  </button>
-                  <div className="h-px bg-slate-50 my-1" />
-                  <button
-                    onClick={logout}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-all font-medium"
-                  >
-                    <LogOut size={16} /><span>Déconnexion</span>
-                  </button>
-                </div>
-              </>
+              <div className="absolute right-0 mt-3 w-56 bg-white border border-slate-200 shadow-2xl py-2 z-50 animate-fade-up">
+                 <div className="px-4 py-3 border-b border-slate-50 mb-1">
+                    <p className="text-xs font-black text-slate-900 truncate">{user?.name}</p>
+                    <p className="text-[10px] font-bold text-slate-400 truncate mt-0.5">{user?.email}</p>
+                 </div>
+                 <button onClick={() => { setCurrentView('settings'); setIsProfileOpen(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-brand-blue flex items-center gap-3">
+                    <UserCircle size={14} /> Mon Compte
+                 </button>
+                 <button onClick={() => { setCurrentView('settings'); setIsProfileOpen(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-brand-blue flex items-center gap-3">
+                    <Settings size={14} /> Paramètres
+                 </button>
+                 <div className="h-px bg-slate-50 my-1" />
+                 <button onClick={logout} className="w-full text-left px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-3">
+                   <LogOut size={14} /> Déconnexion
+                 </button>
+              </div>
             )}
           </div>
         </div>
       </header>
-
-      {/* ── Mobile search overlay ── */}
-      {showMobileSearch && (
-        <div className="sm:hidden fixed inset-0 z-[80] bg-white flex flex-col">
-          <div className="flex items-center gap-3 p-4 border-b border-slate-100" ref={mobileSearchRef}>
-            <div className="relative flex-1">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-blue" />
-              <input
-                autoFocus
-                type="text"
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); }}
-                onKeyDown={handleKeyDown}
-                placeholder="Rechercher un médicament..."
-                className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-brand-blue/30 text-sm outline-none text-slate-900"
-              />
-            </div>
-            <button
-              onClick={() => { setShowMobileSearch(false); setSearchTerm(''); }}
-              className="h-11 w-11 flex items-center justify-center text-slate-400 hover:text-slate-700 bg-slate-50 shrink-0"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          {/* Mobile suggestions list */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {filteredMeds.length === 0 && searchTerm.trim() === '' && (
-              <div className="text-center py-16 text-slate-300">
-                <Search size={40} className="mx-auto mb-3 opacity-40" />
-                <p className="text-sm font-medium">Tapez pour rechercher</p>
-              </div>
-            )}
-            {filteredMeds.map((med) => (
-              <button
-                key={med.id}
-                onClick={() => { handleSelect(med); setShowMobileSearch(false); }}
-                className="w-full flex items-center gap-4 p-4 bg-white border border-slate-100 shadow-sm hover:border-brand-blue/20 transition-all text-left"
-              >
-                <div className="h-10 w-10 bg-slate-50 border border-slate-100 flex items-center justify-center text-brand-blue">
-                  <Pill size={18} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-900 truncate">{med.nom}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{med.type} · Stock: {med.quantite}</p>
-                </div>
-                <ArrowRight size={16} className="text-slate-300 shrink-0" />
-              </button>
-            ))}
-            {filteredMeds.length === 0 && searchTerm.trim() !== '' && (
-              <div className="text-center py-12 text-slate-300">
-                <p className="text-sm font-medium text-slate-400">Aucun résultat pour "{searchTerm}"</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </>
   );
 }
@@ -324,65 +213,19 @@ export default function DashboardHeader({
 const SuggestionsDropdown = ({ meds, actions, selectedIdx, handleSelect, setSelectedIndex }) => (
   <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 shadow-2xl overflow-hidden z-[70]">
     <div className="p-2 space-y-1">
-      {meds.length > 0 && (
-        <div className="px-3 py-2">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Médicaments</p>
-          <div className="mt-2 space-y-1">
-            {meds.map((med, idx) => (
-              <button
-                key={med.id}
-                onClick={() => handleSelect(med)}
-                onMouseEnter={() => setSelectedIndex(idx)}
-                className={`w-full flex items-center justify-between p-2 transition-all ${selectedIdx === idx ? 'bg-brand-blue/5 text-brand-blue' : 'hover:bg-slate-50 text-slate-700'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`h-8 w-8 flex items-center justify-center border ${selectedIdx === idx ? 'bg-white border-brand-blue/20' : 'bg-slate-50 border-slate-100'}`}>
-                    <Pill size={14} />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-bold leading-none">{med.nom}</p>
-                    <p className="text-[10px] font-medium opacity-60 mt-0.5">{med.type}</p>
-                  </div>
-                </div>
-                <ArrowRight size={12} className={`transition-transform ${selectedIdx === idx ? 'opacity-100' : 'opacity-0'}`} />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {actions.length > 0 && (
-        <div className={`px-3 py-2 ${meds.length > 0 ? 'border-t border-slate-50' : ''}`}>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Actions</p>
-          <div className="mt-2 space-y-1">
-            {actions.map((action, idx) => {
-              const actualIdx = idx + meds.length;
-              return (
-                <button
-                  key={action.id}
-                  onClick={() => handleSelect(action)}
-                  onMouseEnter={() => setSelectedIndex(actualIdx)}
-                  className={`w-full flex items-center gap-3 p-2 transition-all ${selectedIdx === actualIdx ? 'bg-brand-blue/5 text-brand-blue' : 'hover:bg-slate-50 text-slate-700'}`}
-                >
-                  <div className={`h-8 w-8 flex items-center justify-center border ${selectedIdx === actualIdx ? 'bg-white border-brand-blue/20' : 'bg-slate-50 border-slate-100'}`}>
-                    {action.icon}
-                  </div>
-                  <span className="text-xs font-bold">{action.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-
-    <div className="bg-slate-50 px-4 py-2 flex items-center gap-4 border-t border-slate-100">
-      <span className="text-[9px] font-bold text-slate-400 uppercase flex items-center gap-1.5">
-        <MousePointer2 size={10} /> Sélectionner
-      </span>
-      <span className="text-[9px] font-bold text-slate-400 uppercase">
-        ESC pour fermer
-      </span>
+      {meds.map((med, idx) => (
+        <button key={med.id} onClick={() => handleSelect(med)} onMouseEnter={() => setSelectedIndex(idx)} className={`w-full flex items-center gap-3 p-2 transition-all ${selectedIdx === idx ? 'bg-brand-blue/5 text-brand-blue' : 'hover:bg-slate-50 text-slate-700'}`}>
+          <div className="h-7 w-7 bg-slate-50 flex items-center justify-center border border-slate-100"><Pill size={14} className="text-slate-400" /></div>
+          <span className="text-xs font-bold">{med.nom}</span>
+        </button>
+      ))}
+      {meds.length > 0 && <div className="h-px bg-slate-50 my-1" />}
+      {actions.map((action, idx) => (
+        <button key={action.id} onClick={() => handleSelect(action)} onMouseEnter={() => setSelectedIndex(idx + meds.length)} className="w-full flex items-center gap-3 p-2 hover:bg-slate-50 text-slate-700">
+          <div className="h-7 w-7 bg-slate-50 flex items-center justify-center border border-slate-100">{action.icon}</div>
+          <span className="text-xs font-bold">{action.label}</span>
+        </button>
+      ))}
     </div>
   </div>
 );

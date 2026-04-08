@@ -16,6 +16,12 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        const profilId = localStorage.getItem('profil_actif_id');
+        if (profilId) {
+            config.headers['X-Profil-Id'] = profilId;
+        }
+        
         return config;
     },
     (error) => Promise.reject(error)

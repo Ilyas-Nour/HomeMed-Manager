@@ -9,6 +9,7 @@ use App\Http\Controllers\MedicamentController;
 use App\Http\Controllers\PriseController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\RappelController;
+use App\Http\Controllers\PlanningController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -84,9 +85,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // ——————————————————————————————————————————
     // Gestion des Achats (Requirement 3.6)
     // ——————————————————————————————————————————
-    Route::get('achats', [AchatController::class, 'index']);
-    Route::post('achats', [AchatController::class, 'store']);
-    Route::delete('achats/{achat}', [AchatController::class, 'destroy']);
+    // Planning & Suivi des prises
+    Route::get('/planning', [PlanningController::class, 'index']);
+    Route::post('/prises/toggle', [PriseController::class, 'toggle']);
+
+    // Achats (Shopping List)
+    Route::apiResource('achats', AchatController::class)->except(['show']);
 
     // ——————————————————————————————————————————
     // Administration & Supervision (Requirement 4)
@@ -101,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ——————————————————————————————————————————
     Route::get('groupes', [GroupeController::class, 'index']);
     Route::post('groupes', [GroupeController::class, 'store']);
+    Route::post('groupes/accept', [GroupeController::class, 'acceptInvite']);
     Route::get('groupes/{groupe}', [GroupeController::class, 'show']);
     Route::delete('groupes/{groupe}', [GroupeController::class, 'destroy']);
     Route::post('groupes/{groupe}/add-user', [GroupeController::class, 'addUser']);

@@ -9,8 +9,13 @@ class Achat extends Model
 {
     use HasFactory;
 
+    const STATUT_PENDING   = 'pending';
+    const STATUT_COMPLETED = 'completed';
+
     protected $fillable = [
         'medicament_id',
+        'statut',
+        'label',
         'pharmacie',
         'prix',
         'quantite',
