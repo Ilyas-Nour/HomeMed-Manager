@@ -23,4 +23,12 @@ class Groupe extends Model
     {
         return $this->belongsToMany(User::class, 'groupe_user')->withPivot('role')->withTimestamps();
     }
+
+    /**
+     * Invitations envoyées pour ce groupe.
+     */
+    public function invitations()
+    {
+        return $this->hasMany(GroupInvitation::class);
+    }
 }
