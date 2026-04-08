@@ -1,11 +1,15 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, Pill, Clock, Calendar, AlertTriangle, ShieldCheck, ArrowRight, Package } from 'lucide-react';
+import { 
+  X, Pill, Clock, Calendar, AlertTriangle, 
+  ShieldCheck, ArrowRight, Package, Edit3, Trash2 
+} from 'lucide-react';
 
 /**
- * MedicamentDetailsModal — Mobile-First bottom-sheet on mobile, centered modal on desktop
+ * MedicamentDetailsModal — Product Precision "Sleek & Clean"
+ * Transformé en centre de contrôle avec actions de modification et suppression.
  */
-export default function MedicamentDetailsModal({ isOpen, onClose, medicament }) {
+export default function MedicamentDetailsModal({ isOpen, onClose, medicament, onEdit, onDelete }) {
   if (!isOpen || !medicament) return null;
 
   const isExpired  = medicament.date_expiration && new Date(medicament.date_expiration) < new Date();
@@ -47,16 +51,34 @@ export default function MedicamentDetailsModal({ isOpen, onClose, medicament }) 
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all shrink-0"
-          >
-            <X size={18} />
-          </button>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { onEdit(medicament); onClose(); }}
+              className="h-8 w-8 flex items-center justify-center text-brand-blue bg-blue-50 hover:bg-brand-blue hover:text-white transition-all border border-blue-100"
+              title="Modifier"
+            >
+              <Edit3 size={14} />
+            </button>
+            <button
+              onClick={() => { onDelete(medicament.id); onClose(); }}
+              className="h-8 w-8 flex items-center justify-center text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-all border border-red-100"
+              title="Supprimer"
+            >
+              <Trash2 size={14} />
+            </button>
+            <div className="w-px h-8 bg-slate-100 mx-1 hidden sm:block" />
+            <button
+              onClick={onClose}
+              className="h-8 w-8 flex items-center justify-center text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all shrink-0"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6 no-scrollbar pb-32">
 
           {/* Posologie */}
           <div className="space-y-2">
@@ -64,6 +86,27 @@ export default function MedicamentDetailsModal({ isOpen, onClose, medicament }) 
             <div className="p-4 bg-slate-50 border border-slate-100 text-sm text-slate-700 leading-relaxed font-medium italic shadow-inner">
               "{medicament.posologie || 'Aucune instruction consignée.'}"
             </div>
+          </div>
+
+          {/* Protocol Section */}
+          <div className="space-y-3">
+             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-2">
+                <Clock size={12} /> Protocole de Rappel
+             </p>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {medicament.rappels && medicament.rappels.length > 0 ? (
+                   medicament.rappels.map((r, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 bg-white border border-slate-100">
+                         <span className="text-[11px] font-bold text-slate-500 uppercase">{r.moment}</span>
+                         <span className="text-sm font-black text-slate-900 tracking-tighter">{r.heure}</span>
+                      </div>
+                   ))
+                ) : (
+                   <div className="col-span-full py-3 text-center bg-slate-50 border border-dashed border-slate-200">
+                      <p className="text-[10px] font-bold text-slate-400">Aucun horaire configuré.</p>
+                   </div>
+                )}
+             </div>
           </div>
 
           {/* Metrics grid */}
@@ -103,17 +146,17 @@ export default function MedicamentDetailsModal({ isOpen, onClose, medicament }) 
           {/* Dates cycle */}
           {(medicament.date_debut || medicament.date_fin) && (
             <div className="space-y-2">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Chronologie</p>
-              <div className="flex items-center gap-2 bg-slate-50 p-3 border border-slate-100">
-                <div className="flex-1 bg-white p-3 border border-slate-100 text-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Chronologie du traitement</p>
+              <div className="flex items-center gap-2 bg-slate-50 p-2 border border-slate-50">
+                <div className="flex-1 bg-white p-3 border border-slate-100 text-center shadow-sm">
                   <p className="text-[9px] font-bold text-slate-300 uppercase tracking-tight mb-1">Début</p>
                   <p className="text-xs font-bold text-slate-700">
                     {medicament.date_debut ? new Date(medicament.date_debut).toLocaleDateString('fr-FR') : '—'}
                   </p>
                 </div>
                 <ArrowRight size={14} className="text-brand-blue shrink-0" strokeWidth={2.5} />
-                <div className="flex-1 bg-white p-3 border border-slate-100 text-center">
-                  <p className="text-[9px] font-bold text-slate-300 uppercase tracking-tight mb-1">Fin</p>
+                <div className="flex-1 bg-white p-3 border border-slate-100 text-center shadow-sm">
+                   <p className="text-[9px] font-bold text-slate-300 uppercase tracking-tight mb-1">Fin</p>
                   <p className="text-xs font-bold text-slate-700">
                     {medicament.date_fin ? new Date(medicament.date_fin).toLocaleDateString('fr-FR') : 'N/D'}
                   </p>
@@ -124,10 +167,10 @@ export default function MedicamentDetailsModal({ isOpen, onClose, medicament }) 
 
           {/* Notes */}
           {medicament.notes && (
-            <div className="space-y-2">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Notes Cliniques</p>
-              <div className="p-4 bg-slate-50 border border-slate-100">
-                <p className="text-xs font-medium text-slate-500 leading-relaxed italic">{medicament.notes}</p>
+            <div className="space-y-2 pb-6">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Notes & Observations</p>
+              <div className="p-4 bg-white border border-slate-100 border-l-brand-blue border-l-4">
+                <p className="text-xs font-medium text-slate-600 leading-relaxed italic">{medicament.notes}</p>
               </div>
             </div>
           )}
@@ -137,10 +180,10 @@ export default function MedicamentDetailsModal({ isOpen, onClose, medicament }) 
         <div className="px-5 sm:px-7 py-4 sm:py-5 border-t border-slate-100 bg-white">
           <button
             onClick={onClose}
-            className="med-btn-primary w-full h-12 text-sm font-bold flex items-center justify-center gap-2"
+            className="med-btn-primary w-full h-12 text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-brand-blue/10"
           >
             <ShieldCheck size={17} strokeWidth={2.5} />
-            Fermer
+            Fermer les détails
           </button>
         </div>
       </div>

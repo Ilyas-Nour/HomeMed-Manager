@@ -194,12 +194,16 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                     <label className="med-form-label">Forme Galénique</label>
                     <div className="relative">
                       <select
+                        value={formData.type}
+                        onChange={e => setFormData({ ...formData, type: e.target.value })}
                         className="med-input appearance-none px-4 bg-slate-50 border border-slate-200 focus:bg-white transition-all text-xs font-semibold"
                       >
                         {typesMed.map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                        <ChevronDown size={14} />
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                          <ChevronDown size={14} />
+                        </div>
                       </div>
                     </div>
                  </div>
@@ -247,6 +251,8 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                     <label className="med-form-label">Stock Initial</label>
                     <input
                       type="number" min="0" required
+                      value={formData.quantite}
+                      onChange={e => setFormData({ ...formData, quantite: parseInt(e.target.value) || 0 })}
                       className="med-input text-center font-bold border-slate-200"
                     />
                  </div>
@@ -254,6 +260,8 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                     <label className="med-form-label">Seuil Critique</label>
                     <input
                       type="number" min="0"
+                      value={formData.seuil_alerte}
+                      onChange={e => setFormData({ ...formData, seuil_alerte: parseInt(e.target.value) || 0 })}
                       className="med-input text-center font-bold text-brand-amber border-slate-200"
                     />
                  </div>
