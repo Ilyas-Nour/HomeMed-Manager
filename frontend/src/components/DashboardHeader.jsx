@@ -113,11 +113,17 @@ export default function DashboardHeader({
 
   return (
     <>
-      <header className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-100 relative z-[60]">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-50 transition-all"><PanelLeft size={20} /></button>
+      <header className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-100 relative z-30">
+        <div className="flex items-center gap-3 min-w-0">
+          <button 
+            onClick={() => setSidebarOpen(true)} 
+            className="lg:hidden h-10 w-10 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all shrink-0"
+          >
+            <PanelLeft size={20} />
+          </button>
           
-          <div className="relative group w-full max-w-md hidden sm:block" ref={searchRef}>
+          {/* 🔍 Desktop Search Bar */}
+          <div className="relative group w-full max-w-md hidden lg:block" ref={searchRef}>
             <div className="absolute left-3 top-1/2 -translate-y-1/2"><Search size={14} className="text-slate-400" /></div>
             <input
               type="text"
@@ -125,8 +131,8 @@ export default function DashboardHeader({
               onFocus={() => setShowSuggestions(true)}
               onChange={(e) => { setSearchTerm(e.target.value); setShowSuggestions(true); }}
               onKeyDown={handleKeyDown}
-              placeholder="Rechercher..."
-              className="w-full h-9 pl-10 pr-12 bg-slate-50 border border-slate-200 text-sm focus:bg-white focus:border-brand-blue outline-none transition-all"
+              placeholder="Rechercher un médicament..."
+              className="w-full h-10 pl-10 pr-12 bg-slate-50 border border-slate-100 text-sm font-medium focus:bg-white focus:border-brand-blue outline-none transition-all"
             />
             {showSuggestions && (searchTerm.trim() !== '' || quickActions.length > 0) && (
               <SuggestionsDropdown meds={filteredMeds} actions={quickActions} selectedIdx={selectedIndex} handleSelect={handleSelect} setSelectedIndex={setSelectedIndex} />
@@ -180,7 +186,7 @@ export default function DashboardHeader({
           <div className="relative">
             <button 
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="h-8 w-8 bg-slate-900 text-white flex items-center justify-center font-black text-[10px] shadow-sm hover:scale-105 transition-all"
+              className="h-8 w-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-[10px] shadow-sm hover:scale-105 transition-all"
             >
               {user?.name?.charAt(0).toUpperCase() || 'H'}
             </button>

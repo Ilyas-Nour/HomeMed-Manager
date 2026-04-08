@@ -72,36 +72,6 @@ export default function PlanningView({ showToast, activeProfileId }) {
   return (
     <div className="space-y-8 animate-fade-up">
       
-      {/* Adherence Header Card */}
-      <div className="p-8 bg-white border border-slate-100 shadow-tiny overflow-hidden relative group">
-         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700"></div>
-         <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="space-y-2 text-center md:text-left">
-               <h2 className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Observance du jour</h2>
-               <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-slate-900 tracking-tighter">{percentage}%</span>
-                  <span className="text-sm font-bold text-slate-400 uppercase tracking-tight">Effectué</span>
-               </div>
-               <p className="text-xs font-medium text-slate-500">
-                  {stats.taken} sur {stats.total} doses prises aujourd'hui.
-               </p>
-            </div>
-
-            {/* Scale-style progress */}
-            <div className="w-full md:w-64 space-y-3">
-               <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                  <div 
-                    className="h-full bg-brand-blue transition-all duration-1000 ease-out" 
-                    style={{ width: `${percentage}%` }}
-                  ></div>
-               </div>
-               <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                  <span>0%</span>
-                  <span>Target: 100%</span>
-               </div>
-            </div>
-         </div>
-      </div>
 
       {/* Daily Timeline */}
       <div className="grid grid-cols-1 gap-12">

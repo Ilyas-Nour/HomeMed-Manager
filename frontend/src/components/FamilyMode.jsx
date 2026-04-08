@@ -83,7 +83,7 @@ export default function FamilyMode({ onProfileSwitch, setCurrentView }) {
             {user?.profils?.map(profil => (
                 <div key={profil.id} className="group relative bg-white border border-slate-200 p-4 sm:p-5 hover:border-brand-blue/20 transition-all duration-200">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="h-11 w-11 sm:h-12 sm:w-12 flex items-center justify-center bg-slate-50 text-slate-400 border border-slate-100 group-hover:bg-brand-blue group-hover:text-white group-hover:border-brand-blue transition-all duration-200 font-bold text-sm">
+                        <div className="h-11 w-11 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 border border-slate-100 group-hover:bg-brand-blue group-hover:text-white group-hover:border-brand-blue transition-all duration-200 font-bold text-sm">
                            {profil.nom.charAt(0).toUpperCase()}
                         </div>
                         <button

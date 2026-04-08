@@ -12,13 +12,15 @@ import SettingsView from '../components/SettingsView';
 import ReportsView from '../components/ReportsView';
 import PlanningView from '../components/PlanningView';
 import AchatsView from '../components/AchatsView';
+import AdminView from '../components/AdminView';
+import MobileBottomNav from '../components/MobileBottomNav';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import MedicamentDetailsModal from '../components/MedicamentDetailsModal';
 import {
   Plus, Calendar, AlertTriangle,
   LayoutDashboard, Pill,
-  Users, Settings
+  Users, Settings, X, TrendingUp
 } from 'lucide-react';
 
 /**
@@ -40,6 +42,14 @@ export default function Dashboard() {
   const [medToDeleteId, setMedToDeleteId] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [medToDetail, setMedToDetail] = useState(null);
+  const [showReminder, setShowReminder] = useState(() => {
+    return localStorage.getItem('hide_system_reminder') !== 'true';
+  });
+
+  const handleDismissReminder = () => {
+    setShowReminder(false);
+    localStorage.setItem('hide_system_reminder', 'true');
+  };
 
   const [allMedicaments, setAllMedicaments] = useState([]);
   const [adherenceData, setAdherenceData] = useState({ percentage: 0, stats: { taken: 0, total: 0 } });
@@ -120,20 +130,27 @@ export default function Dashboard() {
                        <Plus size={18} /> Nouveau Médicament
                     </button>
                  </div>
-                 <DashboardStats medicaments={allMedicaments} timeline={[]} onCardClick={(v, f) => { if (v) setCurrentView(v); if (f) setInventoryFilter(f); }} />
+                  <DashboardStats 
+                    medicaments={allMedicaments} 
+                    adherence={adherenceData}
+                    onCardClick={(v, f) => { if (v) setCurrentView(v); if (f) setInventoryFilter(f); }} 
+                  />
               </div>
               
+              {/* Radial Adherence Chart */}
               {/* Radial Adherence Chart */}
               <div className="bg-white border border-slate-100 p-8 flex flex-col items-center justify-center shadow-tiny group relative overflow-hidden">
                  <div className="absolute top-0 right-0 w-24 h-24 bg-brand-blue/5 rounded-full -mr-12 -mt-12 group-hover:scale-125 transition-transform duration-700"></div>
                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 relative">Observance</h3>
                  <div className="relative h-28 w-28 flex items-center justify-center">
-                    <svg className="w-full h-full -rotate-90">
-                       <circle cx="56" cy="56" r="48" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-50" />
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                       {/* Background Track with safe margins */}
+                       <circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-50" />
+                       {/* Adherence Path - No more clipping */}
                        <circle 
-                         cx="56" cy="56" r="48" fill="none" stroke="currentColor" strokeWidth="8" 
-                         strokeDasharray="301.6" 
-                         strokeDashoffset={301.6 - (301.6 * adherenceData.percentage) / 100} 
+                         cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="8" 
+                         strokeDasharray="314.16" 
+                         strokeDashoffset={314.16 - (314.16 * adherenceData.percentage) / 100} 
                          className="text-brand-blue transition-all duration-1000 ease-out" 
                          strokeLinecap="round"
                        />
@@ -170,13 +187,21 @@ export default function Dashboard() {
                        showToast={showToast} 
                      />
                   </div>
-                  <div className="p-6 bg-slate-900 text-white space-y-4 shadow-xl">
-                     <div className="flex items-center gap-2 text-brand-blue">
-                        <AlertTriangle size={18} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-white">Rappel Système</span>
-                     </div>
-                     <p className="text-xs font-medium text-slate-300 leading-relaxed">Pensez à vérifier vos dates d'expiration avant de synchroniser vos stocks.</p>
-                  </div>
+                   {showReminder && (
+                      <div className="p-6 bg-slate-900 text-white space-y-4 shadow-xl relative group animate-fade-in">
+                         <button 
+                            onClick={handleDismissReminder}
+                            className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+                         >
+                            <X size={16} />
+                         </button>
+                         <div className="flex items-center gap-2 text-brand-blue">
+                            <AlertTriangle size={18} />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Conseil de Gestion</span>
+                         </div>
+                         <p className="text-xs font-medium text-slate-300 leading-relaxed pr-6">Pensez à vérifier vos dates d'expiration avant de synchroniser vos stocks pour garantir la sécurité de votre famille.</p>
+                      </div>
+                   )}
                </div>
             </div>
           </div>
@@ -236,6 +261,11 @@ export default function Dashboard() {
           <SettingsView showToast={showToast} setCurrentView={setCurrentView} />
         );
 
+      case 'admin':
+        return (
+          <AdminView showToast={showToast} />
+        );
+
       default:
         return null;
     }
@@ -278,12 +308,15 @@ export default function Dashboard() {
           />
 
           <div className="flex-1 overflow-y-auto no-scrollbar">
-            <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-24 lg:pb-10">
+            <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-32 lg:pb-10">
               {renderContent()}
             </div>
           </div>
         </main>
       </div>
+
+      {/* Mobile Nav */}
+      <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} user={user} />
 
       {/* Modals */}
       <MedicamentForm
@@ -312,6 +345,8 @@ export default function Dashboard() {
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         medicament={medToDetail}
+        onEdit={handleEdit}
+        onDelete={openDeleteConfirm}
       />
     </div>
   );
