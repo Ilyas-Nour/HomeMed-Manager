@@ -7,60 +7,89 @@ import {
 /**
  * DashboardStats — Mobile-First · 2-col on mobile, 4-col on desktop
  */
-export default function DashboardStats({ onCardClick, medicaments = [], timeline = [] }) {
+export default function DashboardStats({ onCardClick, medicaments = [], adherence = { percentage: 0, stats: { taken: 0, total: 0 } } }) {
   
   const actifsCount       = medicaments.length;
-  const totalRappels      = timeline.length;
-  const prisCount         = timeline.filter(e => e.pris).length;
-  const rappelsProgression = totalRappels > 0 ? Math.round((prisCount / totalRappels) * 100) : 0;
+  
+  // Observance logic from real API data
+  const rappelsProgression = adherence.percentage || 0;
+  const prisCount         = adherence.stats.taken || 0;
+  const totalRappels      = adherence.stats.total || 0;
+
+  // Stock Alerts logic
   const alertesCount      = medicaments.filter(m => m.stock_faible || m.quantite <= (m.seuil_alerte || 5)).length;
+  
+  // Smart Expiration logic
   const closestExpiration = [...medicaments]
     .filter(m => m.date_expiration)
     .sort((a, b) => new Date(a.date_expiration) - new Date(b.date_expiration))[0];
-  const daysToExpiration  = closestExpiration
-    ? Math.ceil((new Date(closestExpiration.date_expiration) - new Date()) / (1000 * 60 * 60 * 24))
-    : null;
+    
+  let expirationStatus = "Aucun";
+  let expirationColor = "bg-emerald-50 text-emerald-600";
+  let daysToExpiration = null;
+
+  if (closestExpiration) {
+    daysToExpiration = Math.ceil((new Date(closestExpiration.date_expiration) - new Date()) / (1000 * 60 * 60 * 24));
+    
+    if (daysToExpiration < 0) {
+      expirationStatus = "Expiré !";
+      expirationColor = "bg-red-50 text-red-600";
+    } else if (daysToExpiration <= 7) {
+      expirationStatus = "Urgent";
+      expirationColor = "bg-red-50 text-red-600";
+    } else if (daysToExpiration <= 30) {
+      expirationStatus = "Bientôt";
+      expirationColor = "bg-amber-50 text-amber-600";
+    } else {
+      expirationStatus = "Sécurisé";
+      expirationColor = "bg-emerald-50 text-emerald-600";
+    }
+  }
 
   const stats = [
     {
       label: 'Traitements',
       value: actifsCount.toString().padStart(2, '0'),
-      change: actifsCount > 0 ? `${actifsCount} actif(s)` : 'Aucun',
+      change: `${actifsCount} actif(s)`,
       isPositive: true,
       icon: <TrendingUp size={16} className="text-brand-blue" />,
       bg: 'bg-brand-blue/5',
       view: 'medicaments',
-      filter: 'all'
+      filter: 'all',
+      statusColor: "bg-emerald-50 text-emerald-600"
     },
     {
-      label: 'Observance',
-      value: `${rappelsProgression}%`,
-      change: `${prisCount}/${totalRappels} pris`,
-      isPositive: rappelsProgression > 50,
+      label: 'Prises du Jour',
+      value: totalRappels.toString().padStart(2, '0'),
+      change: totalRappels > 0 ? "Planifié" : "Aucun",
+      isPositive: totalRappels > 0,
       icon: <Clock size={16} className="text-brand-green" />,
       bg: 'bg-brand-green/5',
-      view: 'overview',
-      filter: null
+      view: 'planning',
+      filter: null,
+      statusColor: totalRappels > 0 ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"
     },
     {
       label: 'Alertes Stock',
       value: alertesCount.toString().padStart(2, '0'),
-      change: alertesCount > 0 ? 'Action requise' : 'Optimal',
+      change: alertesCount > 0 ? `${alertesCount} alerte(s)` : 'Optimal',
       isPositive: alertesCount === 0,
       icon: <AlertTriangle size={16} className="text-brand-amber" />,
       bg: 'bg-amber-50',
       view: 'medicaments',
-      filter: 'stock'
+      filter: 'stock',
+      statusColor: alertesCount === 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
     },
     {
       label: 'Échéance',
       value: daysToExpiration !== null ? `${daysToExpiration}j` : '—',
-      change: closestExpiration ? closestExpiration.nom : 'Aucune',
-      isPositive: daysToExpiration > 7 || daysToExpiration === null,
+      change: expirationStatus,
+      isPositive: daysToExpiration === null || daysToExpiration > 30,
       icon: <Package size={16} className="text-slate-400" />,
       bg: 'bg-slate-50',
       view: 'medicaments',
-      filter: 'expired'
+      filter: 'expired',
+      statusColor: expirationColor
     }
   ];
 
@@ -76,7 +105,7 @@ export default function DashboardStats({ onCardClick, medicaments = [], timeline
             <div className={`h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center ${stat.bg} border border-white shadow-sm`}>
               {stat.icon}
             </div>
-            <div className={`px-1.5 sm:px-2 py-0.5 text-xs font-semibold ${stat.isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+            <div className={`px-1.5 sm:px-2 py-0.5 text-xs font-semibold ${stat.statusColor}`}>
               {stat.change}
             </div>
           </div>
