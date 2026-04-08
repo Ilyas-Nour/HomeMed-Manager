@@ -225,25 +225,47 @@ function PasswordPanel({ onBack, showToast }) {
 
 /* ─── Sub‑panel: Notifications ─── */
 function NotificationsPanel({ onBack, showToast }) {
-  const storageKey = 'homemed_notifications';
-  const [prefs, setPrefs] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(storageKey)) || {
-        push_medications: true,
-        push_renewals: true,
-        email_reports: false,
-        email_alerts: true,
-        sound: true,
-      };
-    } catch { return { push_medications: true, push_renewals: true, email_reports: false, email_alerts: true, sound: true }; }
+  const [prefs, setPrefs] = useState({
+    push_medications: true,
+    push_renewals: true,
+    email_reports: false,
+    email_alerts: true,
+    sound: true,
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchPrefs();
+  }, []);
+
+  const fetchPrefs = async () => {
+    try {
+      const res = await api.get('/notifications/preferences');
+      setPrefs(res.data);
+    } catch (e) {
+      console.error(e);
+      showToast('Erreur de chargement des préférences.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggle = (key) => {
-    setPrefs(prev => {
-      const next = { ...prev, [key]: !prev[key] };
-      localStorage.setItem(storageKey, JSON.stringify(next));
-      return next;
-    });
+    setPrefs(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.patch('/notifications/preferences', prefs);
+      showToast('Préférences de notifications enregistrées !');
+    } catch (e) {
+      console.error(e);
+      showToast("Erreur lors de l'enregistrement.", 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const notifSections = [
@@ -266,21 +288,32 @@ function NotificationsPanel({ onBack, showToast }) {
     }
   ];
 
+  if (loading) {
+    return (
+      <PanelLayout title="Notifications" icon={<Bell size={20} className="text-brand-amber" />} onBack={onBack}>
+         <div className="flex flex-col items-center justify-center py-24 opacity-30">
+            <Loader2 className="animate-spin text-brand-blue mb-4" size={32} />
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Synchronisation...</p>
+         </div>
+      </PanelLayout>
+    );
+  }
+
   return (
     <PanelLayout title="Notifications" icon={<Bell size={20} className="text-brand-amber" />} onBack={onBack}>
       <div className="space-y-6">
         {notifSections.map((section, idx) => (
-          <div key={idx} className="bg-white border border-slate-100 overflow-hidden">
+          <div key={idx} className="bg-white border border-slate-100 overflow-hidden shadow-sm">
             <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
               {section.icon}
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-tight">{section.title}</h3>
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{section.title}</h3>
             </div>
             <div className="divide-y divide-slate-50">
               {section.items.map(item => (
                 <div key={item.key} className="flex items-center justify-between p-5">
                   <div className="space-y-0.5 mr-4">
-                    <p className="text-sm font-bold text-slate-800">{item.label}</p>
-                    <p className="text-xs text-slate-400">{item.desc}</p>
+                    <p className="text-sm font-bold text-slate-900">{item.label}</p>
+                    <p className="text-xs text-slate-400 font-medium">{item.desc}</p>
                   </div>
                   <Toggle enabled={prefs[item.key]} onToggle={() => toggle(item.key)} />
                 </div>
@@ -289,10 +322,11 @@ function NotificationsPanel({ onBack, showToast }) {
           </div>
         ))}
         <button
-          onClick={() => showToast('Préférences de notifications enregistrées !')}
-          className="med-btn-primary w-full h-12 text-sm font-bold"
+          onClick={handleSave}
+          disabled={saving}
+          className="med-btn-primary w-full h-12 text-sm font-bold shadow-lg shadow-brand-blue/10"
         >
-          <Save size={16} className="mr-2" /> Enregistrer
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <><Save size={16} className="mr-2" /> Enregistrer les préférences</>}
         </button>
       </div>
     </PanelLayout>
