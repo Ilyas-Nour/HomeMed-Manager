@@ -14,8 +14,10 @@ use Illuminate\Database\Eloquent\Builder;
 class AchatResource extends Resource
 {
     protected static ?string $model = Achat::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+    protected static ?string $navigationGroup = 'Inventaire & Suivi';
+    protected static ?string $navigationLabel = 'Achats';
+    protected static ?string $modelLabel = 'Achat';
 
     public static function getEloquentQuery(): Builder
     {
@@ -28,7 +30,12 @@ class AchatResource extends Resource
             ->schema([
                 Forms\Components\Select::make('medicament_id')
                     ->relationship('medicament', 'nom')
-                    ->required(),
+                    ->searchable()
+                    ->placeholder('Sélectionner un médicament existant'),
+                Forms\Components\TextInput::make('medicament_nom_temp')
+                    ->label('Nom (si nouveau)')
+                    ->helperText('Utilisez ce champ si le médicament n\'est pas encore dans l\'inventaire.')
+                    ->maxLength(255),
                 Forms\Components\TextInput::make('pharmacie')
                     ->required()
                     ->maxLength(255),
@@ -50,6 +57,8 @@ class AchatResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('medicament.nom')
+                    ->label('Médicament')
+                    ->default(fn ($record) => $record->medicament_nom_temp)
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('pharmacie')

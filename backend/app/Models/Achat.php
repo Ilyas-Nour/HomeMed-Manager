@@ -13,7 +13,9 @@ class Achat extends Model
     const STATUT_COMPLETED = 'completed';
 
     protected $fillable = [
+        'profil_id',
         'medicament_id',
+        'medicament_nom_temp',
         'statut',
         'label',
         'pharmacie',
@@ -21,6 +23,14 @@ class Achat extends Model
         'quantite',
         'date_achat',
     ];
+
+    /**
+     * Chaque achat appartient à un profil.
+     */
+    public function profil()
+    {
+        return $this->belongsTo(Profil::class);
+    }
 
     /**
      * Chaque achat correspond à un médicament.

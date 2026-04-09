@@ -14,8 +14,10 @@ use Illuminate\Database\Eloquent\Builder;
 class MedicamentResource extends Resource
 {
     protected static ?string $model = Medicament::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-beaker';
+    protected static ?string $navigationGroup = 'Inventaire & Suivi';
+    protected static ?string $navigationLabel = 'Médicaments';
+    protected static ?string $modelLabel = 'Médicament';
 
     public static function getEloquentQuery(): Builder
     {

@@ -14,8 +14,10 @@ use Illuminate\Database\Eloquent\Builder;
 class GroupeResource extends Resource
 {
     protected static ?string $model = Groupe::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationGroup = 'Gestion Administrative';
+    protected static ?string $navigationLabel = 'Groupes';
+    protected static ?string $modelLabel = 'Groupe';
 
     public static function getEloquentQuery(): Builder
     {
@@ -45,8 +47,8 @@ class GroupeResource extends Resource
                 Tables\Columns\TextColumn::make('proprietaire.name')
                     ->label('Propriétaire')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('membres_count')
-                    ->counts('membres')
+                Tables\Columns\TextColumn::make('participants_count')
+                    ->counts('participants')
                     ->label('Membres'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Builder;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationGroup = 'Gestion Administrative';
+    protected static ?string $navigationLabel = 'Utilisateurs';
+    protected static ?string $modelLabel = 'Utilisateur';
 
     public static function getEloquentQuery(): Builder
     {
