@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../services/api';
 import { 
   X, Save, Pill, ClipboardList, Info, 
@@ -132,18 +133,18 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-fade-in" onClick={onClose} />
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={onClose} />
       
-      <div className="relative w-full sm:max-w-xl bg-white border border-slate-200 overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+      <div className="relative w-full sm:max-w-xl bg-white shadow-2xl rounded-t-[32px] sm:rounded-[32px] overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh] animate-fade-up">
         {/* Mobile drag handle */}
         <div className="flex justify-center pt-3 sm:hidden shrink-0">
           <div className="w-10 h-1 bg-slate-200" />
         </div>
         
         {/* Header */}
-        <div className="px-5 sm:px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
+        <div className="px-6 py-3 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
            <div className="flex items-center gap-3">
               <div className="h-9 w-9 sm:h-10 sm:w-10 bg-slate-50 border border-slate-100 flex items-center justify-center text-brand-blue">
                  <Pill size={17} strokeWidth={2.5} />
@@ -164,9 +165,9 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
         </div>
 
         {/* Content Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
            
-           <form onSubmit={handleSubmit} id="med-form" className="space-y-6">
+           <form onSubmit={handleSubmit} id="med-form" className="space-y-5">
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  {/* Nome e Type */}
@@ -215,45 +216,41 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                  <textarea
                    required placeholder="Ex: 1 unité après chaque repas principal..."
                    value={formData.posologie} onChange={e => setFormData({ ...formData, posologie: e.target.value })}
-                   className="med-input min-h-[90px] py-4 px-4 bg-slate-50/50 focus:bg-white resize-none leading-relaxed text-sm font-medium border border-slate-200"
+                   className="med-input min-h-[64px] py-3 px-4 bg-slate-50/50 focus:bg-white resize-none leading-relaxed text-sm font-medium border border-slate-100 rounded-xl transition-all"
                  />
               </div>
 
               {/* Cycle de Traitement */}
-              <div className="med-form-section space-y-6 pt-2">
-                 <div className="flex items-center gap-2 mb-2">
-                    <Calendar size={14} className="text-brand-blue" />
-                    <h3 className="text-xs font-semibold text-slate-500">Temporalité du Traitement</h3>
-                 </div>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                    <div className="med-form-field">
-                       <label className="med-form-label opacity-60">Date de Début</label>
-                       <input
-                         type="date" required
-                         value={formData.date_debut} onChange={e => setFormData({ ...formData, date_debut: e.target.value })}
-                         className="med-input border-slate-100 bg-white"
-                       />
-                    </div>
-                    <div className="med-form-field">
-                       <label className="med-form-label opacity-60">Date de Fin (Estimée)</label>
-                       <input
-                         type="date"
-                         value={formData.date_fin || ''} onChange={e => setFormData({ ...formData, date_fin: e.target.value })}
-                         className="med-input border-slate-100 bg-white"
-                       />
-                    </div>
+              <div className="pt-2">
+                 <div className="grid grid-cols-2 gap-4">
+                   <div className="med-form-field">
+                      <label className="med-form-label">Date Début</label>
+                      <input
+                        type="date" required
+                        value={formData.date_debut} onChange={e => setFormData({ ...formData, date_debut: e.target.value })}
+                        className="med-input border-slate-100 bg-slate-50/50 rounded-xl"
+                      />
+                   </div>
+                   <div className="med-form-field">
+                      <label className="med-form-label">Fin Estimée</label>
+                      <input
+                        type="date"
+                        value={formData.date_fin || ''} onChange={e => setFormData({ ...formData, date_fin: e.target.value })}
+                        className="med-input border-slate-100 bg-slate-50/50 rounded-xl"
+                      />
+                   </div>
                  </div>
               </div>
 
               {/* Stock et Expiration */}
-              <div className="bg-slate-50 border border-slate-100 p-4 sm:p-5 grid grid-cols-3 gap-3 sm:gap-5">
+              <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl grid grid-cols-3 gap-4">
                  <div className="med-form-field">
                     <label className="med-form-label">Stock Initial</label>
                     <input
                       type="number" min="0" required
                       value={formData.quantite}
                       onChange={e => setFormData({ ...formData, quantite: parseInt(e.target.value) || 0 })}
-                      className="med-input text-center font-bold border-slate-200"
+                      className="med-input text-center font-bold border-slate-200 rounded-xl"
                     />
                  </div>
                  <div className="med-form-field">
@@ -262,15 +259,15 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                       type="number" min="0"
                       value={formData.seuil_alerte}
                       onChange={e => setFormData({ ...formData, seuil_alerte: parseInt(e.target.value) || 0 })}
-                      className="med-input text-center font-bold text-brand-amber border-slate-200"
+                      className="med-input text-center font-bold text-brand-amber border-slate-200 rounded-xl"
                     />
                  </div>
                  <div className="med-form-field">
-                    <label className="med-form-label">Expiration Finale</label>
+                    <label className="med-form-label">Expiration</label>
                     <input
                       type="date"
                       value={formData.date_expiration || ''} onChange={e => setFormData({ ...formData, date_expiration: e.target.value })}
-                      className="med-input text-[11px] font-bold border-slate-200 bg-white"
+                      className="med-input text-[11px] font-bold border-slate-200 bg-white rounded-xl"
                     />
                  </div>
               </div>
@@ -368,6 +365,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
            </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

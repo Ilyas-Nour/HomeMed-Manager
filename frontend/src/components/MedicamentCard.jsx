@@ -1,115 +1,96 @@
 import React from 'react';
-import { 
-  Pill, Edit2, Trash2, ArrowRight,
-  Package, Clock
-} from 'lucide-react';
+import { Pill, Clock, Package, ChevronRight, Edit2, Trash2, ArrowRight } from 'lucide-react';
 
 /**
- * MedicamentCard — Mobile-First · Product Precision
+ * MedicamentCard — Sleek SaaS Design
  */
-export default function MedicamentCard({ medicament, isCompact, onEdit, onDelete, onDetails }) {
-  if (!medicament) return null;
+export default function MedicamentCard({ medicament, onEdit, onDelete, onDetails }) {
+  const stock = medicament.quantite || 0;
+  const status = medicament.statut || 'Optimal';
 
-  const isExpired     = medicament.date_expiration && new Date(medicament.date_expiration) < new Date();
-  const isOutOfStock  = medicament.quantite === 0;
-  const isStockLow    = !isOutOfStock && medicament.quantite <= (medicament.seuil_alerte || 5);
+  const getStatusStyles = (status) => {
+    switch (status.toLowerCase()) {
+      case 'bas':
+      case 'alerte':
+        return { bg: 'bg-rose-50', text: 'text-rose-600', dot: 'bg-rose-500' };
+      case 'épuisé':
+      case 'out':
+        return { bg: 'bg-slate-100', text: 'text-slate-500', dot: 'bg-slate-400' };
+      case 'attention':
+        return { bg: 'bg-amber-50', text: 'text-amber-600', dot: 'bg-amber-500' };
+      default:
+        return { bg: 'bg-indigo-50/50', text: 'text-brand-blue', dot: 'bg-brand-blue' };
+    }
+  };
 
-  // Near-expiry: within 30 days but not yet expired
-  const daysToExpiry  = medicament.date_expiration
-    ? Math.ceil((new Date(medicament.date_expiration) - new Date()) / (1000 * 60 * 60 * 24))
-    : null;
-  const isNearExpiry  = !isExpired && daysToExpiry !== null && daysToExpiry <= 30;
-
-  const statusColor = isExpired || isOutOfStock
-    ? 'bg-red-50 text-red-600 border-red-100'
-    : isStockLow || isNearExpiry
-    ? 'bg-amber-50 text-amber-600 border-amber-100'
-    : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-brand-blue group-hover:text-white group-hover:border-brand-blue/30';
-
-  const dotColor = isExpired || isOutOfStock ? 'bg-red-500' : (isStockLow || isNearExpiry) ? 'bg-amber-500' : medicament.is_incomplet ? 'bg-indigo-500' : 'bg-brand-green';
-  const statusLabel = isExpired ? 'Expiré' : isOutOfStock ? 'Stock Épuisé' : isStockLow ? 'Stock Faible' : isNearExpiry ? `Expire dans ${daysToExpiry}j` : medicament.is_incomplet ? 'À compléter' : 'Optimal';
+  const statusColors = getStatusStyles(status);
+  const isStockLow = stock <= (medicament.seuil_alerte || 5);
+  const isOutOfStock = stock === 0;
 
   return (
-    <div className={`
-      group relative bg-white border border-slate-200
-      transition-colors duration-200 hover:border-brand-blue/30 overflow-hidden
-      ${isCompact ? 'p-4' : 'p-5 flex flex-col h-full'}
-    `}>
-      {/* Alert strip */}
-      {(isExpired || isStockLow || medicament.is_incomplet) && (
-        <div className={`absolute top-0 left-0 right-0 h-0.5 ${isExpired ? 'bg-red-400' : medicament.is_incomplet ? 'bg-indigo-400' : 'bg-amber-400'}`} />
-      )}
-
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={`h-10 w-10 flex-shrink-0 flex items-center justify-center border shadow-sm transition-all ${medicament.is_incomplet ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : statusColor}`}>
-            <Pill size={18} strokeWidth={2.5} />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-slate-900 truncate group-hover:text-brand-blue transition-colors">
-              {medicament.nom}
-            </h3>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className={`h-1.5 w-1.5 ${dotColor}`} />
-              <span className="text-xs font-medium text-slate-500">{statusLabel}</span>
-            </div>
-          </div>
+    <div className="group bg-white border border-slate-100 rounded-[32px] p-4 sm:p-5 flex flex-col h-full relative shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 hover:border-brand-blue/10 active:scale-[0.99] overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute -right-4 -top-4 w-24 h-24 bg-slate-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      
+      <div className="flex justify-between items-start mb-5 relative z-10">
+        <div className={`h-12 w-12 flex items-center justify-center rounded-2xl ${statusColors.bg} ${statusColors.text} shadow-sm border border-white transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3`}>
+          <Pill size={22} strokeWidth={2.5} />
         </div>
-
-        {/* Actions — always visible on mobile, hover on desktop */}
-        <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-all shrink-0">
-          <button
-            onClick={() => onEdit && onEdit(medicament)}
-            className="p-2 text-slate-300 hover:text-brand-blue hover:bg-blue-50 transition-all"
-          >
-            <Edit2 size={14} />
-          </button>
-          <button
-            onClick={() => onDelete && onDelete(medicament.id)}
-            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </div>
-
-      {/* Data */}
-      <div className="flex-1 grid grid-cols-2 gap-2">
-        <div className="p-3 bg-slate-50 border border-slate-100">
-          <span className="text-xs font-medium text-slate-500 block mb-1">Stock</span>
-          <div className="flex items-center gap-1.5">
-            <Package size={14} className="text-slate-400 shrink-0" />
-            <span className={`text-sm font-semibold ${isOutOfStock ? 'text-red-600' : isStockLow ? 'text-amber-600' : 'text-slate-900'}`}>
-              {isOutOfStock ? 'Épuisé' : `${medicament.quantite} unités`}
+        <div className="flex flex-col items-end gap-1.5">
+          {isStockLow && (
+            <span className="bg-rose-50 text-rose-600 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-rose-100 animate-pulse">
+              Stock Bas
             </span>
-          </div>
-        </div>
-        <div className="p-3 bg-slate-50 border border-slate-100">
-          <span className="text-xs font-medium text-slate-500 block mb-1">Expiration</span>
-          <div className="flex items-center gap-1.5">
-            <Clock size={14} className="text-slate-400 shrink-0" />
-            <span className={`text-sm font-semibold ${isExpired ? 'text-red-600' : isNearExpiry ? 'text-amber-600' : 'text-slate-900'}`}>
-              {medicament.date_expiration
-                ? new Date(medicament.date_expiration).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
-                : 'N/A'}
-            </span>
+          )}
+          <div className={`badge-dna border-white ${statusColors.bg} ${statusColors.text}`}>
+            {status}
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-        <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-medium">
-          {medicament.type}
-        </span>
-        <button
-          onClick={() => onDetails && onDetails(medicament)}
-          className="flex items-center gap-1 text-sm font-medium text-brand-blue hover:text-blue-700 transition-colors group/btn"
+      <div className="flex-1 space-y-1.5 relative z-10">
+        <h3 className="text-lg font-bold text-slate-900 group-hover:text-brand-blue transition-colors truncate tracking-tight">
+          {medicament.nom}
+        </h3>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.1em] truncate">
+          {medicament.dosage} • {medicament.forme}
+        </p>
+      </div>
+
+      <div className="mt-6 pt-5 border-t border-slate-50 grid grid-cols-2 gap-4 relative z-10">
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Stock</p>
+          <div className="flex items-center gap-2">
+            <div className={`h-2 w-2 rounded-full ${isStockLow ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+            <p className={`text-sm font-bold ${isStockLow ? 'text-rose-600' : 'text-slate-800'}`}>{stock} <span className="text-[10px] text-slate-400 font-bold uppercase">{medicament.unite || 'unités'}</span></p>
+          </div>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Fréquence</p>
+          <div className="flex items-center gap-2">
+             <Clock size={14} className="text-slate-300" />
+             <p className="text-sm font-bold text-slate-800">{medicament.frequence || 'N/A'}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 flex gap-3 relative z-10">
+        <button 
+          onClick={() => onDetails(medicament)}
+          className="flex-1 h-11 px-6 rounded-xl bg-slate-50 text-slate-600 text-sm font-bold hover:bg-slate-100 hover:text-slate-900 transition-all flex items-center justify-center gap-2 active:scale-95"
         >
-          Détails <ArrowRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+          Détails
+        </button>
+        <button 
+          onClick={() => onEdit(medicament)}
+          className="h-11 w-11 flex items-center justify-center bg-indigo-50 text-brand-blue hover:bg-brand-blue hover:text-white rounded-xl transition-all shadow-sm hover:shadow-lg hover:shadow-brand-blue/20 active:scale-90"
+        >
+          <Edit2 size={18} />
         </button>
       </div>
+      
+      {/* Hover Background Accent */}
+      <div className="absolute inset-x-0 bottom-0 h-1 bg-brand-blue scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
     </div>
   );
 }
