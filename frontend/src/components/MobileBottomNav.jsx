@@ -15,7 +15,7 @@ export default function MobileBottomNav({ currentView, setCurrentView, user }) {
     { id: 'medicaments', label: 'Médocs',   icon: <Pill size={20} /> },
     { id: 'planning',    label: 'Planning', icon: <Calendar size={20} /> },
     { id: 'groups',      label: 'Groupes',  icon: <FolderHeart size={20} /> },
-    { id: 'settings',    label: 'Admin',    icon: user?.role === 'admin' ? <Shield size={20} /> : <Settings size={20} /> },
+    { id: 'settings',    label: 'Paramètres', icon: <Settings size={20} /> },
   ];
 
   return (

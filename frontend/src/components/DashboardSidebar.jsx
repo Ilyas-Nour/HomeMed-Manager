@@ -10,7 +10,7 @@ import {
  * DashboardSidebar — Mobile-First · Product Precision
  */
 export default function DashboardSidebar({
-  currentView, setCurrentView,
+  currentView, setCurrentView, navigateToSettings,
   setSidebarOpen, user, activeProfileId, onProfileSwitch
 }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function DashboardSidebar({
       items: [
         { id: 'settings', label: 'Paramètres', icon: <Settings size={18} /> },
         ...(user?.role === 'admin' ? [
-          { id: 'admin', label: 'Console Admin', icon: <Shield size={18} className="text-emerald-500" /> }
+          { id: 'admin', label: 'Paramètres Admin', icon: <Settings size={18} className="text-emerald-500" /> }
         ] : []),
       ]
     }
@@ -56,11 +56,11 @@ export default function DashboardSidebar({
           onClick={() => handleNav('overview')}
           className="flex items-center group"
         >
-          <div className="h-10 flex items-center overflow-hidden">
+          <div className="h-10 flex items-center px-1">
             <img 
               src="/HomeMed-Logo.png" 
               alt="HomeMed Logo" 
-              className="max-w-[140px] h-full object-contain transition-transform group-hover:scale-105" 
+              className="max-w-[140px] h-full object-contain transition-transform group-hover:scale-[1.03]" 
             />
           </div>
         </button>
@@ -86,7 +86,11 @@ export default function DashboardSidebar({
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleNav(item.id)}
+                  onClick={() => {
+                    if (item.id === 'settings') navigateToSettings(null);
+                    else if (item.id === 'admin') window.location.href = '/admin';
+                    else handleNav(item.id);
+                  }}
                   className={`
                     w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-150 group text-left
                     ${isActive
