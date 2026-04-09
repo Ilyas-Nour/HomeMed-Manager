@@ -5,23 +5,23 @@ import {
   Check, Eye, EyeOff, AlertTriangle,
   UserCircle, Mail, Key, Smartphone,
   ArrowLeft, ToggleLeft, ToggleRight,
-  Users, LogOut, Loader2
+  Users, LogOut, Loader2, ArrowRight
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 
-/* ─── Tiny reusable toggle ─── */
+/* ─── Tiny reusable toggle — Sleek SaaS ─── */
 function Toggle({ enabled, onToggle }) {
   return (
     <button
       type="button"
       onClick={onToggle}
-      className={`relative inline-flex h-6 w-11 items-center transition-colors duration-200 focus:outline-none ${
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-brand-blue/5 ${
         enabled ? 'bg-brand-blue' : 'bg-slate-200'
       }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform bg-white shadow-md transition-transform duration-200 ${
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-500 ease-in-out ${
           enabled ? 'translate-x-6' : 'translate-x-1'
         }`}
       />
@@ -43,7 +43,7 @@ function ProfilePanel({ onBack, showToast }) {
     try {
       await api.patch('/auth/update', { name: form.name, email: form.email });
       await fetchUser();
-      showToast('Informations mises à jour avec succès !');
+      showToast('Informations mises à jour !');
     } catch (err) {
       const data = err.response?.data;
       if (data?.errors) setErrors(data.errors);
@@ -54,55 +54,56 @@ function ProfilePanel({ onBack, showToast }) {
   };
 
   return (
-    <PanelLayout title="Informations Personnelles" icon={<UserCircle size={20} className="text-brand-blue" />} onBack={onBack}>
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* Avatar */}
-        <div className="flex items-center gap-4 p-5 bg-slate-50 border border-slate-100">
-          <div className="h-16 w-16 bg-brand-blue text-white flex items-center justify-center text-2xl font-bold shadow-md shadow-brand-blue/10">
+    <PanelLayout title="Informations Personnelles" icon={<UserCircle size={22} className="text-brand-blue" />} onBack={onBack}>
+      <form onSubmit={handleSave} className="space-y-8">
+        {/* Avatar Section */}
+        <div className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-3xl shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 transition-transform duration-700 group-hover:scale-125"></div>
+          <div className="h-20 w-20 bg-slate-900 text-white flex items-center justify-center text-2xl font-black rounded-2xl shadow-xl shadow-slate-900/10 relative z-10 transition-transform group-hover:rotate-3">
             {user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <div>
-            <p className="font-bold text-slate-900">{user?.name}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{user?.email}</p>
+          <div className="relative z-10">
+            <p className="text-lg font-black text-slate-900 tracking-tight">{user?.name}</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">{user?.email}</p>
           </div>
         </div>
 
-        {/* Name */}
-        <div className="med-form-field">
-          <label className="med-form-label flex items-center gap-2">
-            <User size={12} /> Nom Complet
-          </label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
-            className={`med-input ${errors.name ? 'border-red-400 focus:border-red-500' : ''}`}
-            placeholder="Votre nom complet"
-          />
-          {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name[0]}</p>}
-        </div>
+        <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
+                <User size={12} /> Nom Complet
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                className={`w-full h-12 px-6 bg-slate-50/50 border rounded-xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all ${errors.name ? 'border-rose-400' : 'border-slate-100'}`}
+                placeholder="Votre nom complet"
+              />
+              {errors.name && <p className="text-[10px] text-rose-500 font-bold ml-1">{errors.name[0]}</p>}
+            </div>
 
-        {/* Email */}
-        <div className="med-form-field">
-          <label className="med-form-label flex items-center gap-2">
-            <Mail size={12} /> Adresse Email
-          </label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={e => setForm({ ...form, email: e.target.value })}
-            className={`med-input ${errors.email ? 'border-red-400 focus:border-red-500' : ''}`}
-            placeholder="votre@email.com"
-          />
-          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email[0]}</p>}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
+                <Mail size={12} /> Adresse Email
+              </label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                className={`w-full h-12 px-6 bg-slate-50/50 border rounded-xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all ${errors.email ? 'border-rose-400' : 'border-slate-100'}`}
+                placeholder="votre@email.com"
+              />
+              {errors.email && <p className="text-[10px] text-rose-500 font-bold ml-1">{errors.email[0]}</p>}
+            </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="med-btn-primary w-full h-12 text-sm font-bold"
+          className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-brand-blue/30 hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center justify-center disabled:opacity-50"
         >
-          {loading ? <Loader2 size={16} className="animate-spin" /> : <><Save size={16} className="mr-2" /> Enregistrer les modifications</>}
+          {loading ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} className="mr-3" /> Enregistrer</>}
         </button>
       </form>
     </PanelLayout>
@@ -127,8 +128,8 @@ function PasswordPanel({ onBack, showToast }) {
     return score;
   })();
 
-  const strengthLabel = ['', 'Faible', 'Moyen', 'Bon', 'Fort'][strength];
-  const strengthColor = ['', 'bg-red-400', 'bg-amber-400', 'bg-brand-green', 'bg-emerald-500'][strength];
+  const strengthLabel = ['', 'Faible', 'Moyen', 'Bon', 'Sûre'][strength];
+  const strengthColor = ['', 'bg-rose-400', 'bg-amber-400', 'bg-emerald-400', 'bg-brand-blue'][strength];
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -140,7 +141,7 @@ function PasswordPanel({ onBack, showToast }) {
     setErrors({});
     try {
       await api.patch('/auth/update', { password: form.password, password_confirmation: form.password_confirmation });
-      showToast('Mot de passe mis à jour avec succès !');
+      showToast('Mot de passe mis à jour !');
       setForm({ password: '', password_confirmation: '' });
     } catch (err) {
       const data = err.response?.data;
@@ -152,71 +153,71 @@ function PasswordPanel({ onBack, showToast }) {
   };
 
   return (
-    <PanelLayout title="Mot de Passe" icon={<Key size={20} className="text-brand-blue" />} onBack={onBack}>
-      <form onSubmit={handleSave} className="space-y-6">
-        <div className="p-4 bg-amber-50 border border-amber-100 flex items-start gap-3">
-          <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-700 font-medium">
-            Choisissez un mot de passe fort avec au moins 8 caractères, une majuscule et un chiffre.
+    <PanelLayout title="Sécurité" icon={<Shield size={22} className="text-emerald-500" />} onBack={onBack}>
+      <form onSubmit={handleSave} className="space-y-8">
+        <div className="p-6 bg-slate-950 rounded-3xl text-white flex items-start gap-4 shadow-xl shadow-slate-900/10">
+          <AlertTriangle size={20} className="text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-xs font-medium text-slate-400 leading-relaxed">
+            Pour plus de sécurité, utilisez un mot de passe d'au moins 8 caractères combinant majuscules, chiffres et symboles.
           </p>
         </div>
 
-        {/* New password */}
-        <div className="med-form-field">
-          <label className="med-form-label">Nouveau Mot de Passe</label>
-          <div className="relative">
-            <input
-              type={show.pwd ? 'text' : 'password'}
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-              className={`med-input pr-12 ${errors.password ? 'border-red-400' : ''}`}
-              placeholder="••••••••"
-              minLength={8}
-            />
-            <button type="button" onClick={() => setShow(s => ({ ...s, pwd: !s.pwd }))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors">
-              {show.pwd ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-          {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password[0]}</p>}
-          {/* Strength bar */}
-          {form.password.length > 0 && (
-            <div className="mt-2 space-y-1">
-              <div className="flex gap-1">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className={`h-1 flex-1 transition-all ${i <= strength ? strengthColor : 'bg-slate-100'}`} />
-                ))}
+        <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nouveau Mot de Passe</label>
+              <div className="relative group/input">
+                <input
+                  type={show.pwd ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  className={`w-full h-12 px-6 bg-slate-50/50 border rounded-xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all ${errors.password ? 'border-rose-400' : 'border-slate-100'}`}
+                  placeholder="••••••••"
+                  minLength={8}
+                />
+                <button type="button" onClick={() => setShow(s => ({ ...s, pwd: !s.pwd }))}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-900 transition-colors">
+                  {show.pwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{strengthLabel}</p>
+              {errors.password && <p className="text-[10px] text-rose-500 font-bold ml-1">{errors.password[0]}</p>}
+              
+              {form.password.length > 0 && (
+                <div className="mt-4 px-1 space-y-2">
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className={`h-1.5 flex-1 transition-all duration-700 rounded-full ${i <= strength ? strengthColor : 'bg-slate-100'}`} />
+                    ))}
+                  </div>
+                  <p className={`text-[9px] font-black uppercase tracking-widest ${strength > 0 ? strengthColor.replace('bg-', 'text-') : 'text-slate-300'}`}>Sécurité : {strengthLabel}</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Confirm */}
-        <div className="med-form-field">
-          <label className="med-form-label">Confirmer le Mot de Passe</label>
-          <div className="relative">
-            <input
-              type={show.confirm ? 'text' : 'password'}
-              value={form.password_confirmation}
-              onChange={e => setForm({ ...form, password_confirmation: e.target.value })}
-              className={`med-input pr-12 ${errors.password_confirmation ? 'border-red-400' : ''}`}
-              placeholder="••••••••"
-            />
-            <button type="button" onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors">
-              {show.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-          {errors.password_confirmation && <p className="text-xs text-red-500 mt-1">{errors.password_confirmation[0]}</p>}
-          {form.password_confirmation && form.password === form.password_confirmation && (
-            <p className="text-xs text-brand-green mt-1 flex items-center gap-1"><Check size={12} /> Les mots de passe correspondent</p>
-          )}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Confirmer</label>
+              <div className="relative group/input">
+                <input
+                  type={show.confirm ? 'text' : 'password'}
+                  value={form.password_confirmation}
+                  onChange={e => setForm({ ...form, password_confirmation: e.target.value })}
+                  className={`w-full h-12 px-6 bg-slate-50/50 border rounded-xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all ${errors.password_confirmation ? 'border-rose-400' : 'border-slate-100'}`}
+                  placeholder="••••••••"
+                />
+                <button type="button" onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-900 transition-colors">
+                  {show.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.password_confirmation && <p className="text-[10px] text-rose-500 font-bold ml-1">{errors.password_confirmation[0]}</p>}
+              {form.password_confirmation && form.password === form.password_confirmation && (
+                <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mt-1 ml-1 flex items-center gap-2 animate-fade-in"><Check size={14} strokeWidth={3} /> Correspondance validée</p>
+              )}
+            </div>
         </div>
 
         <button type="submit" disabled={loading || form.password.length < 8}
-          className="med-btn-primary w-full h-12 text-sm font-bold disabled:opacity-40">
-          {loading ? <Loader2 size={16} className="animate-spin" /> : <><Lock size={16} className="mr-2" /> Mettre à jour le mot de passe</>}
+          className="w-full h-14 bg-slate-950 text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-slate-950/10 hover:bg-brand-blue hover:shadow-brand-blue/30 hover:-translate-y-1 transition-all flex items-center justify-center disabled:opacity-40">
+          {loading ? <Loader2 size={18} className="animate-spin" /> : <><Key size={18} className="mr-3" /> Mettre à jour</>}
         </button>
       </form>
     </PanelLayout>
@@ -259,7 +260,7 @@ function NotificationsPanel({ onBack, showToast }) {
     setSaving(true);
     try {
       await api.patch('/notifications/preferences', prefs);
-      showToast('Préférences de notifications enregistrées !');
+      showToast('Préférences enregistrées !');
     } catch (e) {
       console.error(e);
       showToast("Erreur lors de l'enregistrement.", 'error');
@@ -270,50 +271,50 @@ function NotificationsPanel({ onBack, showToast }) {
 
   const notifSections = [
     {
-      title: 'Notifications Push',
-      icon: <Smartphone size={16} className="text-brand-amber" />,
+      title: 'Notifications Mobiles',
+      icon: <Smartphone size={16} className="text-amber-500" />,
       items: [
-        { key: 'push_medications', label: 'Rappels de médicaments', desc: 'Alertes à chaque heure de prise configurée.' },
-        { key: 'push_renewals', label: 'Renouvellement de stock', desc: 'Quand le stock passe sous le seuil critique.' },
-        { key: 'sound', label: 'Son des alertes', desc: 'Jouer un son lors des notifications.' },
+        { key: 'push_medications', label: 'Rappels de prise', desc: 'Alertes en temps réel pour vos médicaments.' },
+        { key: 'push_renewals', label: 'Alertes stock', desc: 'Quand un médicament arrive à épuisement.' },
+        { key: 'sound', label: 'Sons push', desc: 'Activer le signal sonore des notifications.' },
       ]
     },
     {
-      title: 'Rapports par Email',
+      title: 'Correspondance Email',
       icon: <Mail size={16} className="text-brand-blue" />,
       items: [
-        { key: 'email_reports', label: 'Résumé hebdomadaire', desc: "Bilan d'observance envoyé chaque lundi." },
-        { key: 'email_alerts', label: 'Alertes critiques', desc: "Medications expirées ou stocks critiques." },
+        { key: 'email_reports', label: 'Bilan Hebdomadaire', desc: "Résumé d'observance envoyé chaque lundi." },
+        { key: 'email_alerts', label: 'Urgence sécurité', desc: "Alerte en cas d'expiration ou stock critique." },
       ]
     }
   ];
 
   if (loading) {
     return (
-      <PanelLayout title="Notifications" icon={<Bell size={20} className="text-brand-amber" />} onBack={onBack}>
-         <div className="flex flex-col items-center justify-center py-24 opacity-30">
-            <Loader2 className="animate-spin text-brand-blue mb-4" size={32} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Synchronisation...</p>
+      <PanelLayout title="Notifications" icon={<Bell size={22} className="text-amber-500" />} onBack={onBack}>
+         <div className="flex flex-col items-center justify-center py-32">
+            <div className="h-10 w-10 border-4 border-amber-100 border-t-amber-500 rounded-full animate-spin mb-6"></div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Synchronisation des alertes...</p>
          </div>
       </PanelLayout>
     );
   }
 
   return (
-    <PanelLayout title="Notifications" icon={<Bell size={20} className="text-brand-amber" />} onBack={onBack}>
-      <div className="space-y-6">
+    <PanelLayout title="Notifications" icon={<Bell size={22} className="text-amber-500" />} onBack={onBack}>
+      <div className="space-y-8">
         {notifSections.map((section, idx) => (
-          <div key={idx} className="bg-white border border-slate-100 overflow-hidden shadow-sm">
-            <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
-              {section.icon}
+          <div key={idx} className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-500">
+            <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-3">
+              <div className="h-8 w-8 bg-white rounded-lg border border-slate-100 flex items-center justify-center shadow-sm">{section.icon}</div>
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{section.title}</h3>
             </div>
             <div className="divide-y divide-slate-50">
               {section.items.map(item => (
-                <div key={item.key} className="flex items-center justify-between p-5">
-                  <div className="space-y-0.5 mr-4">
-                    <p className="text-sm font-bold text-slate-900">{item.label}</p>
-                    <p className="text-xs text-slate-400 font-medium">{item.desc}</p>
+                <div key={item.key} className="flex items-center justify-between p-6 group transition-colors hover:bg-slate-50/40">
+                  <div className="space-y-1 pr-6">
+                    <p className="text-sm font-black text-slate-900 tracking-tight">{item.label}</p>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{item.desc}</p>
                   </div>
                   <Toggle enabled={prefs[item.key]} onToggle={() => toggle(item.key)} />
                 </div>
@@ -324,9 +325,9 @@ function NotificationsPanel({ onBack, showToast }) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="med-btn-primary w-full h-12 text-sm font-bold shadow-lg shadow-brand-blue/10"
+          className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-brand-blue/30 hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center justify-center disabled:opacity-50"
         >
-          {saving ? <Loader2 size={16} className="animate-spin" /> : <><Save size={16} className="mr-2" /> Enregistrer les préférences</>}
+          {saving ? <Loader2 size={18} className="animate-spin" /> : <><Save size={18} className="mr-3" /> Appliquer</>}
         </button>
       </div>
     </PanelLayout>
@@ -337,19 +338,19 @@ function NotificationsPanel({ onBack, showToast }) {
 /* ─── Shared Panel Layout Wrapper ─── */
 function PanelLayout({ title, icon, onBack, children }) {
   return (
-    <div className="animate-fade-up">
+    <div className="animate-fade-up max-w-2xl mx-auto">
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-brand-blue mb-6 transition-colors group"
+        className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-brand-blue mb-8 transition-all group"
       >
-        <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
-        Retour aux Paramètres
+        <ArrowLeft size={16} className="group-hover:-translate-x-2 transition-transform duration-500" />
+        Retour
       </button>
-      <div className="flex items-center gap-3 mb-8">
-        <div className="h-10 w-10 bg-slate-50 border border-slate-100 flex items-center justify-center shadow-inner">
+      <div className="flex items-center gap-5 mb-12 px-1">
+        <div className="h-14 w-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center shadow-sm rotate-3">
           {icon}
         </div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">{title}</h2>
+        <h2 className="text-3xl font-black text-slate-900 tracking-tighter">{title}</h2>
       </div>
       {children}
     </div>
@@ -379,86 +380,85 @@ export default function SettingsView({ showToast, settingsPanel, setSettingsPane
 
   const sections = [
     {
-      title: 'Notifications',
-      icon: <Bell size={16} className="text-brand-amber" />,
+      title: 'Préférences',
+      icon: <Bell size={14} className="text-amber-500" />,
       items: [
         {
           id: 'notifications',
-          label: 'Alertes et Rappels',
-          desc: 'Gérez les rappels push et les rapports par email.',
-          icon: <Bell size={18} className="text-brand-amber" />
+          label: 'Alertes & Rappels',
+          desc: 'Notifications push et rapports hebdomadaires.',
+          icon: <Bell size={18} />,
+          color: 'text-amber-500 bg-amber-50'
         },
       ]
     },
     {
-      title: 'Sécurité',
-      icon: <Shield size={16} className="text-brand-green" />,
+      title: 'Sécurité & Accès',
+      icon: <Shield size={14} className="text-emerald-500" />,
       items: [
         {
           id: 'password',
-          label: 'Mot de Passe',
-          desc: 'Changez le mot de passe de votre compte.',
-          icon: <Key size={18} className="text-slate-400" />
+          label: 'Mot de passe',
+          desc: 'Clés de sécurité et authentification.',
+          icon: <Key size={18} />,
+          color: 'text-indigo-600 bg-indigo-50'
         }
       ]
     },
   ];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 animate-fade-up pb-24">
+    <div className="max-w-3xl mx-auto space-y-12 animate-fade-up pb-24">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Paramètres</h1>
-        <p className="text-sm font-medium text-slate-400 mt-1">Gérez vos préférences de compte et votre sécurité.</p>
+      <div className="px-1 space-y-2">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Paramètres</h1>
+        <p className="text-base font-medium text-slate-500">Personnalisez votre expérience et gérez votre sécurité.</p>
       </div>
 
-      {/* User card */}
-      <div className="bg-white border border-slate-100 p-5 flex items-center gap-4 shadow-sm">
-        <div className="h-14 w-14 bg-brand-blue text-white flex items-center justify-center text-xl font-bold shadow-md shadow-brand-blue/10 shrink-0">
+      {/* User profile card */}
+      <div className="bg-white border border-slate-100 p-6 rounded-[32px] flex items-center gap-6 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 group-hover:scale-125 transition-transform duration-700 opacity-50"></div>
+        <div className="h-20 w-20 bg-slate-900 text-white flex items-center justify-center text-2xl font-black rounded-2xl shadow-xl shadow-slate-900/10 relative transition-transform group-hover:rotate-3 shrink-0">
           {user?.name?.charAt(0).toUpperCase() || 'U'}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-900 truncate">{user?.name || 'Utilisateur'}</p>
-          <p className="text-xs text-slate-400 truncate">{user?.email || ''}</p>
+        <div className="flex-1 min-w-0 relative">
+          <p className="text-lg font-black text-slate-900 tracking-tight truncate">{user?.name || 'Utilisateur'}</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">{user?.email || ''}</p>
         </div>
         <button
           onClick={() => { setActivePanel('profile'); setSettingsPanel && setSettingsPanel('profile'); }}
-          className="text-[11px] font-bold text-brand-blue bg-brand-blue/5 hover:bg-brand-blue/10 px-3 py-2 transition-all uppercase tracking-tight shrink-0"
+          className="relative h-11 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest bg-indigo-50 text-brand-blue hover:bg-brand-blue hover:text-white transition-all shadow-sm shrink-0 active:scale-95"
         >
           Modifier
         </button>
       </div>
 
-      {/* Sections */}
-      <div className="space-y-5">
+      {/* Sections List */}
+      <div className="space-y-10">
         {sections.map((section, idx) => (
-          <div key={idx} className="bg-white border border-slate-100 overflow-hidden shadow-sm">
-            {/* Section header */}
-            <div className="px-5 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center gap-2">
-              {section.icon}
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{section.title}</h3>
+          <div key={idx} className="space-y-4">
+            <div className="flex items-center gap-3 px-2">
+               <div className="h-6 w-1 bg-brand-blue rounded-full"></div>
+               <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">{section.title}</h3>
             </div>
-            {/* Items */}
-            <div className="divide-y divide-slate-50">
+            
+            <div className="grid grid-cols-1 gap-4">
               {section.items.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => { setActivePanel(item.id); setSettingsPanel && setSettingsPanel(item.id); }}
-                  className="w-full flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-all group text-left"
+                  className="w-full flex items-center gap-5 p-5 bg-white border border-slate-100 rounded-3xl hover:shadow-2xl hover:shadow-slate-200/50 hover:border-brand-blue/30 transition-all duration-500 group text-left active:scale-[0.99]"
                 >
-                  <div className="h-9 w-9 bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:border-brand-blue/20 group-hover:bg-brand-blue/5 transition-all">
+                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white transition-all group-hover:scale-110 group-hover:rotate-3 ${item.color}`}>
                     {item.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800">{item.label}</p>
-                    <p className="text-xs text-slate-400 font-medium truncate">{item.desc}</p>
+                    <p className="text-base font-black text-slate-900 tracking-tight">{item.label}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">{item.desc}</p>
                   </div>
-                  {item.badge && (
-                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 uppercase tracking-tight shrink-0 hidden sm:block">
-                      {item.badge}
-                    </span>
-                  )}
-                  <ChevronRight size={15} className="text-slate-200 group-hover:text-brand-blue group-hover:translate-x-0.5 transition-all shrink-0" />
+                  <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-200 group-hover:bg-brand-blue group-hover:text-white transition-all">
+                     <ArrowRight size={18} strokeWidth={3} className="opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all" />
+                  </div>
                 </button>
               ))}
             </div>
@@ -467,12 +467,12 @@ export default function SettingsView({ showToast, settingsPanel, setSettingsPane
       </div>
 
       {/* Bottom actions */}
-      <div className="space-y-3 pt-2">
+      <div className="pt-8 px-1">
         <button
           onClick={logout}
-          className="w-full flex items-center justify-center gap-2 h-12 bg-slate-100 text-slate-600 hover:bg-slate-200 text-sm font-bold transition-all"
+          className="w-full flex items-center justify-center gap-3 h-14 bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 shadow-sm hover:shadow-xl hover:shadow-rose-100 active:scale-[0.98]"
         >
-          <LogOut size={16} /> Se déconnecter
+          <LogOut size={16} strokeWidth={3} /> Se déconnecter
         </button>
       </div>
     </div>
