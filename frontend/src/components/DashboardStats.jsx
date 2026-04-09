@@ -1,11 +1,12 @@
 import React from 'react';
 import { 
   TrendingUp, Clock, AlertTriangle, Package,
-  ArrowUpRight, ArrowDownRight
+  ArrowRight
 } from 'lucide-react';
 
 /**
- * DashboardStats — Mobile-First · 2-col on mobile, 4-col on desktop
+ * DashboardStats — Sleek SaaS Design
+ * Multi-layer shadows, 16px radius, and refined typography.
  */
 export default function DashboardStats({ onCardClick, medicaments = [], adherence = { percentage: 0, stats: { taken: 0, total: 0 } } }) {
   
@@ -24,25 +25,25 @@ export default function DashboardStats({ onCardClick, medicaments = [], adherenc
     .filter(m => m.date_expiration)
     .sort((a, b) => new Date(a.date_expiration) - new Date(b.date_expiration))[0];
     
-  let expirationStatus = "Aucun";
-  let expirationColor = "bg-emerald-50 text-emerald-600";
+  let expirationStatus = "Sûr";
+  let expirationColor = "text-emerald-500 bg-emerald-50";
   let daysToExpiration = null;
 
   if (closestExpiration) {
     daysToExpiration = Math.ceil((new Date(closestExpiration.date_expiration) - new Date()) / (1000 * 60 * 60 * 24));
     
     if (daysToExpiration < 0) {
-      expirationStatus = "Expiré !";
-      expirationColor = "bg-red-50 text-red-600";
+      expirationStatus = "Expiré";
+      expirationColor = "text-rose-600 bg-rose-50";
     } else if (daysToExpiration <= 7) {
       expirationStatus = "Urgent";
-      expirationColor = "bg-red-50 text-red-600";
+      expirationColor = "text-rose-600 bg-rose-50";
     } else if (daysToExpiration <= 30) {
-      expirationStatus = "Bientôt";
-      expirationColor = "bg-amber-50 text-amber-600";
+      expirationStatus = "Proche";
+      expirationColor = "text-amber-600 bg-amber-50";
     } else {
-      expirationStatus = "Sécurisé";
-      expirationColor = "bg-emerald-50 text-emerald-600";
+      expirationStatus = "Optimal";
+      expirationColor = "text-brand-blue bg-indigo-50";
     }
   }
 
@@ -50,69 +51,69 @@ export default function DashboardStats({ onCardClick, medicaments = [], adherenc
     {
       label: 'Traitements',
       value: actifsCount.toString().padStart(2, '0'),
-      change: `${actifsCount} actif(s)`,
-      isPositive: true,
-      icon: <TrendingUp size={16} className="text-brand-blue" />,
-      bg: 'bg-brand-blue/5',
+      badge: `${actifsCount} Actifs`,
+      icon: <TrendingUp size={18} />,
+      colors: 'text-indigo-600 bg-indigo-50',
       view: 'medicaments',
-      filter: 'all',
-      statusColor: "bg-emerald-50 text-emerald-600"
+      filter: 'all'
     },
     {
       label: 'Prises du Jour',
       value: totalRappels.toString().padStart(2, '0'),
-      change: totalRappels > 0 ? "Planifié" : "Aucun",
-      isPositive: totalRappels > 0,
-      icon: <Clock size={16} className="text-brand-green" />,
-      bg: 'bg-brand-green/5',
+      badge: totalRappels > 0 ? "Planifié" : "Libre",
+      icon: <Clock size={18} />,
+      colors: 'text-emerald-600 bg-emerald-50',
       view: 'planning',
-      filter: null,
-      statusColor: totalRappels > 0 ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"
+      filter: null
     },
     {
       label: 'Alertes Stock',
       value: alertesCount.toString().padStart(2, '0'),
-      change: alertesCount > 0 ? `${alertesCount} alerte(s)` : 'Optimal',
-      isPositive: alertesCount === 0,
-      icon: <AlertTriangle size={16} className="text-brand-amber" />,
-      bg: 'bg-amber-50',
+      badge: alertesCount > 0 ? `${alertesCount} Alertes` : 'Optimal',
+      icon: <AlertTriangle size={18} />,
+      colors: alertesCount > 0 ? 'text-rose-600 bg-rose-50' : 'text-amber-600 bg-amber-50',
       view: 'medicaments',
-      filter: 'stock',
-      statusColor: alertesCount === 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+      filter: 'stock'
     },
     {
-      label: 'Échéance',
+      label: 'Prochaine Échéance',
       value: daysToExpiration !== null ? `${daysToExpiration}j` : '—',
-      change: expirationStatus,
-      isPositive: daysToExpiration === null || daysToExpiration > 30,
-      icon: <Package size={16} className="text-slate-400" />,
-      bg: 'bg-slate-50',
+      badge: expirationStatus,
+      icon: <Package size={18} />,
+      colors: expirationColor,
       view: 'medicaments',
-      filter: 'expired',
-      statusColor: expirationColor
+      filter: 'expired'
     }
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
       {stats.map((stat, idx) => (
         <button
           key={idx}
           onClick={() => onCardClick && onCardClick(stat.view, stat.filter)}
-          className="group relative bg-white border border-slate-200 p-4 sm:p-5 text-left w-full hover:border-brand-blue/30 transition-all duration-200 overflow-hidden"
+          className="group bg-white border border-slate-100 rounded-[32px] p-5 sm:p-6 text-left relative transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 hover:border-brand-blue/10 active:scale-[0.98] overflow-hidden"
         >
-          <div className="flex items-start justify-between mb-3 relative z-10">
-            <div className={`h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center ${stat.bg} border border-white shadow-sm`}>
-              {stat.icon}
+          {/* Subtle pattern background */}
+          <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 transition-transform duration-700 group-hover:scale-110 opacity-70"></div>
+          
+          <div className="flex items-center justify-between mb-6 relative z-10">
+            <div className={`h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-xl bg-white border border-slate-100 shadow-sm transition-transform duration-500 group-hover:scale-110`}>
+              <div className={stat.colors.split(' ')[0]}>{stat.icon}</div>
             </div>
-            <div className={`px-1.5 sm:px-2 py-0.5 text-xs font-semibold ${stat.statusColor}`}>
-              {stat.change}
+            <div className={`badge-dna ${stat.colors}`}>
+              {stat.badge}
             </div>
           </div>
 
           <div className="relative z-10">
-            <p className="text-xs font-semibold text-slate-500 mb-1">{stat.label}</p>
-            <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-none">{stat.value}</h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+            <div className="flex items-end justify-between">
+               <h3 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tighter">{stat.value}</h3>
+               <div className="mb-1 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500">
+                  <ArrowRight size={16} className="text-brand-blue" />
+               </div>
+            </div>
           </div>
         </button>
       ))}

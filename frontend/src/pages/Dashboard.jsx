@@ -142,98 +142,107 @@ export default function Dashboard() {
     switch (currentView) {
       case 'overview':
         return (
-          <div className="space-y-8 animate-fade-up">
-            {/* Adherence & Stats Header */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-3">
-                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                    <div className="space-y-1">
-                       <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bonjour, {user?.name.split(' ')[0]}</h1>
-                       <p className="text-sm font-medium text-slate-500">Voici l'état de santé de {profilActif?.nom} aujourd'hui.</p>
-                    </div>
-                    <button 
-                      onClick={() => { setMedicamentToEdit(null); setIsFormOpen(true); }}
-                      className="bg-brand-blue text-white h-11 px-6 text-sm font-bold shadow-lg shadow-brand-blue/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
-                    >
-                       <Plus size={18} /> Nouveau Médicament
-                    </button>
-                 </div>
-                  <DashboardStats 
-                    medicaments={allMedicaments} 
-                    adherence={adherenceData}
-                    onCardClick={(v, f) => { if (v) setCurrentView(v); if (f) setInventoryFilter(f); }} 
-                  />
-              </div>
-              
-              {/* Radial Adherence Chart */}
-              {/* Radial Adherence Chart */}
-              <div className="bg-white border border-slate-100 p-8 flex flex-col items-center justify-center shadow-tiny group relative overflow-hidden">
-                 <div className="absolute top-0 right-0 w-24 h-24 bg-brand-blue/5 rounded-full -mr-12 -mt-12 group-hover:scale-125 transition-transform duration-700"></div>
-                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 relative">Observance</h3>
-                 <div className="relative h-28 w-28 flex items-center justify-center">
-                    <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                       {/* Background Track with safe margins */}
-                       <circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="8" className="text-slate-50" />
-                       {/* Adherence Path - No more clipping */}
-                       <circle 
-                         cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="8" 
-                         strokeDasharray="314.16" 
-                         strokeDashoffset={314.16 - (314.16 * adherenceData.percentage) / 100} 
-                         className="text-brand-blue transition-all duration-1000 ease-out" 
-                         strokeLinecap="round"
-                       />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                       <span className="text-2xl font-black text-slate-900 tracking-tighter">{adherenceData.percentage}%</span>
-                    </div>
-                 </div>
-                 <p className="text-[10px] font-bold text-slate-500 mt-6 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full">
-                    {adherenceData.stats.taken}/{adherenceData.stats.total} Prises
-                 </p>
-              </div>
+          <div className="space-y-12 animate-fade-up">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
+                <div className="space-y-2">
+                   <h1 className="text-3xl font-bold tracking-tight text-slate-900">Bonjour, {user?.name.split(' ')[0]}</h1>
+                   <p className="text-base font-medium text-slate-500">Voici l'état de santé de <span className="text-brand-blue font-bold">{profilActif?.nom}</span> pour aujourd'hui.</p>
+                </div>
+                <button 
+                  onClick={() => { setMedicamentToEdit(null); setIsFormOpen(true); }}
+                  className="bg-brand-blue text-white h-12 px-8 rounded-xl text-sm font-bold shadow-lg shadow-brand-blue/20 hover:shadow-xl hover:shadow-brand-blue/30 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                >
+                   <Plus size={20} strokeWidth={3} /> Nouveau Médicament
+                </button>
             </div>
 
-            {/* Main Grid: Planning + Stock */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-               <div className="lg:col-span-8">
-                  <div className="flex items-center justify-between mb-4 px-1">
-                     <h2 className="text-[11px] font-black uppercase text-slate-900 tracking-widest">Planning du jour</h2>
-                     <button onClick={() => setCurrentView('planning')} className="text-[10px] font-bold text-brand-blue uppercase tracking-widest hover:underline">Voir tout le planning</button>
+            {/* Dashboard Stats Row */}
+            <DashboardStats 
+              medicaments={allMedicaments} 
+              adherence={adherenceData}
+              onCardClick={(v, f) => { if (v) setCurrentView(v); if (f) setInventoryFilter(f); }} 
+            />
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+               {/* Column 1 (2/3) - Today's Planning */}
+               <div className="lg:col-span-8 flex flex-col gap-6">
+                  <div className="flex items-center justify-between px-2">
+                     <div className="flex items-center gap-3">
+                        <div className="w-1 h-6 bg-brand-blue rounded-full"></div>
+                        <h2 className="text-sm font-black uppercase text-slate-900 tracking-widest">Planning du jour</h2>
+                     </div>
+                     <button onClick={() => setCurrentView('planning')} className="text-xs font-bold text-brand-blue hover:text-slate-900 transition-colors uppercase tracking-widest">Voir le planning complet</button>
                   </div>
-                  <PlanningView 
-                    showToast={showToast} 
-                    activeProfileId={profilActif?.id} 
-                    initialData={adherenceData} 
-                  />
+                  <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-200/50">
+                    <PlanningView 
+                      showToast={showToast} 
+                      activeProfileId={profilActif?.id} 
+                      initialData={adherenceData} 
+                    />
+                  </div>
                </div>
 
-               <div className="lg:col-span-4 space-y-6">
-                  <div className="space-y-4">
-                     <h2 className="text-[11px] font-black uppercase text-slate-900 tracking-widest px-1">Alertes Stock</h2>
-                     <Inventory 
-                       isCompact={true} 
-                       limit={3} 
-                       filter="low" 
-                       medicamentsData={allMedicaments} 
-                       onDetails={handleShowDetails} 
-                       showToast={showToast} 
-                     />
+               {/* Column 2 (1/3) - Compliance & Stock Alerts */}
+               <div className="lg:col-span-4 space-y-10">
+                  {/* Adherence Chart Card */}
+                  <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200/50 flex flex-col items-center">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-10">Observance Quotidienne</h3>
+                    
+                    <div className="relative h-44 w-44 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                           <circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="10" className="text-slate-50" />
+                           <circle 
+                             cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="10" 
+                             strokeDasharray="314.16" 
+                             strokeDashoffset={314.16 - (314.16 * adherenceData.percentage) / 100} 
+                             className="text-brand-blue transition-all duration-1000 ease-out" 
+                             strokeLinecap="round"
+                           />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                           <span className="text-4xl font-black text-slate-900 tracking-tighter">{adherenceData.percentage}%</span>
+                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">{adherenceData.stats.taken}/{adherenceData.stats.total} PRISES</span>
+                        </div>
+                    </div>
                   </div>
-                   {showReminder && (
-                      <div className="p-6 bg-slate-900 text-white space-y-4 shadow-xl relative group animate-fade-in">
-                         <button 
-                            onClick={handleDismissReminder}
-                            className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
-                         >
-                            <X size={16} />
-                         </button>
-                         <div className="flex items-center gap-2 text-brand-blue">
-                            <AlertTriangle size={18} />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Conseil de Gestion</span>
-                         </div>
-                         <p className="text-xs font-medium text-slate-300 leading-relaxed pr-6">Pensez à vérifier vos dates d'expiration avant de synchroniser vos stocks pour garantir la sécurité de votre famille.</p>
-                      </div>
-                   )}
+
+                  {/* Stock Alerts Area */}
+                  <div className="space-y-6">
+                     <div className="flex items-center gap-3 px-2">
+                        <div className="w-1 h-6 bg-brand-amber rounded-full"></div>
+                        <h2 className="text-sm font-black uppercase text-slate-900 tracking-widest">Alertes Stock</h2>
+                     </div>
+                     <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-200/50">
+                        <Inventory 
+                          isCompact={true} 
+                          limit={3} 
+                          filter="low" 
+                          medicamentsData={allMedicaments} 
+                          onDetails={handleShowDetails} 
+                          showToast={showToast} 
+                        />
+                     </div>
+                  </div>
+
+                  {showReminder && (
+                    <div className="p-8 bg-slate-950 rounded-3xl text-white space-y-5 shadow-2xl relative group overflow-hidden">
+                       <div className="absolute -top-4 -right-4 p-8 opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
+                          <AlertTriangle size={100} />
+                       </div>
+                       <button 
+                          onClick={handleDismissReminder}
+                          className="absolute top-6 right-6 text-slate-600 hover:text-white transition-colors"
+                       >
+                          <X size={20} />
+                       </button>
+                       <div className="flex items-center gap-3 text-brand-blue">
+                          <TrendingUp size={20} strokeWidth={3} />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-white">Astuce Santé</span>
+                       </div>
+                       <p className="text-sm font-medium text-slate-400 leading-relaxed relative z-10 pr-4">Optimisez votre gestion : vérifiez vos dates d'expiration avant de synchroniser vos stocks pour une sécurité maximale.</p>
+                    </div>
+                  )}
                </div>
             </div>
           </div>
@@ -346,7 +355,7 @@ export default function Dashboard() {
           />
 
           <div className="flex-1 overflow-y-auto no-scrollbar">
-            <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-32 lg:pb-10">
+            <div className="p-4 sm:p-6 lg:pt-10 lg:px-10 max-w-7xl mx-auto pb-32 lg:pb-10">
               {renderContent()}
             </div>
           </div>
