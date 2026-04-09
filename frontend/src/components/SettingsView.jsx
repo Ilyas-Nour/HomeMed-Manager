@@ -359,14 +359,23 @@ function PanelLayout({ title, icon, onBack, children }) {
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* ─── MAIN SettingsView ─── */
 /* ─────────────────────────────────────────────────────────────────────────── */
-export default function SettingsView({ showToast }) {
+export default function SettingsView({ showToast, settingsPanel, setSettingsPanel }) {
   const { user, logout } = useAuth();
-  const [activePanel, setActivePanel] = useState(null); // null = main list
+  const [activePanel, setActivePanel] = useState(settingsPanel);
+
+  React.useEffect(() => {
+    setActivePanel(settingsPanel);
+  }, [settingsPanel]);
+
+  const handleBack = () => {
+    setActivePanel(null);
+    setSettingsPanel && setSettingsPanel(null);
+  };
 
   /* If a sub-panel is active, render it */
-  if (activePanel === 'profile')       return <ProfilePanel onBack={() => setActivePanel(null)} showToast={showToast} />;
-  if (activePanel === 'notifications') return <NotificationsPanel onBack={() => setActivePanel(null)} showToast={showToast} />;
-  if (activePanel === 'password')      return <PasswordPanel onBack={() => setActivePanel(null)} showToast={showToast} />;
+  if (activePanel === 'profile')       return <ProfilePanel onBack={handleBack} showToast={showToast} />;
+  if (activePanel === 'notifications') return <NotificationsPanel onBack={handleBack} showToast={showToast} />;
+  if (activePanel === 'password')      return <PasswordPanel onBack={handleBack} showToast={showToast} />;
 
   const sections = [
     {
@@ -413,7 +422,7 @@ export default function SettingsView({ showToast }) {
           <p className="text-xs text-slate-400 truncate">{user?.email || ''}</p>
         </div>
         <button
-          onClick={() => setActivePanel('profile')}
+          onClick={() => { setActivePanel('profile'); setSettingsPanel && setSettingsPanel('profile'); }}
           className="text-[11px] font-bold text-brand-blue bg-brand-blue/5 hover:bg-brand-blue/10 px-3 py-2 transition-all uppercase tracking-tight shrink-0"
         >
           Modifier
@@ -434,7 +443,7 @@ export default function SettingsView({ showToast }) {
               {section.items.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setActivePanel(item.id)}
+                  onClick={() => { setActivePanel(item.id); setSettingsPanel && setSettingsPanel(item.id); }}
                   className="w-full flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-all group text-left"
                 >
                   <div className="h-9 w-9 bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:border-brand-blue/20 group-hover:bg-brand-blue/5 transition-all">

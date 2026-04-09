@@ -18,11 +18,36 @@ class GroupeController extends Controller
      */
     public function index(Request $request)
     {
-        return response()->json(
-            $request->user()->participatedGroups()
-                ->with(['participants:id,name,email', 'invitations'])
-                ->get()
-        );
+        $groupes = $request->user()->participatedGroups()
+            ->with([
+                'participants:id,name,email',
+                'invitations',
+                'participants.profils.medicaments'
+            ])
+            ->get();
+
+        // Enrich each group with a flat list of shared medications
+        $groupes->each(function ($groupe) {
+            $medicamentsPartages = collect();
+            foreach ($groupe->participants as $participant) {
+                foreach ($participant->profils as $profil) {
+                    foreach ($profil->medicaments as $med) {
+                        $medicamentsPartages->push([
+                            'id'            => $med->id,
+                            'nom'           => $med->nom,
+                            'type'          => $med->type,
+                            'quantite'      => $med->quantite,
+                            'seuil_alerte'  => $med->seuil_alerte,
+                            'date_expiration' => $med->date_expiration,
+                            'profil_nom'    => $profil->nom . ' (' . $participant->name . ')',
+                        ]);
+                    }
+                }
+            }
+            $groupe->medicaments_partages = $medicamentsPartages->values();
+        });
+
+        return response()->json($groupes);
     }
 
     /**
@@ -89,10 +114,22 @@ class GroupeController extends Controller
             ]
         );
 
-        // Envoi de l'e-mail réel
+        // Envoi de l'e-mail réel (si l'utilisateur autorise les alertes par email)
         try {
-            Mail::to($email)->send(new GroupInvitationMail($groupe, $token, !!$existingUser));
-            ActivityLog::log('GROUP_INVITE_SENT', "Invitation envoyée à {$email} pour le groupe {$groupe->nom}");
+            $shouldSend = true;
+            if ($existingUser) {
+                $prefs = $existingUser->notificationPreference; // Laravel relationship (needs update in User model)
+                if ($prefs && !$prefs->email_alerts) {
+                    $shouldSend = false;
+                }
+            }
+
+            if ($shouldSend) {
+                Mail::to($email)->send(new GroupInvitationMail($groupe, $token, !!$existingUser));
+                ActivityLog::log('GROUP_INVITE_SENT', "Invitation envoyée à {$email} pour le groupe {$groupe->nom}");
+            } else {
+                ActivityLog::log('GROUP_INVITE_SILENT', "Invitation enregistrée pour {$email} (Envoi email désactivé par l'utilisateur)");
+            }
         } catch (\Exception $e) {
             return response()->json(['message' => "L'invitation a été enregistrée mais l'e-mail n'a pas pu être envoyé.", 'error' => $e->getMessage()], 500);
         }

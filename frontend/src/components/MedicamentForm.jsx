@@ -29,7 +29,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
-  const typesMed = ['comprimé', 'gélule', 'sirop', 'injection', 'pommade', 'gouttes', 'autre'];
+  const typesMed = ['comprimé', 'gélule', 'sirop', 'injection', 'crème', 'pommade', 'gouttes', 'patch', 'suppositoire', 'autre'];
   const moments = ['Matin', 'Midi', 'Soir', 'Coucher', 'Avant repas', 'Après repas'];
 
   useEffect(() => {

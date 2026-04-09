@@ -21,14 +21,17 @@ class PlanningController extends Controller
             return response()->json(['message' => 'Profil non spécifié'], 400);
         }
 
-        // On récupère tous les rappels du profil actif
-        $rappels = Rappel::whereHas('medicament', function($q) use ($profilId) {
-            $q->where('profil_id', $profilId);
-        })
-        ->with(['medicament', 'prises' => function($q) use ($date) {
-            $q->where('date_prise', $date);
-        }])
-        ->get();
+        $cacheKey = "planning_{$profilId}_{$date}";
+
+        $rappels = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($profilId, $date) {
+            return app(\App\Models\Rappel::class)->whereHas('medicament', function($q) use ($profilId) {
+                $q->where('profil_id', $profilId);
+            })
+            ->with(['medicament', 'prises' => function($q) use ($date) {
+                $q->where('date_prise', $date);
+            }])
+            ->get();
+        });
 
         // On formate pour le frontend
         $grouped = [

@@ -5,7 +5,7 @@ import MedicamentCard from './MedicamentCard';
 /**
  * Inventory — Mobile-First · Product Precision
  */
-export default function Inventory({ isCompact, showToast, searchTerm = '', setIsFormOpen, onEdit, onDelete, onDetails, filter, setFilter, medicamentsData }) {
+export default function Inventory({ isCompact, showToast, searchTerm = '', setIsFormOpen, onEdit, onDelete, onDetails, filter, setFilter, medicamentsData, limit }) {
   const [internalFilter, setInternalFilter] = useState('all');
 
   const activeFilter    = filter    || internalFilter;
@@ -25,13 +25,19 @@ export default function Inventory({ isCompact, showToast, searchTerm = '', setIs
     if (activeFilter === 'stock') {
       return matchesSearch && med.quantite <= (med.seuil_alerte || 5);
     }
+    if (activeFilter === 'incomplete') {
+      return matchesSearch && med.is_incomplet;
+    }
     return matchesSearch;
   });
 
+  const displayedMedicaments = limit ? filteredMedicaments.slice(0, limit) : filteredMedicaments;
+
   const FILTERS = [
-    { key: 'all',     label: 'Tous', count: medicaments.length },
-    { key: 'stock',   label: 'Critique', count: medicaments.filter(m => m.quantite <= (m.seuil_alerte || 5)).length },
-    { key: 'expired', label: 'Expiré', count: medicaments.filter(m => m.date_expiration && new Date(m.date_expiration) < new Date()).length },
+    { key: 'all',        label: 'Tous', count: medicaments.length },
+    { key: 'stock',      label: 'Critique', count: medicaments.filter(m => m.quantite <= (m.seuil_alerte || 5)).length },
+    { key: 'incomplete', label: 'Incomplets', count: medicaments.filter(m => m.is_incomplet).length },
+    { key: 'expired',    label: 'Expiré', count: medicaments.filter(m => m.date_expiration && new Date(m.date_expiration) < new Date()).length },
   ];
 
   return (
@@ -86,7 +92,7 @@ export default function Inventory({ isCompact, showToast, searchTerm = '', setIs
           ? 'grid-cols-1'
           : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
       }`}>
-        {filteredMedicaments.map(med => (
+        {displayedMedicaments.map(med => (
           <MedicamentCard
             key={med.id}
             medicament={med}
@@ -100,7 +106,7 @@ export default function Inventory({ isCompact, showToast, searchTerm = '', setIs
       </div>
 
       {/* Empty state */}
-      {filteredMedicaments.length === 0 && (
+      {displayedMedicaments.length === 0 && (
         <div className="py-16 text-center border-2 border-dashed border-slate-100 bg-slate-50/30">
           <div className="flex flex-col items-center gap-3 opacity-40">
             <div className="h-12 w-12 bg-white flex items-center justify-center shadow-sm border border-slate-100">

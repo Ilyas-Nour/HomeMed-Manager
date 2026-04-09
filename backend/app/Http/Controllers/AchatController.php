@@ -6,6 +6,7 @@ use App\Models\Achat;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class AchatController extends Controller
 {
@@ -14,11 +15,17 @@ class AchatController extends Controller
      */
     public function index(Request $request)
     {
-        $statut = $request->query('statut'); // 'pending' ou 'completed'
-        
-        $medicamentIds = auth()->user()->medicaments()->pluck('medicaments.id');
-        
-        $query = Achat::whereIn('medicament_id', $medicamentIds)
+        $statut = $request->query('statut');
+        $profilId = $request->header('X-Profil-Id');
+
+        if (!$profilId) {
+            return response()->json(['message' => 'Profil non spécifié'], 400);
+        }
+
+        // Vérifier que le profil appartient à l'utilisateur
+        auth()->user()->profils()->findOrFail($profilId);
+
+        $query = Achat::where('profil_id', $profilId)
             ->with('medicament');
 
         if ($statut) {
@@ -36,31 +43,66 @@ class AchatController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'medicament_id' => 'required|exists:medicaments,id',
-            'statut'        => 'nullable|in:pending,completed',
-            'label'         => 'nullable|string|max:50',
-            'quantite'      => 'required|integer|min:1',
-            'prix'          => 'nullable|numeric',
-            'pharmacie'     => 'nullable|string',
+            'medicament_id'       => 'nullable|exists:medicaments,id',
+            'medicament_nom_temp' => 'nullable|string|max:100|required_without:medicament_id',
+            'statut'              => 'nullable|in:pending,completed',
+            'label'               => 'nullable|string|max:50',
+            'quantite'            => 'required|integer|min:1',
+            'prix'                => 'nullable|numeric',
+            'pharmacie'           => 'nullable|string',
+            'date_achat'          => 'nullable|date',
         ]);
 
-        // Sécurité : Vérifier que le médicament appartient à l'utilisateur
-        $medicament = auth()->user()->medicaments()->findOrFail($validated['medicament_id']);
+        $profilId = $request->header('X-Profil-Id');
+        if (!$profilId) {
+            return response()->json(['message' => 'Profil non spécifié'], 400);
+        }
 
-        return DB::transaction(function () use ($validated, $medicament) {
+        // Vérifier l'appartenance du profil
+        $profil = auth()->user()->profils()->findOrFail($profilId);
+        $validated['profil_id'] = $profil->id;
+
+        $medicament = null;
+        if (isset($validated['medicament_id'])) {
+            $medicament = $profil->medicaments()->findOrFail($validated['medicament_id']);
+        }
+
+        return DB::transaction(function () use ($validated, $medicament, $profil) {
             $validated['statut'] = $validated['statut'] ?? Achat::STATUT_PENDING;
             
             if ($validated['statut'] === Achat::STATUT_COMPLETED) {
-                $validated['date_achat'] = now();
-                $medicament->increment('quantite', $validated['quantite']);
-                ActivityLog::log('ACHAT_ADD', "Achat immédiat : {$validated['quantite']} unités pour {$medicament->nom}");
+                $validated['date_achat'] = $validated['date_achat'] ?? now();
+                
+                // Si c'est un nouveau médicament (pas d'ID), on le crée immédiatement
+                if (!$medicament && !empty($validated['medicament_nom_temp'])) {
+                    $medicament = $profil->medicaments()->create([
+                        'nom' => $validated['medicament_nom_temp'],
+                        'type' => 'autre',
+                        'posologie' => 'À définir', // Champ obligatoire
+                        'date_debut' => now(),
+                        'quantite' => 0, // Sera incrémenté juste après
+                        'seuil_alerte' => 2,
+                    ]);
+                    $validated['medicament_id'] = $medicament->id;
+                    $validated['medicament_nom_temp'] = null;
+                }
+
+                if ($medicament) {
+                    $medicament->increment('quantite', $validated['quantite']);
+                    ActivityLog::log('ACHAT_ADD', "Achat immédiat : {$validated['quantite']} unités pour " . ($medicament->nom));
+                }
             } else {
-                ActivityLog::log('SHOPPING_ADD', "Ajouté à la liste : {$medicament->nom} ({$validated['label']})");
+                $nom = $medicament ? $medicament->nom : $validated['medicament_nom_temp'];
+                ActivityLog::log('SHOPPING_ADD', "Ajouté à la liste : {$nom} ({$validated['label']})");
             }
 
             $achat = Achat::create($validated);
 
-            return response()->json($achat, 201);
+            // Invalider le cache pour forcer le Dashboard à se mettre à jour
+            Cache::forget("medicaments_{$profilId}");
+            Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
+
+            return response()->json($achat->load('medicament'), 201);
         });
     }
 
@@ -69,7 +111,8 @@ class AchatController extends Controller
      */
     public function show(Achat $achat)
     {
-        if ($achat->medicament->profil->user_id !== auth()->id()) {
+        // Vérifier ownership via profil
+        if ($achat->profil->user_id !== auth()->id()) {
             return response()->json(['message' => 'Action non autorisée'], 403);
         }
 
@@ -81,8 +124,8 @@ class AchatController extends Controller
      */
     public function update(Request $request, Achat $achat)
     {
-        // Sécurité
-        if ($achat->medicament->profil->user_id !== auth()->id()) {
+        // Sécurité via profil
+        if ($achat->profil->user_id !== auth()->id()) {
             return response()->json(['message' => 'Action non autorisée'], 403);
         }
 
@@ -97,6 +140,27 @@ class AchatController extends Controller
             $oldStatut = $achat->statut;
             $oldQuantite = $achat->quantite;
             
+            // Logique de création de Médicament si c'était un "Nouveau" (temp name)
+            if ($oldStatut === Achat::STATUT_PENDING && $validated['statut'] === Achat::STATUT_COMPLETED) {
+                if (!$achat->medicament_id && $achat->medicament_nom_temp) {
+                    $profil = $achat->profil;
+                    $newMed = $profil->medicaments()->create([
+                        'nom' => $achat->medicament_nom_temp,
+                        'type' => 'autre',
+                        'posologie' => 'À définir', // Champ obligatoire
+                        'date_debut' => now(),
+                        'quantite' => 0,
+                        'seuil_alerte' => 2,
+                    ]);
+                    $achat->medicament_id = $newMed->id;
+                    $achat->medicament_nom_temp = null;
+                    $achat->save();
+                    // On refresh l'achat pour être sûr que la relation 'medicament' pointe sur le nouvel objet
+                    $achat->refresh();
+                    $achat->load('medicament');
+                }
+            }
+
             $achat->update($validated);
             $achat->refresh(); // Pour avoir les nouvelles valeurs si besoin
 
@@ -119,6 +183,11 @@ class AchatController extends Controller
                 }
             }
 
+            // Invalider le cache
+            $profilId = $achat->profil_id;
+            Cache::forget("medicaments_{$profilId}");
+            Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
+
             return response()->json($achat->load('medicament'));
         });
     }
@@ -128,15 +197,15 @@ class AchatController extends Controller
      */
     public function destroy(Achat $achat)
     {
-        if ($achat->medicament->profil->user_id !== auth()->id()) {
+        if ($achat->profil->user_id !== auth()->id()) {
             return response()->json(['message' => 'Action non autorisée'], 403);
         }
 
         return DB::transaction(function () use ($achat) {
             $medicament = $achat->medicament;
 
-            // Si l'achat était déjà complété, on rectifie le stock
-            if ($achat->statut === Achat::STATUT_COMPLETED) {
+            // Si l'achat était déjà complété et relié à un médoc, on rectifie le stock
+            if ($achat->statut === Achat::STATUT_COMPLETED && $medicament) {
                 if ($medicament->quantite >= $achat->quantite) {
                     $medicament->decrement('quantite', $achat->quantite);
                 } else {
@@ -144,7 +213,12 @@ class AchatController extends Controller
                 }
             }
 
+            $profilId = $achat->profil_id;
             $achat->delete();
+
+            // Invalider le cache
+            Cache::forget("medicaments_{$profilId}");
+            Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
 
             return response()->json(['message' => 'Supprimé avec succès']);
         });

@@ -1,6 +1,8 @@
 import React, { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
 
+import LoadingScreen from '../components/LoadingScreen';
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -52,6 +54,7 @@ export const AuthProvider = ({ children }) => {
         setUser(utilisateur);
         if (utilisateur.profils && utilisateur.profils.length > 0) {
             setProfilActif(utilisateur.profils[0]);
+            localStorage.setItem('profil_actif_id', utilisateur.profils[0].id);
         }
         return response.data;
     };
@@ -65,6 +68,7 @@ export const AuthProvider = ({ children }) => {
         setUser(utilisateur);
         if (utilisateur.profils && utilisateur.profils.length > 0) {
             setProfilActif(utilisateur.profils[0]);
+            localStorage.setItem('profil_actif_id', utilisateur.profils[0].id);
         }
         return response.data;
     };
@@ -80,6 +84,7 @@ export const AuthProvider = ({ children }) => {
             setToken(null);
             setUser(null);
             setProfilActif(null);
+
         }
     };
 
@@ -96,6 +101,7 @@ export const AuthProvider = ({ children }) => {
         user,
         token,
         profilActif,
+
         loading,
         fetchUser,
         login,
@@ -107,12 +113,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            {loading ? (
-                <div className="min-h-screen flex flex-col items-center justify-center bg-white">
-                    <div className="h-12 w-12 border-b-2 border-brand-blue mb-4 animate-spin"></div>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-tight animate-pulse">Session Sécurisée HomeMed...</p>
-                </div>
-            ) : children}
+            {loading ? <LoadingScreen /> : children}
         </AuthContext.Provider>
     );
 };

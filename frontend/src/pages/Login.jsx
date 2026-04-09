@@ -23,8 +23,7 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      const res = await api.post('/login', { email, password });
-      login(res.data.user, res.data.token);
+      await login(email, password);
       navigate('/dashboard');
     } catch {
       setError('Identifiants incorrects ou problème serveur.');

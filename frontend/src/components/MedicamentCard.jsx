@@ -10,17 +10,24 @@ import {
 export default function MedicamentCard({ medicament, isCompact, onEdit, onDelete, onDetails }) {
   if (!medicament) return null;
 
-  const isExpired  = medicament.date_expiration && new Date(medicament.date_expiration) < new Date();
-  const isStockLow = medicament.quantite <= (medicament.seuil_alerte || 5);
+  const isExpired     = medicament.date_expiration && new Date(medicament.date_expiration) < new Date();
+  const isOutOfStock  = medicament.quantite === 0;
+  const isStockLow    = !isOutOfStock && medicament.quantite <= (medicament.seuil_alerte || 5);
 
-  const statusColor = isExpired
+  // Near-expiry: within 30 days but not yet expired
+  const daysToExpiry  = medicament.date_expiration
+    ? Math.ceil((new Date(medicament.date_expiration) - new Date()) / (1000 * 60 * 60 * 24))
+    : null;
+  const isNearExpiry  = !isExpired && daysToExpiry !== null && daysToExpiry <= 30;
+
+  const statusColor = isExpired || isOutOfStock
     ? 'bg-red-50 text-red-600 border-red-100'
-    : isStockLow
+    : isStockLow || isNearExpiry
     ? 'bg-amber-50 text-amber-600 border-amber-100'
     : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-brand-blue group-hover:text-white group-hover:border-brand-blue/30';
 
-  const dotColor = isExpired ? 'bg-red-500' : isStockLow ? 'bg-amber-500' : 'bg-brand-green';
-  const statusLabel = isExpired ? 'Expiré' : isStockLow ? 'Stock Faible' : 'Optimal';
+  const dotColor = isExpired || isOutOfStock ? 'bg-red-500' : (isStockLow || isNearExpiry) ? 'bg-amber-500' : medicament.is_incomplet ? 'bg-indigo-500' : 'bg-brand-green';
+  const statusLabel = isExpired ? 'Expiré' : isOutOfStock ? 'Stock Épuisé' : isStockLow ? 'Stock Faible' : isNearExpiry ? `Expire dans ${daysToExpiry}j` : medicament.is_incomplet ? 'À compléter' : 'Optimal';
 
   return (
     <div className={`
@@ -29,14 +36,14 @@ export default function MedicamentCard({ medicament, isCompact, onEdit, onDelete
       ${isCompact ? 'p-4' : 'p-5 flex flex-col h-full'}
     `}>
       {/* Alert strip */}
-      {(isExpired || isStockLow) && (
-        <div className={`absolute top-0 left-0 right-0 h-0.5 ${isExpired ? 'bg-red-400' : 'bg-amber-400'}`} />
+      {(isExpired || isStockLow || medicament.is_incomplet) && (
+        <div className={`absolute top-0 left-0 right-0 h-0.5 ${isExpired ? 'bg-red-400' : medicament.is_incomplet ? 'bg-indigo-400' : 'bg-amber-400'}`} />
       )}
 
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`h-10 w-10 flex-shrink-0 flex items-center justify-center border shadow-sm transition-all ${statusColor}`}>
+          <div className={`h-10 w-10 flex-shrink-0 flex items-center justify-center border shadow-sm transition-all ${medicament.is_incomplet ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : statusColor}`}>
             <Pill size={18} strokeWidth={2.5} />
           </div>
           <div className="min-w-0">
@@ -73,8 +80,8 @@ export default function MedicamentCard({ medicament, isCompact, onEdit, onDelete
           <span className="text-xs font-medium text-slate-500 block mb-1">Stock</span>
           <div className="flex items-center gap-1.5">
             <Package size={14} className="text-slate-400 shrink-0" />
-            <span className={`text-sm font-semibold ${isStockLow ? 'text-amber-600' : 'text-slate-900'}`}>
-              {medicament.quantite} unités
+            <span className={`text-sm font-semibold ${isOutOfStock ? 'text-red-600' : isStockLow ? 'text-amber-600' : 'text-slate-900'}`}>
+              {isOutOfStock ? 'Épuisé' : `${medicament.quantite} unités`}
             </span>
           </div>
         </div>
@@ -82,7 +89,7 @@ export default function MedicamentCard({ medicament, isCompact, onEdit, onDelete
           <span className="text-xs font-medium text-slate-500 block mb-1">Expiration</span>
           <div className="flex items-center gap-1.5">
             <Clock size={14} className="text-slate-400 shrink-0" />
-            <span className={`text-sm font-semibold ${isExpired ? 'text-red-600' : 'text-slate-900'}`}>
+            <span className={`text-sm font-semibold ${isExpired ? 'text-red-600' : isNearExpiry ? 'text-amber-600' : 'text-slate-900'}`}>
               {medicament.date_expiration
                 ? new Date(medicament.date_expiration).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
                 : 'N/A'}

@@ -61,6 +61,10 @@ class PriseController extends Controller
                 ActivityLog::log('PRISE_CANCEL', "Prise annulée : {$rappel->medicament->nom} (stock restauré)");
             }
 
+            $profilId = $rappel->medicament->profil_id;
+            \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$profilId}_" . $validated['date_prise']);
+            \Illuminate\Support\Facades\Cache::forget("medicaments_{$profilId}"); // Because stock might have changed
+
             return response()->json($prise);
         });
     }

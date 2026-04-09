@@ -12,7 +12,6 @@ import SettingsView from '../components/SettingsView';
 import ReportsView from '../components/ReportsView';
 import PlanningView from '../components/PlanningView';
 import AchatsView from '../components/AchatsView';
-import AdminView from '../components/AdminView';
 import MobileBottomNav from '../components/MobileBottomNav';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
@@ -30,6 +29,7 @@ import {
 export default function Dashboard() {
   const { user, profilActif, changerProfil } = useAuth();
   const [currentView, setCurrentView] = useState('overview');
+  const [settingsPanel, setSettingsPanel] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,30 +51,56 @@ export default function Dashboard() {
     localStorage.setItem('hide_system_reminder', 'true');
   };
 
+  const navigateToSettings = (panel = null) => {
+    setSettingsPanel(panel);
+    setCurrentView('settings');
+    setIsProfileOpen(false);
+  };
+
   const [allMedicaments, setAllMedicaments] = useState([]);
   const [adherenceData, setAdherenceData] = useState({ percentage: 0, stats: { taken: 0, total: 0 } });
+  const [planningData, setPlanningData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const CACHE_KEY = `dashboard_data_${profilActif?.id}`;
 
   useEffect(() => {
     if (profilActif?.id) {
       refreshData();
     }
-  }, [profilActif?.id, currentView]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profilActif?.id]);
 
-  const refreshData = async () => {
+  const refreshData = async (silent = false) => {
     try {
-      // Fetch Meds
-      const medsRes = await api.get(`/profils/${profilActif.id}/medicaments`);
-      const medsData = medsRes.data.medicaments || medsRes.data || [];
-      setAllMedicaments(Array.isArray(medsData) ? medsData : []);
+      // Stale-While-Revalidate: show cached data instantly, refresh in background
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached && !silent) {
+        const parsed = JSON.parse(cached);
+        setAllMedicaments(parsed.inventory?.items || []);
+        setAdherenceData(parsed.planning || { percentage: 0, stats: { taken: 0, total: 0 } });
+        setPlanningData(parsed.planning?.schedule || {});
+        setLoading(false);
+        // Then silently refresh in background
+        refreshData(true);
+        return;
+      }
 
-      // Fetch Adherence
-      const planningRes = await api.get('/planning');
-      setAdherenceData({ 
-        percentage: planningRes.data.percentage, 
-        stats: planningRes.data.stats 
-      });
+      if (!silent) setLoading(true);
+      const res = await api.get('/dashboard/summary');
+      const data = res.data;
+
+      // Cache the result for instant next load
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(data));
+
+      setAllMedicaments(data.inventory.items || []);
+      setAdherenceData(data.planning);
+      setPlanningData(data.planning.schedule || {});
+      
     } catch (err) {
       console.error('Erreur Refresh Data:', err);
+    } finally {
+      if (!silent) setLoading(false);
     }
   };
 
@@ -104,6 +130,8 @@ export default function Dashboard() {
       showToast('Médicament supprimé');
       setIsConfirmDeleteOpen(false);
       setMedToDeleteId(null);
+      // Invalidate cache so next load is fresh
+      sessionStorage.removeItem(`dashboard_data_${profilActif.id}`);
       refreshData();
     } catch {
       showToast('Erreur lors de la suppression', 'error');
@@ -172,7 +200,11 @@ export default function Dashboard() {
                      <h2 className="text-[11px] font-black uppercase text-slate-900 tracking-widest">Planning du jour</h2>
                      <button onClick={() => setCurrentView('planning')} className="text-[10px] font-bold text-brand-blue uppercase tracking-widest hover:underline">Voir tout le planning</button>
                   </div>
-                  <PlanningView showToast={showToast} activeProfileId={profilActif?.id} />
+                  <PlanningView 
+                    showToast={showToast} 
+                    activeProfileId={profilActif?.id} 
+                    initialData={adherenceData} 
+                  />
                </div>
 
                <div className="lg:col-span-4 space-y-6">
@@ -227,7 +259,11 @@ export default function Dashboard() {
       case 'planning':
         return (
           <div className="animate-fade-up">
-            <PlanningView showToast={showToast} activeProfileId={profilActif?.id} />
+            <PlanningView 
+              showToast={showToast} 
+              activeProfileId={profilActif?.id} 
+              initialData={adherenceData} 
+            />
           </div>
         );
 
@@ -252,18 +288,19 @@ export default function Dashboard() {
               showToast={showToast} 
               activeProfileId={profilActif?.id} 
               medicamentsData={allMedicaments}
+              refreshData={refreshData}
             />
           </div>
         );
 
       case 'settings':
         return (
-          <SettingsView showToast={showToast} setCurrentView={setCurrentView} />
-        );
-
-      case 'admin':
-        return (
-          <AdminView showToast={showToast} />
+          <SettingsView 
+            showToast={showToast} 
+            setCurrentView={setCurrentView} 
+            settingsPanel={settingsPanel}
+            setSettingsPanel={setSettingsPanel}
+          />
         );
 
       default:
@@ -281,8 +318,8 @@ export default function Dashboard() {
           <DashboardSidebar
             currentView={currentView}
             setCurrentView={(v) => { setCurrentView(v); setSidebarOpen(false); }}
+            navigateToSettings={navigateToSettings}
             sidebarCollapsed={false}
-            setSidebarCollapsed={() => {}}
             setSidebarOpen={setSidebarOpen}
             user={user}
             activeProfileId={profilActif?.id}
@@ -301,6 +338,7 @@ export default function Dashboard() {
             isProfileOpen={isProfileOpen}
             setIsProfileOpen={setIsProfileOpen}
             setCurrentView={setCurrentView}
+            navigateToSettings={navigateToSettings}
             allMedicaments={allMedicaments}
             onSelectMedicament={handleShowDetails}
             activeProfileId={profilActif?.id}
@@ -326,6 +364,8 @@ export default function Dashboard() {
           setIsFormOpen(false);
           setMedicamentToEdit(null);
           showToast(medicamentToEdit ? 'Mis à jour' : 'Ajouté');
+          // Invalidate cache so next refresh is fresh
+          sessionStorage.removeItem(`dashboard_data_${profilActif?.id}`);
           refreshData();
         }}
         showToast={showToast}

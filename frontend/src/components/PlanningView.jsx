@@ -10,19 +10,26 @@ import api from '../services/api';
  * PlanningView — HomeMed Daily Adherence
  * Displays today's medication schedule grouped by moment.
  */
-export default function PlanningView({ showToast, activeProfileId }) {
+export default function PlanningView({ showToast, activeProfileId, initialData = null }) {
   const [schedule, setSchedule] = useState({});
   const [percentage, setPercentage] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialData);
   const [stats, setStats] = useState({ total: 0, taken: 0 });
 
   useEffect(() => {
-    fetchPlanning();
-  }, [activeProfileId]);
+    if (initialData) {
+      setSchedule(initialData.schedule || {});
+      setPercentage(initialData.percentage || 0);
+      setStats(initialData.stats || { total: 0, taken: 0 });
+      setLoading(false);
+    } else {
+      fetchPlanning();
+    }
+  }, [activeProfileId, initialData]);
 
   const fetchPlanning = async () => {
     try {
-      setLoading(true);
+      if (!initialData) setLoading(true);
       const res = await api.get('/planning');
       setSchedule(res.data.schedule);
       setPercentage(res.data.percentage);
@@ -31,24 +38,57 @@ export default function PlanningView({ showToast, activeProfileId }) {
       console.error(err);
       showToast && showToast('Erreur lors du chargement du planning', 'error');
     } finally {
-      setLoading(false);
+      if (!initialData) setLoading(false);
     }
   };
 
   const handleToggle = async (item) => {
+    const newStatus = !item.pris;
+    const today = new Date().toISOString().split('T')[0];
+
+    // --- OPTIMISTIC UPDATE: Update UI instantly, don't wait for server ---
+    setSchedule(prev => {
+      const updated = { ...prev };
+      for (const moment in updated) {
+        updated[moment] = updated[moment].map(i =>
+          i.id === item.id ? { ...i, pris: newStatus } : i
+        );
+      }
+      return updated;
+    });
+    if (newStatus) {
+      setStats(prev => ({ ...prev, taken: prev.taken + 1 }));
+      const newTotal = stats.total;
+      const newTaken = stats.taken + 1;
+      setPercentage(newTotal > 0 ? Math.round((newTaken / newTotal) * 100) : 0);
+    } else {
+      setStats(prev => ({ ...prev, taken: Math.max(0, prev.taken - 1) }));
+      const newTotal = stats.total;
+      const newTaken = Math.max(0, stats.taken - 1);
+      setPercentage(newTotal > 0 ? Math.round((newTaken / newTotal) * 100) : 0);
+    }
+
     try {
-      const newStatus = !item.pris;
+      // Fire-and-forget: API call runs in background
       await api.post('/prises/toggle', {
         rappel_id: item.id,
-        date_prise: new Date().toISOString().split('T')[0],
+        date_prise: today,
         pris: newStatus
       });
-      
-      showToast && showToast(newStatus ? 'Prise enregistrée' : 'Prise annulée');
-      fetchPlanning(); // Refresh stats and UI
+      showToast && showToast(newStatus ? '✓ Prise enregistrée' : 'Prise annulée');
     } catch (err) {
       console.error(err);
-      showToast && showToast('Erreur lors de l\'enregistrement', 'error');
+      // Revert on failure
+      setSchedule(prev => {
+        const reverted = { ...prev };
+        for (const moment in reverted) {
+          reverted[moment] = reverted[moment].map(i =>
+            i.id === item.id ? { ...i, pris: item.pris } : i
+          );
+        }
+        return reverted;
+      });
+      showToast && showToast('Erreur — veuillez réessayer', 'error');
     }
   };
 
@@ -88,36 +128,38 @@ export default function PlanningView({ showToast, activeProfileId }) {
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {items.map(item => (
-                       <button 
-                         key={item.id}
-                         onClick={() => handleToggle(item)}
-                         className={`p-5 border transition-all flex items-center justify-between text-left group
-                           ${item.pris 
-                             ? 'bg-slate-50 border-slate-100 opacity-60' 
-                             : 'bg-white border-slate-100 hover:border-brand-blue hover:shadow-lg'
-                           }`}
-                       >
-                          <div className="flex items-center gap-4">
-                             <div className={`h-10 w-10 flex items-center justify-center transition-all
-                               ${item.pris ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-50 text-slate-400 group-hover:bg-brand-blue/5 group-hover:text-brand-blue'}
-                             `}>
-                                {item.pris ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-                             </div>
-                             <div className="space-y-0.5">
-                                <h4 className={`text-sm font-bold tracking-tight ${item.pris ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
-                                   {item.medicament}
-                                </h4>
-                                <div className="flex items-center gap-2">
-                                   <Clock size={10} className="text-slate-300" />
-                                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Prévu à {item.heure.substring(0,5)}</span>
-                                </div>
-                             </div>
-                          </div>
-                          
-                          <ChevronRight size={14} className={`transition-transform duration-300 ${item.pris ? 'text-slate-200' : 'text-slate-300 group-hover:translate-x-1 group-hover:text-brand-blue'}`} />
-                       </button>
-                    ))}
+                    {items.map(item => {
+                       const now = new Date();
+                       const [h, m] = item.heure.substring(0,5).split(":").map(Number);
+                       const scheduledTime = new Date();
+                       scheduledTime.setHours(h, m, 0, 0);
+                       const isMissed = !item.pris && now > scheduledTime;
+                       return (
+                        <button 
+                          key={item.id}
+                          onClick={() => handleToggle(item)}
+                          className={`p-5 border transition-all flex items-center justify-between text-left group ${item.pris ? 'bg-slate-50 border-slate-100 opacity-60' : isMissed ? 'bg-red-50 border-red-100 hover:border-red-300 hover:shadow-lg' : 'bg-white border-slate-100 hover:border-brand-blue hover:shadow-lg'}`}
+                        >
+                           <div className="flex items-center gap-4">
+                              <div className={`h-10 w-10 flex items-center justify-center transition-all ${item.pris ? 'bg-emerald-50 text-emerald-500' : isMissed ? 'bg-red-100 text-red-500' : 'bg-slate-50 text-slate-400 group-hover:bg-brand-blue/5 group-hover:text-brand-blue'}`}>
+                                 {item.pris ? <CheckCircle2 size={20} /> : isMissed ? <AlertCircle size={20} /> : <Circle size={20} />}
+                              </div>
+                              <div className="space-y-0.5">
+                                 <h4 className={`text-sm font-bold tracking-tight ${item.pris ? "text-slate-400 line-through" : isMissed ? "text-red-700" : "text-slate-900"}`}>
+                                    {item.medicament}
+                                 </h4>
+                                 <div className="flex items-center gap-2">
+                                    <Clock size={10} className={isMissed ? "text-red-300" : "text-slate-300"} />
+                                    <span className={`text-[10px] font-bold uppercase tracking-tight ${isMissed ? "text-red-400" : "text-slate-400"}`}>
+                                      {isMissed ? "Dose oubliee - " : "Prevu a "}{item.heure.substring(0,5)}
+                                    </span>
+                                 </div>
+                              </div>
+                           </div>
+                           <ChevronRight size={14} className={`transition-transform duration-300 ${item.pris ? "text-slate-200" : isMissed ? "text-red-300" : "text-slate-300 group-hover:translate-x-1 group-hover:text-brand-blue"}`} />
+                        </button>
+                       );
+                    })}
                  </div>
               </div>
             );
