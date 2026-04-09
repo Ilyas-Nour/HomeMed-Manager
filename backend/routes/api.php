@@ -3,6 +3,7 @@
 use App\Http\Controllers\AchatController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GroupeController;
 use App\Http\Controllers\MasterMedicamentController;
 use App\Http\Controllers\MedicamentController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\RappelController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Récupérer les informations de l'utilisateur connecté
     Route::get('/auth/moi', [AuthController::class, 'moi']);
     Route::patch('/auth/update', [AuthController::class, 'updateAccount']);
+
+    // Dashboard Unifié (Performance)
+    Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
 
     // Médicaments — CRUD scopé par profil / Suggestions
     Route::get('/master-medicaments', [MasterMedicamentController::class, 'index']);
@@ -95,13 +100,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Achats (Shopping List)
     Route::apiResource('achats', AchatController::class)->except(['show']);
 
-    // ——————————————————————————————————————————
-    // Administration & Supervision (Requirement 4)
-    // ——————————————————————————————————————————
-    Route::middleware('admin')->prefix('admin')->group(function () {
-        Route::get('/stats', [AdminController::class, 'stats']);
-        Route::get('/users', [AdminController::class, 'users']);
-    });
 
     // ——————————————————————————————————————————
     // Groupes Collaboratifs (Phase 3)
@@ -112,10 +110,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('groupes/{groupe}', [GroupeController::class, 'show']);
     Route::delete('groupes/{groupe}', [GroupeController::class, 'destroy']);
     // ——————————————————————————————————————————
-    // Notification Preferences
+    // Notifications & Préférences
     // ——————————————————————————————————————————
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::post('notifications', [NotificationController::class, 'store']);
     Route::get('notifications/preferences', [NotificationPreferenceController::class, 'index']);
     Route::patch('notifications/preferences', [NotificationPreferenceController::class, 'update']);
+    Route::patch('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::patch('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('notifications/clear-all', [NotificationController::class, 'clearAll']);
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy']);
 
     // ——————————————————————————————————————————
     // Analytical Reports
