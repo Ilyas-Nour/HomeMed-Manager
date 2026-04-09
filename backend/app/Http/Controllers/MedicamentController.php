@@ -30,11 +30,13 @@ class MedicamentController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        // Optimisation : Eager Loading des rappels pour éviter le N+1 au chargement de l'inventaire
-        $medicaments = $profil->medicaments()
-            ->with(['rappels'])
-            ->orderBy('nom')
-            ->get();
+        $cacheKey = "medicaments_{$profilId}";
+        $medicaments = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($profil) {
+            return $profil->medicaments()
+                ->with(['rappels'])
+                ->orderBy('nom')
+                ->get();
+        });
 
         return response()->json([
             'profil' => $profil->only(['id', 'nom', 'relation']),
@@ -59,6 +61,9 @@ class MedicamentController extends Controller
 
         // Créer le médicament associé au profil
         $medicament = $profil->medicaments()->create($request->validated());
+
+        \Illuminate\Support\Facades\Cache::forget("medicaments_{$profilId}");
+        \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
 
         ActivityLog::log('MED_ADD', "Médicament ajouté : {$medicament->nom} pour {$profil->nom}");
 
@@ -111,9 +116,11 @@ class MedicamentController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        // Récupérer et mettre à jour le médicament
         $medicament = $profil->medicaments()->findOrFail($medicamentId);
         $medicament->update($request->validated());
+
+        \Illuminate\Support\Facades\Cache::forget("medicaments_{$profilId}");
+        \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
 
         ActivityLog::log('MED_UPDATE', "Médicament mis à jour : {$medicament->nom}");
 
@@ -137,10 +144,12 @@ class MedicamentController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        // Récupérer et supprimer le médicament
         $medicament = $profil->medicaments()->findOrFail($medicamentId);
         $nomMedicament = $medicament->nom;
         $medicament->delete();
+
+        \Illuminate\Support\Facades\Cache::forget("medicaments_{$profilId}");
+        \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
 
         ActivityLog::log('MED_DELETE', "Médicament supprimé : {$nomMedicament}");
 

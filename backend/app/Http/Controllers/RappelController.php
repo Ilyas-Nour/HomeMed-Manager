@@ -34,10 +34,12 @@ class RappelController extends Controller
 
         $validated = $request->validate([
             'moment' => 'required|string',
-            'heure' => 'required|date_format:H:i',
+            'heure' => 'required|regex:/^\d{2}:\d{2}(:\d{2})?$/',
         ]);
 
         $rappel = $medicament->rappels()->create($validated);
+
+        \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$medicament->profil_id}_" . now()->toDateString());
 
         ActivityLog::log('RAPPEL_ADD', "Rappel ajouté pour {$medicament->nom} ({$rappel->moment} à {$rappel->heure})");
 
@@ -55,10 +57,12 @@ class RappelController extends Controller
 
         $validated = $request->validate([
             'moment' => 'required|string',
-            'heure' => 'required|date_format:H:i',
+            'heure' => 'required|regex:/^\d{2}:\d{2}(:\d{2})?$/',
         ]);
 
         $rappel->update($validated);
+
+        \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$rappel->medicament->profil_id}_" . now()->toDateString());
 
         return response()->json($rappel);
     }
@@ -73,10 +77,14 @@ class RappelController extends Controller
             return response()->json(['message' => 'Action non autorisée'], 403);
         }
 
+        $profilId = $rappel->medicament->profil_id;
+
         $nomMed = $rappel->medicament->nom;
         $moment = $rappel->moment;
 
         $rappel->delete();
+
+        \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
 
         ActivityLog::log('RAPPEL_DELETE', "Rappel supprimé pour {$nomMed} ({$moment})");
 

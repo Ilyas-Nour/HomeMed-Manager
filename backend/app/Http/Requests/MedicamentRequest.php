@@ -37,7 +37,7 @@ class MedicamentRequest extends FormRequest
             'type' => [
                 $estCreation ? 'required' : 'sometimes',
                 'string',
-                'in:comprimé,sirop,injection,crème,gouttes,patch,suppositoire,autre',
+                'in:comprimé,gélule,sirop,injection,crème,pommade,gouttes,patch,suppositoire,autre',
             ],
             'posologie' => [
                 $estCreation ? 'required' : 'sometimes',
@@ -88,7 +88,7 @@ class MedicamentRequest extends FormRequest
             'nom.required' => 'Le nom du médicament est obligatoire.',
             'nom.min' => 'Le nom doit contenir au moins 2 caractères.',
             'type.required' => 'Le type du médicament est obligatoire.',
-            'type.in' => 'Le type sélectionné est invalide. Types acceptés : comprimé, sirop, injection, crème, gouttes, patch, suppositoire, autre.',
+            'type.in' => 'Le type sélectionné est invalide. Types acceptés : comprimé, gélule, sirop, injection, crème, pommade, gouttes, patch, suppositoire, autre.',
             'posologie.required' => 'La posologie est obligatoire.',
             'posologie.min' => 'La posologie doit contenir au moins 5 caractères.',
             'date_debut.required' => 'La date de début du traitement est obligatoire.',
