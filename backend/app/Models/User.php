@@ -111,4 +111,28 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsToMany(Groupe::class, 'groupe_user')->withPivot('role')->withTimestamps();
     }
+
+    /**
+     * Demandes de partage envoyées par l'utilisateur.
+     */
+    public function sentRequests(): HasMany
+    {
+        return $this->hasMany(MedicamentRequest::class, 'requester_id');
+    }
+
+    /**
+     * Demandes de partage reçues par l'utilisateur.
+     */
+    public function receivedRequests(): HasMany
+    {
+        return $this->hasMany(MedicamentRequest::class, 'owner_id');
+    }
+
+    /**
+     * Messages envoyés dans le chat de partage.
+     */
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(SharingMessage::class, 'sender_id');
+    }
 }

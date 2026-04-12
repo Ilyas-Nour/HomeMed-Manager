@@ -23,7 +23,8 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
     nom: '', type: 'comprimé', posologie: '',
     date_debut: new Date().toISOString().split('T')[0],
     date_fin: '', date_expiration: '',
-    quantite: 0, seuil_alerte: 5, notes: ''
+    quantite: 0, seuil_alerte: 5, notes: '',
+    is_public: false
   });
   
   const [rappels, setRappels] = useState([]);
@@ -63,6 +64,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
     if (medicamentToEdit) {
       setFormData({ 
         ...medicamentToEdit,
+        is_public: !!medicamentToEdit.is_public,
         date_debut: medicamentToEdit.date_debut ? String(medicamentToEdit.date_debut).substring(0, 10) : '',
         date_fin: medicamentToEdit.date_fin ? String(medicamentToEdit.date_fin).substring(0, 10) : '',
         date_expiration: medicamentToEdit.date_expiration ? String(medicamentToEdit.date_expiration).substring(0, 10) : ''
@@ -75,7 +77,8 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
         nom: '', type: 'comprimé', posologie: '',
         date_debut: new Date().toISOString().split('T')[0],
         date_fin: '', date_expiration: '',
-        quantite: 0, seuil_alerte: 5, notes: ''
+        quantite: 0, seuil_alerte: 5, notes: '',
+        is_public: false
       });
       setRappels([]);
     }

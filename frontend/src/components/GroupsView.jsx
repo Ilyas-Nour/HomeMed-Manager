@@ -9,12 +9,13 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import ConfirmModal from './ConfirmModal';
+import SharedPharmacy from './SharedPharmacy';
 
 /**
  * GroupsView — Sleek SaaS Design
  * Coordination of care with a professional, high-fidelity UI.
  */
-export default function GroupsView() {
+export default function GroupsView({ onChatOpen, showToast }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [groupes, setGroupes] = useState([]);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
@@ -234,36 +235,14 @@ export default function GroupsView() {
                          </div>
                       </div>
 
-                       {/* Shared Medications */}
-                       {groupe.medicaments_partages && groupe.medicaments_partages.length > 0 && (
-                         <div className="space-y-6 pt-10 border-t border-slate-100">
-                           <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-3">
-                             <Globe size={14} className="text-brand-blue" /> Médicaments Partagés
-                           </h4>
-                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                             {groupe.medicaments_partages.map(med => {
-                               const isLow = med.quantite <= (med.seuil_alerte || 5);
-                               const isExp = med.date_expiration && new Date(med.date_expiration) < new Date();
-                               return (
-                                 <div key={med.id} className={`p-4 rounded-2xl bg-white border flex items-center justify-between gap-4 transition-all hover:shadow-md ${isExp ? 'border-rose-100 bg-rose-50/10' : isLow ? 'border-amber-100 bg-amber-50/10' : 'border-slate-100'}`}>
-                                   <div className="flex items-center gap-4">
-                                      <div className={`h-10 w-10 flex items-center justify-center rounded-xl bg-white border shadow-sm ${isExp ? 'text-rose-500 border-rose-100' : isLow ? 'text-amber-500 border-amber-100' : 'text-emerald-500 border-slate-100'}`}>
-                                         <Share2 size={18} />
-                                      </div>
-                                      <div>
-                                        <p className="text-sm font-bold text-slate-900 tracking-tight">{med.nom}</p>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 opacity-60">de {med.profil_nom}</p>
-                                      </div>
-                                   </div>
-                                   <span className={`badge-dna ${isExp ? 'bg-rose-50 text-rose-600' : isLow ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                                     {isExp ? 'Expiré' : isLow ? 'Critique' : (med.quantite + ' u.')}
-                                   </span>
-                                 </div>
-                               );
-                             })}
-                           </div>
-                         </div>
-                       )}
+                       {/* Shared Pharmacy Discovery Layer */}
+                       <div className="pt-10 border-t border-slate-100">
+                          <SharedPharmacy 
+                            groupeId={groupe.id} 
+                            onChatOpen={onChatOpen}
+                            showToast={showToast || setMessage}
+                           />
+                       </div>
 
                       {/* Pending Section */}
                       {groupe.invitations?.length > 0 && (

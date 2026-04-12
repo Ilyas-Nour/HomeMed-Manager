@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Pill,
   Settings, Users, FolderHeart,
   ChevronRight, ChevronDown, Check, UserPlus, X,
-  ShoppingCart, Calendar
+  ShoppingCart, Calendar, MessageCircle
 } from 'lucide-react';
 
 /**
@@ -11,7 +11,8 @@ import {
  */
 export default function DashboardSidebar({
   currentView, setCurrentView, navigateToSettings,
-  setSidebarOpen, user, activeProfileId, onProfileSwitch
+  setSidebarOpen, user, activeProfileId, onProfileSwitch,
+  collabBadge = 0
 }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -28,6 +29,7 @@ export default function DashboardSidebar({
         { id: 'shopping',    label: 'Achats & Stocks', icon: <ShoppingCart size={18} /> },
         { id: 'family',      label: 'Famille',         icon: <Users size={18} /> },
         { id: 'groups',      label: 'Groupes',         icon: <FolderHeart size={18} /> },
+        { id: 'collaboration', label: 'Entraide',      icon: <MessageCircle size={18} /> },
       ]
     },
     {
@@ -106,6 +108,11 @@ export default function DashboardSidebar({
                     {item.icon}
                   </div>
                   <span className="flex-1 text-left tracking-tight">{item.label}</span>
+                  {item.id === 'collaboration' && collabBadge > 0 && (
+                    <span className="bg-brand-blue text-white text-[10px] font-black h-5 w-5 flex items-center justify-center rounded-lg shadow-lg shadow-brand-blue/20 animate-pulse">
+                        {collabBadge}
+                    </span>
+                  )}
                 </button>
               );
             })}

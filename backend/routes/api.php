@@ -13,7 +13,11 @@ use App\Http\Controllers\RappelController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\ReportController;
+use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SharedPharmacyController;
+use App\Http\Controllers\MedicamentRequestController;
+use App\Http\Controllers\ChatController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -132,4 +136,22 @@ Route::middleware('auth:sanctum')->group(function () {
     // ——————————————————————————————————————————
     Route::get('reports/summary', [ReportController::class, 'summary']);
     Route::get('reports/history', [ReportController::class, 'history']);
+
+    // ——————————————————————————————————————————
+    // Partage & Collaborations (Requirement Sharing)
+    // ——————————————————————————————————————————
+        Route::get('/collaboration/count', [NotificationController::class, 'collaborationCount']);
+        Route::get('groupes/{groupe}/pharmacie', [SharedPharmacyController::class, 'index']);
+    
+    Route::prefix('partage')->group(function () {
+        Route::get('/demandes', [MedicamentRequestController::class, 'index']);
+        Route::post('/demandes', [MedicamentRequestController::class, 'store']);
+        Route::get('/demandes/{medRequest}', [MedicamentRequestController::class, 'show']);
+        Route::patch('/demandes/{medRequest}', [MedicamentRequestController::class, 'update']);
+        
+        // Chat lié à une demande
+        Route::get('/demandes/{medRequest}/messages', [ChatController::class, 'index']);
+        Route::post('/demandes/{medRequest}/messages', [ChatController::class, 'store']);
+        Route::post('/demandes/{medRequest}/read', [ChatController::class, 'markAsRead']);
+    });
 });

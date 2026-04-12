@@ -13,10 +13,14 @@ import SettingsView from '../components/SettingsView';
 import ReportsView from '../components/ReportsView';
 import PlanningView from '../components/PlanningView';
 import AchatsView from '../components/AchatsView';
+import CollaborationView from '../components/CollaborationView';
 import MobileBottomNav from '../components/MobileBottomNav';
 import Toast from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import MedicamentDetailsModal from '../components/MedicamentDetailsModal';
+import ChatDialog from '../components/ChatDialog';
+import echo from '../services/echo';
+window.Echo = echo;
 import {
   Plus, Calendar, AlertTriangle,
   LayoutDashboard, Pill,
@@ -43,6 +47,8 @@ export default function Dashboard() {
   const [medToDeleteId, setMedToDeleteId] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [medToDetail, setMedToDetail] = useState(null);
+  const [activeRequest, setActiveRequest] = useState(null);
+  const [collabUnreadCount, setCollabUnreadCount] = useState(0);
   const [showReminder, setShowReminder] = useState(() => {
     return localStorage.getItem('hide_system_reminder') !== 'true';
   });
@@ -93,6 +99,46 @@ export default function Dashboard() {
   const refreshData = () => {
     queryClient.invalidateQueries({ queryKey: ['dashboard_data', profilActif?.id] });
   };
+
+  const fetchUnreadCount = async () => {
+    if (!user) return;
+    try {
+      const res = await api.get('/collaboration/count');
+      setCollabUnreadCount(res.data.count);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (dashboardData?.collaboration_unread_count !== undefined) {
+      setCollabUnreadCount(dashboardData.collaboration_unread_count);
+    }
+  }, [dashboardData]);
+
+  useEffect(() => {
+    if (window.Echo && user) {
+      // Écouter les notifications globales de collaboration pour l'utilisateur
+      window.Echo.private(`users.${user.id}`)
+        .listen('.request.updated', (e) => {
+            setCollabUnreadCount(prev => prev + 1);
+            // On ne rafraîchit pas tout le dashboard ici pour éviter les lenteurs
+        })
+        .listen('.message.sent', (e) => {
+            // Uniquement si on n'est pas déjà dans le chat en question 
+            // (La gestion fine peut se faire ici ou dans le composant ChatDialog)
+            if (activeRequest?.id !== e.request_id) {
+                setCollabUnreadCount(prev => prev + 1);
+                showToast(`Nouveau message de ${e.sender_name}`, 'info');
+            }
+        });
+    }
+    return () => {
+      if (window.Echo && user) {
+        window.Echo.leave(`users.${user.id}`);
+      }
+    };
+  }, [user, activeRequest?.id]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -278,7 +324,12 @@ export default function Dashboard() {
       case 'groups':
         return (
           <div className="animate-fade-up">
-            <GroupsView onProfileSwitch={changerProfil} setCurrentView={setCurrentView} />
+            <GroupsView 
+              onProfileSwitch={changerProfil} 
+              setCurrentView={setCurrentView} 
+              onChatOpen={setActiveRequest}
+              showToast={showToast}
+            />
           </div>
         );
 
@@ -304,6 +355,16 @@ export default function Dashboard() {
           />
         );
 
+      case 'collaboration':
+        return (
+          <div className="animate-fade-up">
+            <CollaborationView 
+               onChatOpen={setActiveRequest}
+               showToast={showToast}
+            />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -324,6 +385,7 @@ export default function Dashboard() {
             user={user}
             activeProfileId={profilActif?.id}
             onProfileSwitch={changerProfil}
+            collabBadge={collabUnreadCount}
           />
         </aside>
 
@@ -352,7 +414,7 @@ export default function Dashboard() {
         </main>
       </div>
 
-      <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} user={user} />
+      <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} user={user} collabBadge={collabUnreadCount} />
 
       <MedicamentForm
         isOpen={isFormOpen}
@@ -383,6 +445,15 @@ export default function Dashboard() {
         onEdit={handleEdit}
         onDelete={openDeleteConfirm}
       />
+
+      {activeRequest && (
+        <ChatDialog 
+          medRequest={activeRequest}
+          onClose={() => setActiveRequest(null)}
+          showToast={showToast}
+          onRead={fetchUnreadCount}
+        />
+      )}
     </div>
   );
 }

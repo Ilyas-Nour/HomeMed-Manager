@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Profil;
 use App\Models\Rappel;
+use App\Models\MedicamentRequest;
+use App\Models\SharingMessage;
 use App\Http\Resources\MedicamentResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -79,6 +81,19 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // 5. Compteur de collaboration (Demandes en attente + Messages non lus)
+        $pendingRequestsCount = MedicamentRequest::where('owner_id', $request->user()->id)
+            ->where('status', 'pending')
+            ->count();
+
+        $unreadMessagesCount = SharingMessage::where('sender_id', '!=', $request->user()->id)
+            ->where('is_read', false)
+            ->whereHas('request', function ($q) use ($request) {
+                $q->where('owner_id', $request->user()->id)
+                  ->orWhere('requester_id', $request->user()->id);
+            })
+            ->count();
+
         return [
             'user' => [
                 'name' => $request->user()->name,
@@ -98,6 +113,7 @@ class DashboardController extends Controller
                 ]
             ],
             'notifications' => $notifications,
+            'collaboration_unread_count' => $pendingRequestsCount + $unreadMessagesCount,
         ];
     }
 }

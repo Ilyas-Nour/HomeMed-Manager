@@ -49,6 +49,7 @@ class Medicament extends Model
         'quantite',
         'seuil_alerte',
         'notes',
+        'is_public',
     ];
 
     /**
@@ -60,6 +61,7 @@ class Medicament extends Model
         'date_expiration' => 'date',
         'quantite' => 'integer',
         'seuil_alerte' => 'integer',
+        'is_public' => 'boolean',
     ];
 
     /**
@@ -111,5 +113,13 @@ class Medicament extends Model
     public function achats(): HasMany
     {
         return $this->hasMany(Achat::class, 'medicament_id');
+    }
+
+    /**
+     * Relation : Un médicament peut faire l'objet de plusieurs demandes de partage.
+     */
+    public function requests(): HasMany
+    {
+        return $this->hasMany(MedicamentRequest::class, 'medicament_id');
     }
 }

@@ -31,4 +31,12 @@ class Groupe extends Model
     {
         return $this->hasMany(GroupInvitation::class);
     }
+
+    /**
+     * Demandes de partage effectuées au sein de ce groupe.
+     */
+    public function sharingRequests()
+    {
+        return $this->hasMany(MedicamentRequest::class, 'groupe_id');
+    }
 }

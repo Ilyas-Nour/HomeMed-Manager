@@ -2,18 +2,18 @@ import React from 'react';
 import { 
   LayoutDashboard, Pill, 
   Calendar, ShoppingCart, 
-  Settings, FolderHeart, Shield
+  Settings, FolderHeart, Shield, MessageCircle
 } from 'lucide-react';
 
 /**
  * MobileBottomNav — Product Precision
  * Minimalist glassmorphism design for modern mobile UX.
  */
-export default function MobileBottomNav({ currentView, setCurrentView, user }) {
+export default function MobileBottomNav({ currentView, setCurrentView, user, collabBadge = 0 }) {
   const navItems = [
     { id: 'overview',    label: 'Accueil',  icon: <LayoutDashboard size={20} /> },
     { id: 'medicaments', label: 'Médocs',   icon: <Pill size={20} /> },
-    { id: 'planning',    label: 'Planning', icon: <Calendar size={20} /> },
+    { id: 'collaboration', label: 'Entraide', icon: <MessageCircle size={20} /> },
     { id: 'groups',      label: 'Groupes',  icon: <FolderHeart size={20} /> },
     { id: 'settings',    label: 'Paramètres', icon: <Settings size={20} /> },
   ];
@@ -45,8 +45,11 @@ export default function MobileBottomNav({ currentView, setCurrentView, user }) {
                 isActive ? 'text-brand-blue' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
-              <div className={`transition-transform duration-300 ${isActive ? 'scale-110 -translate-y-0.5' : ''}`}>
+              <div className={`transition-transform duration-300 relative ${isActive ? 'scale-110 -translate-y-0.5' : ''}`}>
                 {item.icon}
+                {item.id === 'collaboration' && collabBadge > 0 && (
+                  <div className="absolute -top-1 -right-1 h-3 w-3 bg-brand-blue rounded-full border-2 border-white shadow-sm" />
+                )}
               </div>
               <span className={`text-[8px] font-black uppercase tracking-widest mt-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-60'}`}>
                 {item.label}
