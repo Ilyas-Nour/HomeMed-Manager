@@ -87,7 +87,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
     setFormData({ ...formData, nom: val });
     if (val.length > 2) {
       try {
-        const res = await api.get(`/medicaments/search?q=${val}`);
+        const res = await api.get(`/master-medicaments?q=${val}`);
         setSuggestions(res.data);
         setShowSuggestions(true);
       } catch (e) { console.error(e); }
