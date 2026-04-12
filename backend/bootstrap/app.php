@@ -24,9 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Diagnostic timer
+        $middleware->prepend(\App\Http\Middleware\RequestTimer::class);
+
         // Enregistre l'alias pour le middleware administrateur
         $middleware->alias([
-            'admin' => EnsureUserIsAdmin::class,
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

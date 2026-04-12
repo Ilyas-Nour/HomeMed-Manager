@@ -144,21 +144,25 @@ export function NotificationProvider({ children }) {
         echo.private(channelName)
           .listen('DataChanged', (e) => {
             console.log('Real-time update received:', e);
-            // On invalide les données globales du dashboard
-            queryClient.invalidateQueries({ queryKey: ['dashboard_data', profilActif.id] });
+            // Only invalidate if the event type is relevant to the dashboard (prevent loops)
+            if (['prise', 'stock_update', 'group_updated'].includes(e.type)) {
+                queryClient.invalidateQueries({ queryKey: ['dashboard_data', profilActif.id] });
+            }
           });
 
         return () => echo.leave(channelName);
       });
 
-      // Polling très espacé en backup
+      // Polling désactivé sur Windows pour préserver le thread unique
+      /*
       const delay = setTimeout(() => {
         checkReminders();
         intervalRef.current = setInterval(checkReminders, 300000); 
       }, 2000);
+      */
 
       return () => {
-        clearTimeout(delay);
+        // clearTimeout(delay);
         if (intervalRef.current) clearInterval(intervalRef.current);
       };
     } else {

@@ -76,7 +76,7 @@ class DashboardController extends Controller
                 $q->whereNull('profil_id')->orWhere('profil_id', $profilId);
             })
             ->orderByDesc('created_at')
-            ->limit(15)
+            ->limit(5)
             ->get();
 
         return [

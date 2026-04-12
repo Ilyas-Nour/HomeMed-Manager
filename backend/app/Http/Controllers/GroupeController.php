@@ -19,33 +19,51 @@ class GroupeController extends Controller
      */
     public function index(Request $request)
     {
-        $groupes = $request->user()->participatedGroups()
-            ->with([
-                'participants:id,name,email',
-                'invitations',
-                'participants.profils.medicaments'
+        $user = $request->user();
+        
+        // 1. Récupérer les groupes avec uniquement les données essentielles
+        $groupes = $user->participatedGroups()
+            ->with(['participants:id,name,email', 'invitations'])
+            ->get();
+
+        // 2. Récupérer TOUS les médicaments partagés pour TOUS les groupes de l'utilisateur en UNE SEULE requête SQL optimisée
+        // On utilise la Query Builder pour éviter l'hydratation de modèles Eloquent lourds
+        $groupeIds = $groupes->pluck('id');
+        
+        $allSharedMeds = \DB::table('medicaments')
+            ->join('profils', 'medicaments.profil_id', '=', 'profils.id')
+            ->join('groupe_user', 'profils.user_id', '=', 'groupe_user.user_id')
+            ->join('users', 'profils.user_id', '=', 'users.id')
+            ->whereIn('groupe_user.groupe_id', $groupeIds)
+            ->select([
+                'medicaments.id',
+                'medicaments.nom',
+                'medicaments.type',
+                'medicaments.quantite',
+                'medicaments.seuil_alerte',
+                'medicaments.date_expiration',
+                'profils.nom as profil_nom',
+                'users.name as user_name',
+                'groupe_user.groupe_id'
             ])
             ->get();
 
-        // Enrich each group with a flat list of shared medications
-        $groupes->each(function ($groupe) {
-            $medicamentsPartages = collect();
-            foreach ($groupe->participants as $participant) {
-                foreach ($participant->profils as $profil) {
-                    foreach ($profil->medicaments as $med) {
-                        $medicamentsPartages->push([
-                            'id'            => $med->id,
-                            'nom'           => $med->nom,
-                            'type'          => $med->type,
-                            'quantite'      => $med->quantite,
-                            'seuil_alerte'  => $med->seuil_alerte,
-                            'date_expiration' => $med->date_expiration,
-                            'profil_nom'    => $profil->nom . ' (' . $participant->name . ')',
-                        ]);
-                    }
-                }
-            }
-            $groupe->medicaments_partages = $medicamentsPartages->values();
+        // 3. Associer les médicaments aux groupes respectifs
+        $groupes->each(function ($groupe) use ($allSharedMeds) {
+            $groupe->medicaments_partages = $allSharedMeds
+                ->where('groupe_id', $groupe->id)
+                ->map(function ($med) {
+                    return [
+                        'id'            => $med->id,
+                        'nom'           => $med->nom,
+                        'type'          => $med->type,
+                        'quantite'      => $med->quantite,
+                        'seuil_alerte'  => $med->seuil_alerte,
+                        'date_expiration' => $med->date_expiration,
+                        'profil_nom'    => $med->profil_nom . ' (' . $med->user_name . ')',
+                    ];
+                })
+                ->values();
         });
 
         return response()->json($groupes);
