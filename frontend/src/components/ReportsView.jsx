@@ -46,7 +46,7 @@ export default function ReportsView({ showToast }) {
 
   const stats = [
     { label: 'Observance Hebdo.', value: summary?.adherence_rate || '0%', icon: <TrendingUp size={20} className="text-emerald-500" /> },
-    { label: 'Dépenses Totales', value: summary?.expenditure || '0 €', icon: <Calculator size={20} className="text-brand-amber" /> },
+    { label: 'Dépenses Totales', value: summary?.expenditure || '0 DH', icon: <Calculator size={20} className="text-brand-amber" /> },
     { label: 'Traitements Actifs', value: summary?.active_treatments || '0', icon: <Activity size={20} className="text-brand-blue" /> }
   ];
 

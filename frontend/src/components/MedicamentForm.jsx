@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import { 
   X, Save, Pill, ClipboardList, Info, 
   Calendar, FlaskConical, AlertCircle, 
   Clock, Plus, Trash2, CheckCircle2, 
   Activity, ActivitySquare, ShieldCheck,
-  ChevronDown
+  ChevronDown, Loader2
 } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 
@@ -16,6 +17,8 @@ import ConfirmModal from './ConfirmModal';
  * Mise à jour : Standardisation totale des styles et labels français.
  */
 export default function MedicamentForm({ isOpen, onClose, profilId, medicamentToEdit, onSuccess, showToast }) {
+  const queryClient = useQueryClient();
+  
   const [formData, setFormData] = useState({
     nom: '', type: 'comprimé', posologie: '',
     date_debut: new Date().toISOString().split('T')[0],
@@ -23,12 +26,35 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
     quantite: 0, seuil_alerte: 5, notes: ''
   });
   
-  const [loading, setLoading] = useState(false);
   const [rappels, setRappels] = useState([]);
   const [deletedRappels, setDeletedRappels] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+
+  const mutation = useMutation({
+    mutationFn: async (data) => {
+        const payload = { ...data, rappels }; // Inclure les rappels dans le payload principal
+        
+        let res;
+        if (medicamentToEdit) {
+            res = await api.put(`/profils/${profilId}/medicaments/${medicamentToEdit.id}`, payload);
+        } else {
+            res = await api.post(`/profils/${profilId}/medicaments`, payload);
+        }
+        return res.data;
+    },
+    onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: ['dashboard_data', profilId] });
+        onSuccess(data);
+    },
+    onError: (err) => {
+        console.error(err);
+        showToast('Une erreur est survenue lors de l\'enregistrement', 'error');
+    }
+  });
+
+  const loading = mutation.isPending;
 
   const typesMed = ['comprimé', 'gélule', 'sirop', 'injection', 'crème', 'pommade', 'gouttes', 'patch', 'suppositoire', 'autre'];
   const moments = ['Matin', 'Midi', 'Soir', 'Coucher', 'Avant repas', 'Après repas'];
@@ -95,40 +121,10 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
      return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateModel()) return;
-
-    setLoading(true);
-    try {
-      let res;
-      if (medicamentToEdit) {
-        res = await api.put(`/profils/${profilId}/medicaments/${medicamentToEdit.id}`, formData);
-        
-        for (const rID of deletedRappels) {
-           await api.delete(`/medicaments/${medicamentToEdit.id}/rappels/${rID}`);
-        }
-        for (const rappel of rappels) {
-           if (rappel.id) {
-             await api.put(`/medicaments/${medicamentToEdit.id}/rappels/${rappel.id}`, rappel);
-           } else {
-             await api.post(`/medicaments/${medicamentToEdit.id}/rappels`, rappel);
-           }
-        }
-      } else {
-        res = await api.post(`/profils/${profilId}/medicaments`, formData);
-        const newMed = res.data;
-        for (const rappel of rappels) {
-          await api.post(`/medicaments/${newMed.id}/rappels`, rappel);
-        }
-      }
-      onSuccess(res.data);
-    } catch (err) {
-      console.error(err);
-      showToast('Une erreur est survenue lors de l\'enregistrement', 'error');
-    } finally {
-      setLoading(false);
-    }
+    mutation.mutate(formData);
   };
 
   if (!isOpen) return null;
@@ -354,14 +350,17 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
              disabled={loading}
              className="med-btn-primary min-w-[160px] sm:min-w-[200px] h-11 sm:h-12 shadow-md shadow-brand-blue/10"
            >
-              {loading ? (
-                 <div className="h-5 w-5 border-2 border-white/30 border-t-white animate-spin" />
-              ) : (
-                 <div className="flex items-center gap-2">
-                    <CheckCircle2 size={17} />
-                    <span className="font-bold text-xs uppercase tracking-tight">Valider</span>
-                 </div>
-              )}
+               {loading ? (
+                  <div className="flex items-center gap-2">
+                     <Loader2 className="animate-spin" size={18} />
+                     <span className="font-bold text-xs uppercase tracking-tight">Enregistrement...</span>
+                  </div>
+               ) : (
+                  <div className="flex items-center gap-2">
+                     <CheckCircle2 size={17} />
+                     <span className="font-bold text-xs uppercase tracking-tight">Valider</span>
+                  </div>
+               )}
            </button>
         </div>
       </div>

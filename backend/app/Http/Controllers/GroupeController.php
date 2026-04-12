@@ -7,6 +7,7 @@ use App\Models\Groupe;
 use App\Models\User;
 use App\Models\GroupInvitation;
 use App\Mail\GroupInvitation as GroupInvitationMail;
+use App\Events\DataChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -68,6 +69,8 @@ class GroupeController extends Controller
         $groupe->participants()->attach($request->user()->id, ['role' => 'proprietaire']);
 
         ActivityLog::log('GROUP_ADD', "Groupe créé : {$groupe->nom}");
+
+        broadcast(new DataChanged('group_updated', $request->user()->id, true))->toOthers();
 
         return response()->json($groupe->load('participants:id,name,email'), 201);
     }
@@ -166,6 +169,8 @@ class GroupeController extends Controller
         
         ActivityLog::log('GROUP_MEMBER_JOIN', "Utilisateur a rejoint le groupe {$groupe->nom} via invitation.");
 
+        broadcast(new DataChanged('group_updated', $request->user()->id, true))->toOthers();
+
         return response()->json(['message' => 'Vous avez rejoint le groupe avec succès !', 'groupe_id' => $groupe->id]);
     }
 
@@ -179,6 +184,8 @@ class GroupeController extends Controller
         $groupe->delete();
 
         ActivityLog::log('GROUP_DELETE', "Groupe supprimé : {$nom}");
+
+        broadcast(new DataChanged('group_updated', $request->user()->id, true))->toOthers();
 
         return response()->json(['message' => 'Groupe supprimé avec succès.']);
     }

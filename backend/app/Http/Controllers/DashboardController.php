@@ -23,75 +23,81 @@ class DashboardController extends Controller
         }
 
         $date = $request->query('date', Carbon::today()->toDateString());
-        $cacheKey = "dashboard_summary_{$profilId}_{$date}";
+        
+        // 1. Récupérer le Profil
+        $profil = Profil::where('id', $profilId)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
 
-        return Cache::remember($cacheKey, 300, function () use ($request, $profilId, $date) {
-            
-            // 1. Récupérer le Profil
-            $profil = Profil::where('id', $profilId)
-                ->where('user_id', $request->user()->id)
-                ->firstOrFail();
+        // 2. Récupérer les Médicaments (Inventaire) avec Eager Loading optimisé
+        $medicaments = $profil->medicaments()
+            ->orderBy('nom')
+            ->get();
 
-            // 2. Récupérer les Médicaments (Inventaire)
-            $medicaments = $profil->medicaments()
-                ->with(['rappels'])
-                ->orderBy('nom')
-                ->get();
+        $medicamentIds = $medicaments->pluck('id');
 
-            // 3. Récupérer le Planning
-            $rappels = Rappel::whereHas('medicament', function($q) use ($profilId) {
-                $q->where('profil_id', $profilId);
-            })
+        // 3. Récupérer le Planning de manière performante via whereIn
+        $rappels = Rappel::whereIn('medicament_id', $medicamentIds)
             ->with(['medicament', 'prises' => function($q) use ($date) {
                 $q->where('date_prise', $date);
             }])
             ->get();
 
-            // Formatter le planning (Logique extraite de PlanningController)
-            $grouped = [
-                'matin' => [], 'midi' => [], 'apres-midi' => [],
-                'soir' => [], 'coucher' => [], 'libre' => []
+        // Formatter le planning
+        $grouped = [
+            'matin' => [], 'midi' => [], 'apres-midi' => [],
+            'soir' => [], 'coucher' => [], 'libre' => []
+        ];
+        $takenCount = 0;
+        $totalCount = $rappels->count();
+
+        foreach ($rappels as $rappel) {
+            $moment = $rappel->moment ?? 'libre';
+            $prise = $rappel->prises->first();
+            $isPris = $prise ? (bool)$prise->pris : false;
+            if ($isPris) $takenCount++;
+            
+            $grouped[$moment][] = [
+                'id' => $rappel->id,
+                'medicament' => $rappel->medicament->nom,
+                'medicament_id' => $rappel->medicament_id,
+                'heure' => $rappel->heure,
+                'pris' => $isPris,
+                'prise_id' => $prise ? $prise->id : null
             ];
-            $takenCount = 0;
-            $totalCount = $rappels->count();
+        }
 
-            foreach ($rappels as $rappel) {
-                $moment = $rappel->moment ?? 'libre';
-                $prise = $rappel->prises->first();
-                $isPris = $prise ? (bool)$prise->pris : false;
-                if ($isPris) $takenCount++;
-                
-                $grouped[$moment][] = [
-                    'id' => $rappel->id,
-                    'medicament' => $rappel->medicament->nom,
-                    'medicament_id' => $rappel->medicament_id,
-                    'heure' => $rappel->heure,
-                    'pris' => $isPris,
-                    'prise_id' => $prise ? $prise->id : null
-                ];
-            }
+        $percentage = $totalCount > 0 ? round(($takenCount / $totalCount) * 100) : 0;
 
-            $percentage = $totalCount > 0 ? round(($takenCount / $totalCount) * 100) : 0;
+        // 4. Récupérer les Notifications récentes (Aujourd'hui) pour ce profil
+        $notifications = \App\Models\Notification::where('user_id', $request->user()->id)
+            ->whereDate('created_at', now()->toDateString())
+            ->where(function ($q) use ($profilId) {
+                $q->whereNull('profil_id')->orWhere('profil_id', $profilId);
+            })
+            ->orderByDesc('created_at')
+            ->limit(15)
+            ->get();
 
-            return [
-                'user' => [
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                ],
-                'profil' => $profil->only(['id', 'nom', 'relation']),
-                'inventory' => [
-                    'items' => MedicamentResource::collection($medicaments),
-                    'total' => $medicaments->count()
-                ],
-                'planning' => [
-                    'schedule' => $grouped,
-                    'percentage' => $percentage,
-                    'stats' => [
-                        'total' => $totalCount,
-                        'taken' => $takenCount
-                    ]
+        return [
+            'user' => [
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+            ],
+            'profil' => $profil->only(['id', 'nom', 'relation']),
+            'inventory' => [
+                'items' => MedicamentResource::collection($medicaments),
+                'total' => $medicaments->count()
+            ],
+            'planning' => [
+                'schedule' => $grouped,
+                'percentage' => $percentage,
+                'stats' => [
+                    'total' => $totalCount,
+                    'taken' => $takenCount
                 ]
-            ];
-        });
+            ],
+            'notifications' => $notifications,
+        ];
     }
 }

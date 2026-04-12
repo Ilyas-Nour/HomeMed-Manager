@@ -21,17 +21,13 @@ class PlanningController extends Controller
             return response()->json(['message' => 'Profil non spécifié'], 400);
         }
 
-        $cacheKey = "planning_{$profilId}_{$date}";
-
-        $rappels = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($profilId, $date) {
-            return app(\App\Models\Rappel::class)->whereHas('medicament', function($q) use ($profilId) {
-                $q->where('profil_id', $profilId);
-            })
-            ->with(['medicament', 'prises' => function($q) use ($date) {
-                $q->where('date_prise', $date);
-            }])
-            ->get();
-        });
+        $rappels = Rappel::whereHas('medicament', function($q) use ($profilId) {
+            $q->where('profil_id', $profilId);
+        })
+        ->with(['medicament', 'prises' => function($q) use ($date) {
+            $q->where('date_prise', $date);
+        }])
+        ->get();
 
         // On formate pour le frontend
         $grouped = [
@@ -73,5 +69,42 @@ class PlanningController extends Controller
                 'taken' => $takenCount
             ]
         ]);
+    }
+
+    /**
+     * Retourne les rappels qui doivent être pris maintenant ou prochainement.
+     * Version légère pour les notifications/polling.
+     */
+    public function due(Request $request)
+    {
+        $profilId = $request->header('X-Profil-Id');
+        if (!$profilId) {
+            return response()->json(['message' => 'Profil non spécifié'], 400);
+        }
+
+        $today = now()->toDateString();
+        $currentTime = now()->format('H:i');
+
+        $rappels = Rappel::whereHas('medicament', function($q) use ($profilId) {
+            $q->where('profil_id', $profilId);
+        })
+        ->with(['medicament', 'prises' => function($q) use ($today) {
+            $q->where('date_prise', $today);
+        }])
+        ->get();
+
+        $due = $rappels->filter(function($r) use ($currentTime) {
+            // Un rappel est "dû" s'il n'est pas pris et que l'heure est passée
+            return !$r->prises->first()?->pris && $r->heure <= $currentTime;
+        })->map(function($r) {
+            return [
+                'id' => $r->id,
+                'medicament' => $r->medicament->nom,
+                'heure' => $r->heure,
+                'moment' => $r->moment
+            ];
+        });
+
+        return response()->json($due->values());
     }
 }

@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Events\DataChanged;
 
 class AchatController extends Controller
 {
@@ -67,7 +68,7 @@ class AchatController extends Controller
             $medicament = $profil->medicaments()->findOrFail($validated['medicament_id']);
         }
 
-        return DB::transaction(function () use ($validated, $medicament, $profil) {
+        return DB::transaction(function () use ($validated, $medicament, $profil, $profilId, $request) {
             $validated['statut'] = $validated['statut'] ?? Achat::STATUT_PENDING;
             
             if ($validated['statut'] === Achat::STATUT_COMPLETED) {
@@ -98,9 +99,11 @@ class AchatController extends Controller
 
             $achat = Achat::create($validated);
 
-            // Invalider le cache pour forcer le Dashboard à se mettre à jour
+            // Cache and real-time state synchronization
             Cache::forget("medicaments_{$profilId}");
             Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
+
+            broadcast(new DataChanged('inventory_updated', $profilId))->toOthers();
 
             return response()->json($achat->load('medicament'), 201);
         });
@@ -136,7 +139,7 @@ class AchatController extends Controller
             'quantite'  => 'nullable|integer|min:1',
         ]);
 
-        return DB::transaction(function () use ($achat, $validated) {
+        return DB::transaction(function () use ($achat, $validated, $request) {
             $oldStatut = $achat->statut;
             $oldQuantite = $achat->quantite;
             
@@ -186,7 +189,7 @@ class AchatController extends Controller
             // Invalider le cache
             $profilId = $achat->profil_id;
             Cache::forget("medicaments_{$profilId}");
-            Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
+            broadcast(new DataChanged('inventory_updated', $achat->profil_id))->toOthers();
 
             return response()->json($achat->load('medicament'));
         });
@@ -218,7 +221,7 @@ class AchatController extends Controller
 
             // Invalider le cache
             Cache::forget("medicaments_{$profilId}");
-            Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
+            broadcast(new DataChanged('inventory_updated', $profilId))->toOthers();
 
             return response()->json(['message' => 'Supprimé avec succès']);
         });

@@ -41,16 +41,16 @@ class ReportController extends Controller
         $adherenceRate = $totalExpected > 0 ? round(($actualPrises / $totalExpected) * 100) : 0;
 
         // 2. Dépenses réelles (Somme des achats du profil)
-        $totalExpenses = Achat::whereHas('medicament', function($q) use ($profilId) {
-            $q->where('profil_id', $profilId);
-        })->sum('prix');
+        $totalExpenses = Achat::where('profil_id', $profilId)
+            ->where('statut', Achat::STATUT_COMPLETED)
+            ->sum('prix');
 
         // 3. Nombre de traitements actifs
         $activeMeds = Medicament::where('profil_id', $profilId)->count();
 
         return response()->json([
             'adherence_rate' => $adherenceRate . '%',
-            'expenditure' => number_format($totalExpenses, 2, ',', ' ') . ' €',
+            'expenditure' => number_format($totalExpenses, 2, ',', ' ') . ' DH',
             'active_treatments' => $activeMeds,
             'period' => '30 derniers jours'
         ]);

@@ -7,6 +7,7 @@ import { ShieldCheck, Activity, Plus } from 'lucide-react';
 import LoadingScreen from './components/LoadingScreen';
 import { NotificationProvider } from './contexts/NotificationContext';
 import SoundToast from './components/SoundToast';
+import ScrollToTop from './components/ScrollToTop';
 
 // Chargement paresseux (Lazy Loading) pour une expérience professionnelle fluide
 const Login    = lazy(() => import('./pages/Login'));
@@ -42,6 +43,7 @@ function App() {
         <AuthProvider>
             <NotificationProvider>
                 <BrowserRouter>
+                    <ScrollToTop />
                     <Suspense fallback={<LoadingScreen />}>
                         <Routes>
                             {/* Redirection Racine */}

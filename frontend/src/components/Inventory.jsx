@@ -24,7 +24,7 @@ export default function Inventory({ isCompact, showToast, searchTerm = '', setIs
       return matchesSearch && med.date_expiration && new Date(med.date_expiration) < new Date();
     }
     if (activeFilter === 'stock') {
-      return matchesSearch && med.quantite <= (med.seuil_alerte || 5);
+      return matchesSearch && med.quantite <= (med.seuil_alerte || 2);
     }
     if (activeFilter === 'incomplete') {
       return matchesSearch && med.is_incomplet;
@@ -36,7 +36,7 @@ export default function Inventory({ isCompact, showToast, searchTerm = '', setIs
 
   const FILTERS = [
     { key: 'all',        label: 'Tous', count: medicaments.length },
-    { key: 'stock',      label: 'Stock Bas', count: medicaments.filter(m => m.quantite <= (m.seuil_alerte || 5)).length },
+    { key: 'stock',      label: 'Stock Bas', count: medicaments.filter(m => m.quantite <= (m.seuil_alerte || 2)).length },
     { key: 'expired',    label: 'Expirés', count: medicaments.filter(m => m.date_expiration && new Date(m.date_expiration) < new Date()).length },
   ];
 
@@ -107,15 +107,15 @@ export default function Inventory({ isCompact, showToast, searchTerm = '', setIs
 
       {/* Empty state */}
       {displayedMedicaments.length === 0 && (
-        <div className="py-24 text-center rounded-3xl border-2 border-dashed border-slate-100 bg-white/50 backdrop-blur-sm group transition-all hover:border-slate-200">
+        <div className={`${isCompact ? 'py-10' : 'py-24'} text-center rounded-3xl border-2 border-dashed border-slate-100 bg-white/50 backdrop-blur-sm group transition-all hover:border-slate-200`}>
           <div className="flex flex-col items-center gap-4">
-            <div className="h-20 w-20 bg-white rounded-3xl flex items-center justify-center shadow-sm border border-slate-50 transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-6">
-              <Package size={32} className="text-slate-200" />
+            <div className={`${isCompact ? 'h-14 w-14' : 'h-20 w-20'} bg-white rounded-3xl flex items-center justify-center shadow-sm border border-slate-50 transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-6`}>
+              <Package size={isCompact ? 24 : 32} className="text-slate-200" />
             </div>
             <div className="max-w-[280px]">
-                <p className="text-sm font-black text-slate-900 uppercase tracking-widest">Inventaire vide</p>
-                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">
-                  {searchTerm ? "Aucun médicament ne correspond à votre recherche." : "Ajoutez votre premier médicament pour commencer le suivi."}
+                <p className={`${isCompact ? 'text-[10px]' : 'text-sm'} font-black text-slate-900 uppercase tracking-widest`}>Inventaire vide</p>
+                <p className={`${isCompact ? 'text-[9px]' : 'text-[10px]'} font-bold text-slate-400 mt-2 uppercase tracking-widest leading-relaxed px-4`}>
+                  {searchTerm ? "Aucun match." : "Aucune alerte de stock pour le moment."}
                 </p>
             </div>
             {!isCompact && (

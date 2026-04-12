@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
 import DashboardSidebar from '../components/DashboardSidebar';
@@ -46,6 +47,15 @@ export default function Dashboard() {
     return localStorage.getItem('hide_system_reminder') !== 'true';
   });
 
+  const mainContentRef = useRef(null);
+
+  // Scroll to top when view changes
+  useEffect(() => {
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+    }
+  }, [currentView, settingsPanel]);
+
   const handleDismissReminder = () => {
     setShowReminder(false);
     localStorage.setItem('hide_system_reminder', 'true');
@@ -57,51 +67,31 @@ export default function Dashboard() {
     setIsProfileOpen(false);
   };
 
-  const [allMedicaments, setAllMedicaments] = useState([]);
-  const [adherenceData, setAdherenceData] = useState({ percentage: 0, stats: { taken: 0, total: 0 } });
-  const [planningData, setPlanningData] = useState({});
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const CACHE_KEY = `dashboard_data_${profilActif?.id}`;
-
-  useEffect(() => {
-    if (profilActif?.id) {
-      refreshData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profilActif?.id]);
-
-  const refreshData = async (silent = false) => {
-    try {
-      // Stale-While-Revalidate: show cached data instantly, refresh in background
-      const cached = sessionStorage.getItem(CACHE_KEY);
-      if (cached && !silent) {
-        const parsed = JSON.parse(cached);
-        setAllMedicaments(parsed.inventory?.items || []);
-        setAdherenceData(parsed.planning || { percentage: 0, stats: { taken: 0, total: 0 } });
-        setPlanningData(parsed.planning?.schedule || {});
-        setLoading(false);
-        // Then silently refresh in background
-        refreshData(true);
-        return;
-      }
-
-      if (!silent) setLoading(true);
+  const { 
+    data: dashboardData, 
+    isLoading, 
+    isFetching, 
+    error 
+  } = useQuery({
+    queryKey: ['dashboard_data', profilActif?.id],
+    queryFn: async () => {
+      if (!profilActif?.id) return null;
       const res = await api.get('/dashboard/summary');
-      const data = res.data;
+      return res.data;
+    },
+    enabled: !!profilActif?.id,
+    staleTime: 60000, // 1 minute of "freshness"
+  });
 
-      // Cache the result for instant next load
-      sessionStorage.setItem(CACHE_KEY, JSON.stringify(data));
+  const currentUser = dashboardData?.user || user;
+  const allMedicaments = dashboardData?.inventory?.items || [];
+  const adherenceData = dashboardData?.planning || { percentage: 0, stats: { taken: 0, total: 0 } };
+  const recentNotifications = dashboardData?.notifications || [];
 
-      setAllMedicaments(data.inventory.items || []);
-      setAdherenceData(data.planning);
-      setPlanningData(data.planning.schedule || {});
-      
-    } catch (err) {
-      console.error('Erreur Refresh Data:', err);
-    } finally {
-      if (!silent) setLoading(false);
-    }
+  const refreshData = () => {
+    queryClient.invalidateQueries({ queryKey: ['dashboard_data', profilActif?.id] });
   };
 
   const showToast = (message, type = 'success') => {
@@ -123,29 +113,32 @@ export default function Dashboard() {
     setIsConfirmDeleteOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!medToDeleteId) return;
-    try {
-      await api.delete(`/profils/${profilActif.id}/medicaments/${medToDeleteId}`);
+  const deleteMutation = useMutation({
+    mutationFn: (medId) => api.delete(`/profils/${profilActif.id}/medicaments/${medId}`),
+    onSuccess: () => {
       showToast('Médicament supprimé');
       setIsConfirmDeleteOpen(false);
       setMedToDeleteId(null);
-      // Invalidate cache so next load is fresh
-      sessionStorage.removeItem(`dashboard_data_${profilActif.id}`);
-      refreshData();
-    } catch {
+      queryClient.invalidateQueries({ queryKey: ['dashboard_data', profilActif.id] });
+    },
+    onError: () => {
       showToast('Erreur lors de la suppression', 'error');
     }
+  });
+
+  const handleDelete = () => {
+    if (!medToDeleteId) return;
+    deleteMutation.mutate(medToDeleteId);
   };
 
   const renderContent = () => {
     switch (currentView) {
       case 'overview':
         return (
-          <div className="space-y-12 animate-fade-up">
+          <div className="space-y-12 animate-fade-up relative">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
                 <div className="space-y-2">
-                   <h1 className="text-3xl font-bold tracking-tight text-slate-900">Bonjour, {user?.name.split(' ')[0]}</h1>
+                   <h1 className="text-3xl font-bold tracking-tight text-slate-900">Bonjour, {currentUser?.name?.split(' ')[0] || 'Utilisateur'}</h1>
                    <p className="text-base font-medium text-slate-500">Voici l'état de santé de <span className="text-brand-blue font-bold">{profilActif?.nom}</span> pour aujourd'hui.</p>
                 </div>
                 <button 
@@ -156,36 +149,15 @@ export default function Dashboard() {
                 </button>
             </div>
 
-            {/* Dashboard Stats Row */}
             <DashboardStats 
               medicaments={allMedicaments} 
               adherence={adherenceData}
               onCardClick={(v, f) => { if (v) setCurrentView(v); if (f) setInventoryFilter(f); }} 
             />
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-               {/* Column 1 (2/3) - Today's Planning */}
-               <div className="lg:col-span-8 flex flex-col gap-6">
-                  <div className="flex items-center justify-between px-2">
-                     <div className="flex items-center gap-3">
-                        <div className="w-1 h-6 bg-brand-blue rounded-full"></div>
-                        <h2 className="text-sm font-black uppercase text-slate-900 tracking-widest">Planning du jour</h2>
-                     </div>
-                     <button onClick={() => setCurrentView('planning')} className="text-xs font-bold text-brand-blue hover:text-slate-900 transition-colors uppercase tracking-widest">Voir le planning complet</button>
-                  </div>
-                  <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-200/50">
-                    <PlanningView 
-                      showToast={showToast} 
-                      activeProfileId={profilActif?.id} 
-                      initialData={adherenceData} 
-                    />
-                  </div>
-               </div>
-
-               {/* Column 2 (1/3) - Compliance & Stock Alerts */}
-               <div className="lg:col-span-4 space-y-10">
-                  {/* Adherence Chart Card */}
+            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-10 items-start">
+               {/* 1. TOP LEFT: Observance (Desktop: Sidebar Top, Mobile: Always Top) */}
+               <div className="w-full lg:col-span-4 order-1">
                   <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200/50 flex flex-col items-center">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-10">Observance Quotidienne</h3>
                     
@@ -206,25 +178,28 @@ export default function Dashboard() {
                         </div>
                     </div>
                   </div>
+               </div>
 
-                  {/* Stock Alerts Area */}
-                  <div className="space-y-6">
-                     <div className="flex items-center gap-3 px-2">
-                        <div className="w-1 h-6 bg-brand-amber rounded-full"></div>
-                        <h2 className="text-sm font-black uppercase text-slate-900 tracking-widest">Alertes Stock</h2>
+               {/* 2. MAIN: Planning (Desktop: Right Side, Mobile: Under Observance) */}
+               <div className="w-full lg:col-span-8 lg:row-span-12 order-2 flex flex-col gap-6">
+                  <div className="flex items-center justify-between px-2">
+                     <div className="flex items-center gap-3">
+                        <div className="w-1 h-6 bg-brand-blue rounded-full"></div>
+                        <h2 className="text-sm font-black uppercase text-slate-900 tracking-widest">Planning du jour</h2>
                      </div>
-                     <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-200/50">
-                        <Inventory 
-                          isCompact={true} 
-                          limit={3} 
-                          filter="low" 
-                          medicamentsData={allMedicaments} 
-                          onDetails={handleShowDetails} 
-                          showToast={showToast} 
-                        />
-                     </div>
+                     <button onClick={() => setCurrentView('planning')} className="text-xs font-bold text-brand-blue hover:text-slate-900 transition-colors uppercase tracking-widest">Voir le planning complet</button>
                   </div>
+                  <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-200/50">
+                    <PlanningView 
+                      showToast={showToast} 
+                      activeProfileId={profilActif?.id} 
+                      initialData={adherenceData} 
+                    />
+                  </div>
+               </div>
 
+               {/* 3. BOTTOM LEFT: Secondary Sidebar items (Reminders + Alerts) */}
+               <div className="w-full lg:col-span-4 order-3 space-y-10">
                   {showReminder && (
                     <div className="p-8 bg-slate-950 rounded-3xl text-white space-y-5 shadow-2xl relative group overflow-hidden">
                        <div className="absolute -top-4 -right-4 p-8 opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">
@@ -243,6 +218,23 @@ export default function Dashboard() {
                        <p className="text-sm font-medium text-slate-400 leading-relaxed relative z-10 pr-4">Optimisez votre gestion : vérifiez vos dates d'expiration avant de synchroniser vos stocks pour une sécurité maximale.</p>
                     </div>
                   )}
+
+                  <div className="space-y-6">
+                     <div className="flex items-center gap-3 px-2">
+                        <div className="w-1 h-6 bg-brand-amber rounded-full"></div>
+                        <h2 className="text-sm font-black uppercase text-slate-900 tracking-widest">Alertes Stock</h2>
+                     </div>
+                     {/* For Dashboard alerts, we use an empty searchTerm to match everything in Stock Alert state regardless of header search */}
+                     <Inventory 
+                       isCompact={true} 
+                       limit={3} 
+                       filter="stock" 
+                       searchTerm=""
+                       medicamentsData={allMedicaments} 
+                       onDetails={handleShowDetails} 
+                       showToast={showToast} 
+                     />
+                  </div>
                </div>
             </div>
           </div>
@@ -322,7 +314,6 @@ export default function Dashboard() {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="flex h-screen overflow-hidden">
-        {/* Sidebar */}
         <aside className={`bg-slate-900 z-50 fixed lg:static inset-y-0 left-0 w-64 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} transition-all duration-300`}>
           <DashboardSidebar
             currentView={currentView}
@@ -338,7 +329,6 @@ export default function Dashboard() {
 
         {sidebarOpen && <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        {/* Main */}
         <main className="flex-1 flex flex-col min-w-0 bg-white lg:bg-slate-50">
           <DashboardHeader
             setSidebarOpen={setSidebarOpen}
@@ -354,7 +344,7 @@ export default function Dashboard() {
             onProfileSwitch={changerProfil}
           />
 
-          <div className="flex-1 overflow-y-auto no-scrollbar">
+          <div ref={mainContentRef} className="flex-1 overflow-y-auto no-scrollbar">
             <div className="p-4 sm:p-6 lg:pt-10 lg:px-10 max-w-7xl mx-auto pb-32 lg:pb-10">
               {renderContent()}
             </div>
@@ -362,10 +352,8 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* Mobile Nav */}
       <MobileBottomNav currentView={currentView} setCurrentView={setCurrentView} user={user} />
 
-      {/* Modals */}
       <MedicamentForm
         isOpen={isFormOpen}
         onClose={() => { setIsFormOpen(false); setMedicamentToEdit(null); }}
@@ -373,8 +361,6 @@ export default function Dashboard() {
           setIsFormOpen(false);
           setMedicamentToEdit(null);
           showToast(medicamentToEdit ? 'Mis à jour' : 'Ajouté');
-          // Invalidate cache so next refresh is fresh
-          sessionStorage.removeItem(`dashboard_data_${profilActif?.id}`);
           refreshData();
         }}
         showToast={showToast}

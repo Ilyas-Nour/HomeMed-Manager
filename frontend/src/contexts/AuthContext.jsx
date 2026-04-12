@@ -97,11 +97,10 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const value = {
+    const value = React.useMemo(() => ({
         user,
         token,
         profilActif,
-
         loading,
         fetchUser,
         login,
@@ -109,11 +108,11 @@ export const AuthProvider = ({ children }) => {
         logout,
         changerProfil,
         isAuthenticated: !!user && !!token,
-    };
+    }), [user, token, profilActif, loading]);
 
     return (
         <AuthContext.Provider value={value}>
-            {loading ? <LoadingScreen /> : children}
+            {children}
         </AuthContext.Provider>
     );
 };

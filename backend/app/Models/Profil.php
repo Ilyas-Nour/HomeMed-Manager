@@ -57,4 +57,12 @@ class Profil extends Model
     {
         return $this->hasMany(Medicament::class, 'profil_id');
     }
+
+    /**
+     * Relation : Un profil possède plusieurs notifications.
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'profil_id');
+    }
 }

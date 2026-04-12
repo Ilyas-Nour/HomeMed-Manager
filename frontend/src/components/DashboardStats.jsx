@@ -18,7 +18,7 @@ export default function DashboardStats({ onCardClick, medicaments = [], adherenc
   const totalRappels      = adherence.stats.total || 0;
 
   // Stock Alerts logic
-  const alertesCount      = medicaments.filter(m => m.stock_faible || m.quantite <= (m.seuil_alerte || 5)).length;
+  const alertesCount      = medicaments.filter(m => m.stock_faible || m.quantite <= (m.seuil_alerte || 2)).length;
   
   // Smart Expiration logic
   const closestExpiration = [...medicaments]

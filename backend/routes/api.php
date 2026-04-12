@@ -41,6 +41,11 @@ Route::prefix('auth')->group(function () {
 // Routes protégées — Authentification requise
 // ——————————————————————————————————————————
 Route::middleware('auth:sanctum')->group(function () {
+    // Authentification pour les canaux privés (WebSockets)
+    Route::post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+        return Broadcast::auth($request);
+    });
+
 
     // Déconnexion (révocation du token courant)
     Route::post('/auth/deconnexion', [AuthController::class, 'logout']);
@@ -95,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // ——————————————————————————————————————————
     // Planning & Suivi des prises
     Route::get('/planning', [PlanningController::class, 'index']);
+    Route::get('/planning/due', [PlanningController::class, 'due']);
     Route::post('/prises/toggle', [PriseController::class, 'toggle']);
 
     // Achats (Shopping List)

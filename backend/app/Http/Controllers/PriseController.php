@@ -24,14 +24,15 @@ class PriseController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated) {
-            $rappel = Rappel::with('medicament')->findOrFail($validated['rappel_id']);
+            // Eager load everything needed for the check
+            $rappel = Rappel::with(['medicament.profil'])->findOrFail($validated['rappel_id']);
             
-            // Sécurité : vérifier l'appartenance via le profil
+            // Security : vérifier l'appartenance
             if ($rappel->medicament->profil->user_id !== auth()->id()) {
                 return response()->json(['message' => 'Non autorisé'], 403);
             }
 
-            // Vérifier l'état précédent pour la logique de stock
+            // Vérifier l'état précédent
             $existingPrise = Prise::where('rappel_id', $validated['rappel_id'])
                 ->where('date_prise', $validated['date_prise'])
                 ->first();
@@ -48,22 +49,19 @@ class PriseController extends Controller
                 ]
             );
 
-            // 1. Passage de "Non pris" à "Pris" -> Décrémenter stock
+            // Logic de stock
             if ($validated['pris'] && !$previouslyPris) {
                 if ($rappel->medicament->quantite > 0) {
                     $rappel->medicament->decrement('quantite', 1);
-                    ActivityLog::log('PRISE_MED', "Dose prise confirmée : {$rappel->medicament->nom}");
+                    ActivityLog::log('PRISE_MED', "Dose prise : {$rappel->medicament->nom}");
                 }
             } 
-            // 2. Passage de "Pris" à "Non pris" -> Rectifier stock (incrémenter)
             elseif (!$validated['pris'] && $previouslyPris) {
                 $rappel->medicament->increment('quantite', 1);
-                ActivityLog::log('PRISE_CANCEL', "Prise annulée : {$rappel->medicament->nom} (stock restauré)");
+                ActivityLog::log('PRISE_CANCEL', "Prise annulée : {$rappel->medicament->nom}");
             }
 
-            $profilId = $rappel->medicament->profil_id;
-            \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$profilId}_" . $validated['date_prise']);
-            \Illuminate\Support\Facades\Cache::forget("medicaments_{$profilId}"); // Because stock might have changed
+            broadcast(new \App\Events\DataChanged('prise', $rappel->medicament->profil_id))->toOthers();
 
             return response()->json($prise);
         });

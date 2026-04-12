@@ -30,13 +30,10 @@ class MedicamentController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        $cacheKey = "medicaments_{$profilId}";
-        $medicaments = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($profil) {
-            return $profil->medicaments()
-                ->with(['rappels'])
-                ->orderBy('nom')
-                ->get();
-        });
+        $medicaments = $profil->medicaments()
+            ->with(['rappels'])
+            ->orderBy('nom')
+            ->get();
 
         return response()->json([
             'profil' => $profil->only(['id', 'nom', 'relation']),
@@ -59,18 +56,29 @@ class MedicamentController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        // Créer le médicament associé au profil
-        $medicament = $profil->medicaments()->create($request->validated());
+        return \DB::transaction(function () use ($request, $profil, $profilId) {
+            // Créer le médicament associé au profil
+            $medicament = $profil->medicaments()->create($request->validated());
 
-        \Illuminate\Support\Facades\Cache::forget("medicaments_{$profilId}");
-        \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
+            // Gérer les rappels s'ils sont fournis dans la requête
+            if ($request->has('rappels')) {
+                foreach ($request->input('rappels') as $rappelData) {
+                    $medicament->rappels()->create([
+                        'heure' => $rappelData['heure'],
+                        'moment' => $rappelData['moment'] ?? 'libre',
+                    ]);
+                }
+            }
 
-        ActivityLog::log('MED_ADD', "Médicament ajouté : {$medicament->nom} pour {$profil->nom}");
+            ActivityLog::log('MED_ADD', "Médicament ajouté : {$medicament->nom} pour {$profil->nom}");
 
-        return response()->json([
-            'message' => 'Médicament ajouté avec succès.',
-            'medicament' => $medicament,
-        ], 201);
+            broadcast(new \App\Events\DataChanged('medicament', $profilId))->toOthers();
+
+            return response()->json([
+                'message' => 'Médicament ajouté avec succès.',
+                'medicament' => $medicament->load('rappels'),
+            ], 201);
+        });
     }
 
     /**
@@ -117,17 +125,43 @@ class MedicamentController extends Controller
             ->firstOrFail();
 
         $medicament = $profil->medicaments()->findOrFail($medicamentId);
-        $medicament->update($request->validated());
 
-        \Illuminate\Support\Facades\Cache::forget("medicaments_{$profilId}");
-        \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
+        return \DB::transaction(function () use ($request, $medicament, $profilId) {
+            $medicament->update($request->validated());
 
-        ActivityLog::log('MED_UPDATE', "Médicament mis à jour : {$medicament->nom}");
+            // Gérer les rappels (Synchronisation complète)
+            if ($request->has('rappels')) {
+                $incomingRappels = $request->input('rappels');
+                $incomingIds = collect($incomingRappels)->pluck('id')->filter()->toArray();
+                
+                // 1. Supprimer les rappels qui ne sont plus dans la liste
+                $medicament->rappels()->whereNotIn('id', $incomingIds)->delete();
 
-        return response()->json([
-            'message' => 'Médicament mis à jour avec succès.',
-            'medicament' => $medicament->fresh(),
-        ]);
+                // 2. Mettre à jour ou créer les rappels
+                foreach ($incomingRappels as $rappelData) {
+                    if (isset($rappelData['id'])) {
+                        $medicament->rappels()->where('id', $rappelData['id'])->update([
+                            'heure' => $rappelData['heure'],
+                            'moment' => $rappelData['moment'] ?? 'libre',
+                        ]);
+                    } else {
+                        $medicament->rappels()->create([
+                            'heure' => $rappelData['heure'],
+                            'moment' => $rappelData['moment'] ?? 'libre',
+                        ]);
+                    }
+                }
+            }
+
+            ActivityLog::log('MED_UPDATE', "Médicament mis à jour : {$medicament->nom}");
+
+            broadcast(new \App\Events\DataChanged('medicament', $profilId))->toOthers();
+
+            return response()->json([
+                'message' => 'Médicament mis à jour avec succès.',
+                'medicament' => $medicament->fresh()->load('rappels'),
+            ]);
+        });
     }
 
     /**
@@ -148,10 +182,10 @@ class MedicamentController extends Controller
         $nomMedicament = $medicament->nom;
         $medicament->delete();
 
-        \Illuminate\Support\Facades\Cache::forget("medicaments_{$profilId}");
-        \Illuminate\Support\Facades\Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
 
         ActivityLog::log('MED_DELETE', "Médicament supprimé : {$nomMedicament}");
+
+        broadcast(new \App\Events\DataChanged('medicament', $profilId))->toOthers();
 
         return response()->json([
             'message' => "Le médicament \"{$nomMedicament}\" a été supprimé avec succès.",

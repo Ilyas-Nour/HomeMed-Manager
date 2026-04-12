@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ShoppingCart, Plus, Search, 
   Trash2, CheckCircle2, ChevronRight,
   TrendingUp, Package, Clock,
-  X, AlertCircle, ArrowRight
+  X, AlertCircle, ArrowRight, Loader2
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -12,13 +13,23 @@ import api from '../services/api';
  * AchatsView — Sleek SaaS Design
  */
 export default function AchatsView({ showToast, activeProfileId, medicamentsData, refreshData }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'completed'
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedAchat, setSelectedAchat] = useState(null);
-  const [medicaments, setMedicaments] = useState(medicamentsData || []);
   
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ['achats', activeProfileId, activeTab],
+    queryFn: async () => {
+      const res = await api.get(`/achats?statut=${activeTab === 'pending' ? 'pending' : 'completed'}`);
+      return res.data;
+    },
+    enabled: !!activeProfileId,
+    staleTime: 5000,
+  });
+
+  const medicaments = Array.isArray(medicamentsData) ? medicamentsData : [];
+
   // New Item Form State
   const [formMode, setFormMode] = useState('existing'); // 'existing' | 'new'
   const [newItem, setNewItem] = useState({
@@ -41,100 +52,81 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
     return () => document.body.classList.remove('modal-open');
   }, [isAddModalOpen, selectedAchat]);
 
-  useEffect(() => {
-    fetchItems();
-  }, [activeTab, activeProfileId]);
-
-  useEffect(() => {
-    if (medicamentsData) {
-      setMedicaments(medicamentsData);
+  const addMutation = useMutation({
+    mutationFn: (payload) => api.post('/achats', payload),
+    onSuccess: () => {
+      showToast && showToast('Ajouté à la liste');
+      setIsAddModalOpen(false);
+      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['achats'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard_data'] });
+    },
+    onError: (err) => {
+      showToast && showToast(err.response?.data?.message || 'Erreur lors de l\'ajout', 'error');
     }
-  }, [medicamentsData]);
+  });
 
-  const fetchItems = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/achats?statut=${activeTab === 'pending' ? 'pending' : 'completed'}`);
-      setItems(res.data);
-    } catch (err) {
-      console.error(err);
-      showToast && showToast('Erreur lors du chargement de la liste', 'error');
-    } finally {
-      setLoading(false);
+  const toggleMutation = useMutation({
+    mutationFn: (item) => {
+      const newStatut = item.statut === 'pending' ? 'completed' : 'pending';
+      return api.patch(`/achats/${item.id}`, { statut: newStatut });
+    },
+    onSuccess: (res, item) => {
+      const newStatut = item.statut === 'pending' ? 'completed' : 'pending';
+      showToast && showToast(newStatut === 'completed' ? 'Marqué comme acheté — Stock mis à jour' : 'Remis dans la liste');
+      if (selectedAchat?.id === item.id) setSelectedAchat(null);
+      queryClient.invalidateQueries({ queryKey: ['achats', activeProfileId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard_data', activeProfileId] });
+    },
+    onError: () => {
+      showToast && showToast('Erreur lors de la mise à jour', 'error');
     }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/achats/${id}`),
+    onSuccess: (res, id) => {
+      showToast && showToast('Supprimé');
+      if (selectedAchat?.id === id) setSelectedAchat(null);
+      queryClient.invalidateQueries({ queryKey: ['achats'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard_data'] });
+    },
+    onError: () => {
+      showToast && showToast('Erreur lors de la suppression', 'error');
+    }
+  });
+
+  const resetForm = () => {
+    setNewItem({ 
+      medicament_id: '', 
+      medicament_nom_temp: '',
+      label: 'Urgent', 
+      quantite: 1, 
+      pharmacie: '', 
+      prix: '', 
+      date_achat: new Date().toISOString().split('T')[0] 
+    });
   };
 
-  const handleAddItem = async (e) => {
+  const handleAddItem = (e) => {
     e.preventDefault();
     if (formMode === 'existing' && !newItem.medicament_id) {
       showToast && showToast('Veuillez sélectionner un médicament', 'error');
       return;
     }
-    if (formMode === 'new' && !newItem.medicament_nom_temp) {
-      showToast && showToast('Veuillez saisir le nom du médicament', 'error');
-      return;
-    }
-
-    try {
-      const payload = { ...newItem };
-      if (formMode === 'new') payload.medicament_id = '';
-      else payload.medicament_nom_temp = '';
-
-      await api.post('/achats', payload);
-      showToast && showToast('Ajouté à la liste');
-      setIsAddModalOpen(false);
-      setNewItem({ 
-        medicament_id: '', 
-        medicament_nom_temp: '',
-        label: 'Urgent', 
-        quantite: 1, 
-        pharmacie: '', 
-        prix: '', 
-        date_achat: new Date().toISOString().split('T')[0] 
-      });
-      fetchItems();
-      refreshData && refreshData();
-    } catch (err) {
-      console.error('Erreur API Achats:', err.response?.data || err.message);
-      showToast && showToast(err.response?.data?.message || 'Erreur lors de l\'ajout', 'error');
-    }
+    const payload = { ...newItem };
+    if (formMode === 'new') payload.medicament_id = '';
+    else payload.medicament_nom_temp = '';
+    
+    addMutation.mutate(payload);
   };
 
-  const handleToggleStatus = async (item) => {
-    // Mise à jour optimiste
-    const oldItems = [...items];
-    const newStatut = item.statut === 'pending' ? 'completed' : 'pending';
-    
-    setItems(items.map(i => i.id === item.id ? { ...i, statut: newStatut } : i));
-    
-    try {
-      await api.patch(`/achats/${item.id}`, { statut: newStatut });
-      showToast && showToast(newStatut === 'completed' ? 'Marqué comme acheté — Stock mis à jour' : 'Remis dans la liste');
-      if (selectedAchat?.id === item.id) setSelectedAchat(null);
-      refreshData && refreshData();
-      // On ne re-fetch pas immédiatement pour garder la fluidité, mais on pourrait le faire en arrière-plan
-    } catch (err) {
-      setItems(oldItems); // Rollback en cas d'erreur
-      console.error('Erreur Toggle:', err.response?.data || err.message);
-      showToast && showToast('Erreur lors de la mise à jour', 'error');
-    }
+  const handleToggleStatus = (item) => {
+    toggleMutation.mutate(item);
   };
 
-  const handleDelete = async (id) => {
-    // Mise à jour optimiste
-    const oldItems = [...items];
-    setItems(items.filter(i => i.id !== id));
-
-    try {
-      await api.delete(`/achats/${id}`);
-      showToast && showToast('Supprimé');
-      if (selectedAchat?.id === id) setSelectedAchat(null);
-      refreshData && refreshData();
-    } catch (err) {
-      setItems(oldItems); // Rollback
-      console.error('Erreur Delete:', err.response?.data || err.message);
-      showToast && showToast('Erreur lors de la suppression', 'error');
-    }
+  const handleDelete = (id) => {
+    deleteMutation.mutate(id);
   };
 
   return (
@@ -173,7 +165,7 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
            </div>
 
            <div className="grid grid-cols-1 gap-4">
-              {loading ? (
+              {isLoading ? (
                 <div className="py-20 text-center">
                     <div className="h-10 w-10 border-4 border-indigo-100 border-t-brand-blue rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-xs font-black uppercase tracking-widest text-slate-400">Chargement de la liste...</p>
@@ -235,15 +227,16 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
               
               <div className="grid grid-cols-1 gap-4">
                  {[
+                   { label: 'Stock Bas', count: medicaments.filter(m => m.quantite <= (m.seuil_alerte || 2)).length, icon: <Package size={18} />, color: 'text-brand-blue bg-indigo-50' },
                    { label: 'À commander', val: items.filter(i => i.statut === 'pending').length || '0', icon: <Package size={18} />, color: 'text-brand-blue bg-indigo-50' },
-                   { label: 'Total Estimé', val: `${items.filter(i => i.statut === 'completed').reduce((acc, curr) => acc + (parseFloat(curr.prix) || 0), 0).toFixed(2)} DH`, icon: <TrendingUp size={18} />, color: 'text-emerald-600 bg-emerald-50' }
+                   { label: 'Total Estimé', val: `${items.reduce((acc, curr) => acc + ((parseFloat(curr.prix) || 0) * (parseInt(curr.quantite) || 1)), 0).toFixed(2)} DH`, icon: <TrendingUp size={18} />, color: 'text-emerald-600 bg-emerald-50' }
                  ].map((s, idx) => (
                    <div key={idx} className="p-5 rounded-2xl bg-white border border-slate-50 shadow-sm flex items-center justify-between group transition-all hover:shadow-md">
                       <div className="flex items-center gap-4">
                          <div className={`h-10 w-10 flex items-center justify-center rounded-xl ${s.color} transition-transform group-hover:rotate-6`}>{s.icon}</div>
                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{s.label}</span>
                       </div>
-                      <span className="text-sm font-bold text-slate-900 tracking-tight">{s.val}</span>
+                      <span className="text-sm font-bold text-slate-900 tracking-tight">{s.val || s.count || '0'}</span>
                    </div>
                  ))}
               </div>
@@ -352,8 +345,19 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
                   />
                 </div>
 
-                <button type="submit" className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand-blue/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all mt-4">
-                  Ajouter à la liste
+                <button 
+                  type="submit" 
+                  disabled={addMutation.isPending}
+                  className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand-blue/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all mt-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
+                >
+                   {addMutation.isPending ? (
+                     <>
+                       <Loader2 className="animate-spin" size={20} />
+                       <span>Opération en cours...</span>
+                     </>
+                   ) : (
+                     'Ajouter à la liste'
+                   )}
                 </button>
               </form>
             </div>
@@ -415,14 +419,24 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
               <div className="mt-12 flex flex-col gap-3">
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleToggleStatus(selectedAchat); }}
-                  className={`h-14 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] ${selectedAchat.statut === 'completed' ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-emerald-500 text-white shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-1'}`}
+                  disabled={toggleMutation.isPending}
+                  className={`h-14 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${selectedAchat.statut === 'completed' ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-emerald-500 text-white shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-1'} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {selectedAchat.statut === 'completed' ? 'Remettre en liste' : 'Confirmer l\'achat'}
+                  {toggleMutation.isPending ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} />
+                      <span>Traitement...</span>
+                    </>
+                  ) : (
+                    selectedAchat.statut === 'completed' ? 'Remettre en liste' : 'Confirmer l\'achat'
+                  )}
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleDelete(selectedAchat.id); }}
-                  className="h-10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all"
+                  disabled={deleteMutation.isPending}
+                  className="h-10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
                 >
+                  {deleteMutation.isPending ? <Loader2 className="animate-spin" size={12} /> : null}
                   Supprimer de la liste
                 </button>
               </div>
