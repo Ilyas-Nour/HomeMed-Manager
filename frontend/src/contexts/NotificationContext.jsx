@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const NotificationContext = createContext();
 
@@ -19,25 +20,38 @@ export function NotificationProvider({ children }) {
   const intervalRef = useRef(null);
   const notificationsRef = useRef([]); // Ref pour accès synchrone dans checkReminders
 
-  const fetchNotifications = useCallback(async () => {
-    if (!isAuthenticated || !profilActif) return;
-    try {
-      const res = await api.get('/notifications');
-      const mapped = res.data.map(n => ({
+  // We now use the global dashboard query to avoid redundant requests
+  const { data: dashboardData } = useQuery({
+    queryKey: ['dashboard_data', profilActif?.id],
+    queryFn: async () => {
+      const res = await api.get('/dashboard/summary');
+      return res.data;
+    },
+    enabled: !!profilActif?.id,
+    staleTime: 60000,
+  });
+
+  // Sync state with query data
+  useEffect(() => {
+    if (dashboardData?.notifications) {
+      const mapped = dashboardData.notifications.map(n => ({
         id: n.id,
         type: n.type,
         title: n.title,
         message: n.message,
-        data: n.data,
+        data: typeof n.data === 'string' ? JSON.parse(n.data) : n.data,
         read: !!n.read_at,
         timestamp: n.created_at
       }));
       setNotifications(mapped);
       notificationsRef.current = mapped;
-    } catch (err) {
-      console.error('Err fetch notifications:', err);
     }
-  }, [isAuthenticated, profilActif]);
+  }, [dashboardData]);
+
+  const fetchNotifications = useCallback(async () => {
+    // This is now handled by the useQuery invalidate in refreshData
+    return;
+  }, []);
 
   const playSound = (type = 'reminder') => {
     try {
@@ -46,95 +60,101 @@ export function NotificationProvider({ children }) {
     } catch (error) {
       console.error('Audio play error', error);
     }
-  };
-
-  const checkReminders = useCallback(async () => {
+  };  const checkReminders = useCallback(async () => {
     if (!isAuthenticated || !profilActif) return;
     
     try {
-      const res = await api.get('/dashboard/summary');
-      const schedule = res.data?.planning?.schedule || {};
+      const res = await api.get('/planning/due');
+      const dueItems = res.data || [];
       
       const now = new Date();
-      const currentH = now.getHours();
-      const currentM = now.getMinutes();
 
-      // Utilisation d'une boucle for...of pour gérer l'asynchronisme séquentiellement
-      const moments = Object.keys(schedule);
-      for (const moment of moments) {
-        const items = schedule[moment];
-        for (const item of items) {
-          if (!item.pris && item.heure) {
-            const timeParts = item.heure.split(':');
-            if (timeParts.length < 2) continue;
-            
-            const h = parseInt(timeParts[0]);
-            const m = parseInt(timeParts[1]);
-            
-            const isDue = (h < currentH) || (h === currentH && m <= currentM);
-            const key = `rem-${item.id}-${h}:${m}-${now.toDateString()}`;
+      for (const item of dueItems) {
+        const key = `rem-${item.id}-${item.heure}-${now.toDateString()}`;
 
-            if (isDue && !notifiedReminders.current.has(key)) {
-              // On vérifie dans la Ref (état synchrone) pour éviter les doublons instantanés
-              const alreadyNotified = notificationsRef.current.some(n => 
+        if (!notifiedReminders.current.has(key)) {
+            // Check in sync state to prevent duplicates
+            const alreadyNotified = notificationsRef.current.some(n => 
                 n.type === 'reminder' && 
                 n.data?.id === item.id && 
                 new Date(n.timestamp).toDateString() === now.toDateString() &&
                 n.data?.heure.substring(0, 5) === item.heure.substring(0, 5)
-              );
+            );
 
-              if (!alreadyNotified) {
+            if (!alreadyNotified) {
                 notifiedReminders.current.add(key);
                 
                 try {
-                  const notifRes = await api.post('/notifications', {
-                    profil_id: profilActif.id,
-                    type: 'reminder',
-                    title: "Heure de prise",
-                    message: `Il est l'heure de prendre ${item.medicament} (${item.heure.substring(0,5)})`,
-                    data: item
-                  });
+                    const notifRes = await api.post('/notifications', {
+                        profil_id: profilActif.id,
+                        type: 'reminder',
+                        title: "Heure de prise",
+                        message: `Il est l'heure de prendre ${item.medicament} (${item.heure.substring(0,5)})`,
+                        data: item
+                    });
 
-                  const newNotif = {
-                    id: notifRes.data.id,
-                    type: 'reminder',
-                    title: "Heure de prise",
-                    message: `Il est l'heure de prendre ${item.medicament} (${item.heure.substring(0,5)})`,
-                    data: item,
-                    read: false,
-                    timestamp: new Date().toISOString()
-                  };
+                    const newNotif = {
+                        id: notifRes.data.id,
+                        type: 'reminder',
+                        title: "Heure de prise",
+                        message: `Il est l'heure de prendre ${item.medicament} (${item.heure.substring(0,5)})`,
+                        data: item,
+                        read: false,
+                        timestamp: new Date().toISOString()
+                    };
 
-                  setNotifications(prev => {
-                    const next = [newNotif, ...prev];
-                    notificationsRef.current = next;
-                    return next;
-                  });
-                  setActivePopup(item);
-                  playSound('reminder');
+                    setNotifications(prev => {
+                        const next = [newNotif, ...prev];
+                        notificationsRef.current = next;
+                        return next;
+                    });
+
+                    // On n'affiche le popup que si l'heure est très proche (ex: 10 minutes)
+                    // Sinon, ça reste seulement dans le menu des notifications
+                    const [h, m] = item.heure.split(':');
+                    const scheduledTime = new Date();
+                    scheduledTime.setHours(parseInt(h), parseInt(m), 0, 0);
+                    const diffInMinutes = Math.abs(new Date() - scheduledTime) / (1000 * 60);
+
+                    if (diffInMinutes <= 10) {
+                        setActivePopup(item);
+                        playSound('reminder');
+                    }
                 } catch (e) {
-                  console.error('Fail to save notification', e);
+                    console.error('Fail to save notification', e);
                 }
-              } else {
+            } else {
                 notifiedReminders.current.add(key);
-              }
             }
-          }
         }
       }
     } catch (err) {
       console.error('Erreur checkReminders:', err);
     }
-  }, [isAuthenticated, profilActif]); // Ne dépend plus de 'notifications' -> Intervalle STABLE
+  }, [isAuthenticated, profilActif]);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (isAuthenticated && profilActif) {
-      fetchNotifications();
-      
-      // Démarrage de l'intervalle fixe (ne change jamais tant que profilActif est là)
+      // Integration temps réel via Echo
+      import('../services/echo').then(({ default: echo }) => {
+        const channelName = `App.Models.Profil.${profilActif.id}`;
+        
+        echo.private(channelName)
+          .listen('DataChanged', (e) => {
+            console.log('Real-time update received:', e);
+            // On invalide les données globales du dashboard
+            queryClient.invalidateQueries({ queryKey: ['dashboard_data', profilActif.id] });
+          });
+
+        return () => echo.leave(channelName);
+      });
+
+      // Polling très espacé en backup
       const delay = setTimeout(() => {
         checkReminders();
-        intervalRef.current = setInterval(checkReminders, 30000); 
+        intervalRef.current = setInterval(checkReminders, 300000); 
       }, 2000);
 
       return () => {
@@ -147,7 +167,7 @@ export function NotificationProvider({ children }) {
       notifiedReminders.current.clear();
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
-  }, [isAuthenticated, profilActif, checkReminders, fetchNotifications]);
+  }, [isAuthenticated, profilActif, checkReminders]);
 
   const markAllAsRead = async () => {
     try {
