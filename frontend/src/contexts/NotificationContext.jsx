@@ -169,44 +169,79 @@ export function NotificationProvider({ children }) {
     }
   }, [isAuthenticated, profilActif, checkReminders]);
 
+  const [pendingIds, setPendingIds] = useState(new Set());
+
   const markAllAsRead = async () => {
     try {
-      await api.patch('/notifications/read-all');
+      // Optimistic update
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       notificationsRef.current = notificationsRef.current.map(n => ({ ...n, read: true }));
+      
+      await api.patch('/notifications/read-all');
     } catch (err) {
       console.error(err);
+      // Rollback would go here if we had a persistent state to revert to
     }
   };
 
   const markAsRead = async (id) => {
+    if (pendingIds.has(id)) return;
+    
+    setPendingIds(prev => new Set(prev).add(id));
+    
+    // Optimistic UI change
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    notificationsRef.current = notificationsRef.current.map(n => n.id === id ? { ...n, read: true } : n);
+
     try {
       await api.patch(`/notifications/${id}/read`);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-      notificationsRef.current = notificationsRef.current.map(n => n.id === id ? { ...n, read: true } : n);
     } catch (err) {
-      console.error(err);
+      // If 404, it might be already read or deleted, no need to rollback
+      if (err.response?.status !== 404) {
+        console.error(err);
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: false } : n));
+      }
+    } finally {
+      setPendingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
   const clearAll = async () => {
     try {
-      await api.delete('/notifications/clear-all');
       setNotifications([]);
       notificationsRef.current = [];
+      await api.delete('/notifications/clear-all');
     } catch (err) {
       console.error(err);
     }
   };
 
   const removeNotification = async (id) => {
+    if (pendingIds.has(id)) return;
+    setPendingIds(prev => new Set(prev).add(id));
+
+    // Optimistic UI change
+    const original = [...notifications];
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    notificationsRef.current = notificationsRef.current.filter(n => n.id !== id);
+
     try {
       await api.delete(`/notifications/${id}`);
-      const next = notificationsRef.current.filter(n => n.id !== id);
-      setNotifications(next);
-      notificationsRef.current = next;
     } catch (err) {
-      console.error(err);
+      if (err.response?.status !== 404) {
+        console.error(err);
+        setNotifications(original);
+      }
+    } finally {
+      setPendingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
   
@@ -232,6 +267,7 @@ export function NotificationProvider({ children }) {
     <NotificationContext.Provider value={{
       notifications,
       activePopup,
+      pendingIds,
       markAllAsRead,
       markAsRead,
       clearAll,

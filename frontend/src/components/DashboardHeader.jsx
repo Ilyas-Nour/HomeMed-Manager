@@ -23,7 +23,8 @@ export default function DashboardHeader({
     removeNotification, 
     markAllAsRead,
     markAsRead, 
-    clearAll 
+    clearAll,
+    pendingIds
   } = useNotifications();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -170,8 +171,9 @@ export default function DashboardHeader({
             </button>
 
             {isNotificationsOpen && (
-              <div className="absolute right-0 mt-4 w-[360px] bg-white border border-slate-100 rounded-3xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.12)] overflow-hidden z-50 animate-fade-up">
-                <div className="px-6 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+              <div className="fixed inset-0 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-4 w-full sm:w-[360px] h-[100dvh] sm:h-auto bg-white sm:border sm:border-slate-100 sm:rounded-3xl sm:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.12)] overflow-hidden z-[100] animate-fade-up">
+                {/* Header du menu */}
+                <div className="px-6 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30 sticky top-0 z-10 backdrop-blur-sm">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-900">Notifications</h3>
                     <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{unreadCount} non lues</p>
@@ -185,10 +187,17 @@ export default function DashboardHeader({
                         Effacer
                       </button>
                     )}
-                    <button onClick={() => setIsNotificationsOpen(false)} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white transition-all"><X size={16} className="text-slate-300" /></button>
+                    <button 
+                      onClick={() => setIsNotificationsOpen(false)} 
+                      className="h-10 w-10 sm:h-8 sm:w-8 flex items-center justify-center rounded-xl sm:rounded-full bg-white sm:bg-transparent border border-slate-100 sm:border-none shadow-sm sm:shadow-none transition-all"
+                    >
+                      <X size={20} className="text-slate-400 sm:text-slate-300" />
+                    </button>
                   </div>
                 </div>
-                <div className="max-h-[440px] overflow-y-auto no-scrollbar py-2">
+
+                {/* Liste des notifications */}
+                <div className="h-[calc(100dvh-80px)] sm:max-h-[440px] overflow-y-auto no-scrollbar py-2 pb-24 sm:pb-2">
                   {allNotifications.length > 0 ? (
                     allNotifications.map(n => (
                       <div key={n.id} className={`mx-2 my-1 p-4 rounded-2xl flex items-start gap-4 hover:bg-indigo-50/30 transition-all cursor-pointer group relative ${!n.read ? 'bg-indigo-50/20' : 'opacity-80'}`}>
@@ -203,30 +212,32 @@ export default function DashboardHeader({
                           <p className={`text-sm leading-snug tracking-tight transition-colors ${!n.read ? 'font-black text-slate-900' : 'font-medium text-slate-500'}`}>{n.message}</p>
                         </div>
                         
-                        <div className="absolute top-1/2 -translate-y-1/2 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                        <div className="absolute top-1/2 -translate-y-1/2 right-4 flex items-center gap-2 sm:gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all sm:translate-x-2 sm:group-hover:translate-x-0">
                           {!n.read && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); markAsRead(n.id); }}
-                              className="h-8 w-8 bg-brand-blue text-white rounded-lg shadow-lg shadow-brand-blue/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+                              disabled={pendingIds.has(n.id)}
+                              className={`h-9 w-9 sm:h-8 sm:w-8 bg-brand-blue text-white rounded-xl sm:rounded-lg shadow-lg shadow-brand-blue/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${pendingIds.has(n.id) ? 'opacity-50 cursor-not-allowed scale-90' : ''}`}
                               title="Lu"
                             >
-                              <ArrowRight size={14} strokeWidth={3} />
+                              <ArrowRight size={16} strokeWidth={3} className="sm:size-14" />
                             </button>
                           )}
                           <button 
                             onClick={(e) => { e.stopPropagation(); removeNotification(n.id); }}
-                            className="h-8 w-8 bg-white text-slate-400 hover:text-rose-600 border border-slate-100 rounded-lg shadow-sm flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-                            title="X"
+                            disabled={pendingIds.has(n.id)}
+                            className={`h-9 w-9 sm:h-8 sm:w-8 bg-white text-slate-400 hover:text-rose-600 border border-slate-100 rounded-xl sm:rounded-lg shadow-sm flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${pendingIds.has(n.id) ? 'opacity-50 cursor-not-allowed scale-90' : ''}`}
+                            title="Supprimer"
                           >
-                            <X size={14} />
+                            <X size={16} className="sm:size-14" />
                           </button>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="py-20 text-center">
-                      <div className="h-16 w-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                        <Bell size={28} className="text-slate-200" />
+                    <div className="py-24 sm:py-20 text-center">
+                      <div className="h-20 w-20 sm:h-16 sm:w-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                        <BellRing size={32} className="text-slate-200" />
                       </div>
                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Tout est à jour</p>
                     </div>
