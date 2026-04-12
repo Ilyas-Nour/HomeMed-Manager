@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Calendar, CheckCircle2, Circle, Clock, 
   Sun, Sunrise, Sunset, Moon, Coffee,
@@ -16,66 +17,109 @@ export default function PlanningView({ showToast, activeProfileId, initialData =
   const [loading, setLoading] = useState(!initialData);
   const [stats, setStats] = useState({ total: 0, taken: 0 });
 
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     if (initialData) {
       setSchedule(initialData.schedule || {});
       setPercentage(initialData.percentage || 0);
       setStats(initialData.stats || { total: 0, taken: 0 });
       setLoading(false);
-    } else {
-      fetchPlanning();
     }
   }, [activeProfileId, initialData]);
 
-  const fetchPlanning = async () => {
-    try {
-      if (!initialData) setLoading(true);
-      const res = await api.get('/planning');
-      setSchedule(res.data.schedule);
-      setPercentage(res.data.percentage);
-      setStats(res.data.stats);
-    } catch (err) {
-      console.error(err);
-      showToast && showToast('Erreur lors du chargement du planning', 'error');
-    } finally {
-      if (!initialData) setLoading(false);
+  const [pendingIds, setPendingIds] = useState(new Set());
+
+  const toggleMutation = useMutation({
+    mutationFn: async (item) => {
+        const today = new Date().toISOString().split('T')[0];
+        return api.post('/prises/toggle', {
+            rappel_id: item.id,
+            date_prise: today,
+            pris: !item.pris
+        });
+    },
+    onMutate: async (item) => {
+        setPendingIds(prev => new Set(prev).add(item.id));
+        const newStatus = !item.pris;
+        
+        // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+        await queryClient.cancelQueries({ queryKey: ['dashboard_data', activeProfileId] });
+
+        // Snapshot the previous value
+        const previousData = queryClient.getQueryData(['dashboard_data', activeProfileId]);
+
+        // Optimistic Update: Global Cache
+        if (previousData) {
+            const newTakenCount = newStatus ? previousData.planning.stats.taken + 1 : Math.max(0, previousData.planning.stats.taken - 1);
+            const total = previousData.planning.stats.total;
+            const newPercentage = total > 0 ? Math.round((newTakenCount / total) * 100) : 0;
+
+            const updatedData = {
+                ...previousData,
+                planning: {
+                    ...previousData.planning,
+                    percentage: newPercentage,
+                    stats: {
+                        ...previousData.planning.stats,
+                        taken: newTakenCount
+                    },
+                    schedule: Object.fromEntries(
+                        Object.entries(previousData.planning.schedule).map(([moment, items]) => [
+                            moment,
+                            items.map(i => i.id === item.id ? { ...i, pris: newStatus } : i)
+                        ])
+                    )
+                }
+            };
+            queryClient.setQueryData(['dashboard_data', activeProfileId], updatedData);
+        }
+
+        // Optimistic Update: Local State (for this component's internal smooth transitions)
+        setSchedule(prev => {
+            const updated = { ...prev };
+            for (const moment in updated) {
+                updated[moment] = updated[moment].map(i =>
+                    i.id === item.id ? { ...i, pris: newStatus } : i
+                );
+            }
+            return updated;
+        });
+        
+        setStats(prev => {
+            const newTaken = newStatus ? prev.taken + 1 : Math.max(0, prev.taken - 1);
+            setPercentage(prev.total > 0 ? Math.round((newTaken / prev.total) * 100) : 0);
+            return { ...prev, taken: newTaken };
+        });
+
+        return { previousData };
+    },
+    onError: (err, item, context) => {
+        // Rollback on error
+        if (context?.previousData) {
+            setSchedule(context.previousData.planning?.schedule || {});
+            setPercentage(context.previousData.planning?.percentage || 0);
+            setStats(context.previousData.planning?.stats || { total: 0, taken: 0 });
+        }
+        showToast && showToast('Erreur — historique non mis à jour', 'error');
+    },
+    onSuccess: (data, item) => {
+        showToast && showToast(!item.pris ? '✓ Prise enregistrée' : 'Prise annulée');
+    },
+    onSettled: (data, error, item) => {
+        setPendingIds(prev => {
+            const next = new Set(prev);
+            next.delete(item.id);
+            return next;
+        });
+        // Always refetch after error or success to keep in sync
+        queryClient.invalidateQueries({ queryKey: ['dashboard_data', activeProfileId] });
     }
-  };
+  });
 
-  const handleToggle = async (item) => {
-    const newStatus = !item.pris;
-    const today = new Date().toISOString().split('T')[0];
-
-    // Optimistic Update
-    setSchedule(prev => {
-      const updated = { ...prev };
-      for (const moment in updated) {
-        updated[moment] = updated[moment].map(i =>
-          i.id === item.id ? { ...i, pris: newStatus } : i
-        );
-      }
-      return updated;
-    });
-    
-    setStats(prev => {
-        const newTaken = newStatus ? prev.taken + 1 : Math.max(0, prev.taken - 1);
-        setPercentage(prev.total > 0 ? Math.round((newTaken / prev.total) * 100) : 0);
-        return { ...prev, taken: newTaken };
-    });
-
-    try {
-      await api.post('/prises/toggle', {
-        rappel_id: item.id,
-        date_prise: today,
-        pris: newStatus
-      });
-      showToast && showToast(newStatus ? '✓ Prise enregistrée' : 'Prise annulée');
-    } catch (err) {
-      console.error(err);
-      // Revert on failure
-      fetchPlanning();
-      showToast && showToast('Erreur — historique non mis à jour', 'error');
-    }
+  const handleToggle = (item) => {
+    if (pendingIds.has(item.id)) return; // Prevention of double-toggle for the SAME item
+    toggleMutation.mutate(item);
   };
 
   const moments = [
@@ -91,7 +135,7 @@ export default function PlanningView({ showToast, activeProfileId, initialData =
     return (
       <div className="py-24 text-center">
         <div className="h-10 w-10 border-4 border-indigo-200 border-t-brand-blue rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-xs font-black uppercase tracking-widest text-slate-400">Synchronisation du planning...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Chargement du planning...</p>
       </div>
     );
   }

@@ -156,7 +156,7 @@ export default function GroupsView() {
       {loading && groupes.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32">
            <div className="h-10 w-10 border-4 border-indigo-100 border-t-brand-blue rounded-full animate-spin mb-6"></div>
-           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Synchronisation du réseau...</p>
+           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Chargement du réseau...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
@@ -321,8 +321,15 @@ export default function GroupsView() {
                          className="w-full h-12 px-6 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all" 
                        />
                     </div>
-                    <button type="submit" disabled={loading} className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-brand-blue/30 hover:shadow-2xl transition-all disabled:opacity-50">
-                       {loading ? 'Envoi...' : "Rejoindre le Groupe"}
+                    <button type="submit" disabled={loading} className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-brand-blue/30 hover:shadow-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95">
+                       {loading ? (
+                         <>
+                           <Loader2 className="animate-spin" size={20} />
+                           <span>Envoi...</span>
+                         </>
+                       ) : (
+                         "Rejoindre le Groupe"
+                       )}
                     </button>
                     <button type="button" onClick={() => setIsInviteModalOpen(false)} className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Ignorer</button>
                  </form>
@@ -359,8 +366,15 @@ export default function GroupsView() {
                          className="w-full h-12 px-6 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all" 
                        />
                     </div>
-                    <button type="submit" disabled={loading} className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-brand-blue/30 hover:shadow-2xl hover:-translate-y-1 transition-all disabled:opacity-50 active:scale-95">
-                       {loading ? 'Création...' : "Lancer le Groupe"}
+                    <button type="submit" disabled={loading} className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-brand-blue/30 hover:shadow-2xl hover:-translate-y-1 transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-3">
+                       {loading ? (
+                         <>
+                           <Loader2 className="animate-spin" size={20} />
+                           <span>Création...</span>
+                         </>
+                       ) : (
+                         "Lancer le Groupe"
+                       )}
                     </button>
                     <button type="button" onClick={() => setIsGroupModalOpen(false)} className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Ignorer</button>
                  </form>

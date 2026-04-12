@@ -294,7 +294,7 @@ function NotificationsPanel({ onBack, showToast }) {
       <PanelLayout title="Notifications" icon={<Bell size={22} className="text-amber-500" />} onBack={onBack}>
          <div className="flex flex-col items-center justify-center py-32">
             <div className="h-10 w-10 border-4 border-amber-100 border-t-amber-500 rounded-full animate-spin mb-6"></div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Synchronisation des alertes...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Chargement des alertes...</p>
          </div>
       </PanelLayout>
     );
