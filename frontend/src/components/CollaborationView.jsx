@@ -1,132 +1,271 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Inbox, MessageCircle, Clock, CheckCircle2, 
-  XCircle, ArrowRight, Loader2, User, 
-  Package, Info, ShieldCheck
+  Plus, MessageCircle, Clock, CheckCircle2, 
+  AlertCircle, ChevronRight, Loader2, RefreshCw,
+  Inbox, Send, ArrowUpRight, ArrowDownLeft,
+  LayoutDashboard, Users, Activity, ShieldCheck
 } from 'lucide-react';
 import api from '../services/api';
+import ChatDialog from './ChatDialog';
 import { useAuth } from '../hooks/useAuth';
 
 /**
- * CollaborationView — Request Management Hub
- * Track incoming and outgoing sharing requests with real-time status.
+ * CollaborationView — Ultra-Responsive Edition
+ * High-fidelity, device-agnostic interface for group collaboration.
  */
 export default function CollaborationView({ onChatOpen, showToast }) {
   const { user } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('received'); // 'received' | 'sent'
+
+  const fetchRequests = async (isBackground = false) => {
+    try {
+      if (!isBackground) setLoading(true);
+      const res = await api.get(`/partage/demandes?t=${Date.now()}`);
+      setRequests(res.data.data || []);
+    } catch (err) {
+      console.error('Fetch error', err);
+      if (showToast) showToast('Erreur lors du chargement des demandes', 'error');
+    } finally {
+      if (!isBackground) setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchRequests();
     
-    // On pourrait ajouter un listener Echo ici pour mettre à jour la liste en temps réel
+    // 🔥 Hard-Sync Real-Time Listener
     if (window.Echo && user) {
-        window.Echo.private(`users.${user.id}`)
-            .listen('RequestUpdated', (e) => {
-                fetchRequests();
-                showToast(`Mise à jour : Requête ${e.medRequest.status}`, 'info');
+        const userChannel = `users.${user.id}`;
+        
+        window.Echo.private(userChannel)
+            .listen('.request.updated', (e) => {
+                setRequests(prev => {
+                    const newRequest = e.medRequest;
+                    const exists = prev.some(r => r.id === newRequest.id);
+                    if (exists) {
+                        return prev.map(r => r.id === newRequest.id ? newRequest : r);
+                    } else {
+                        return [newRequest, ...prev];
+                    }
+                });
+                if (showToast) showToast(`Mise à jour d'entraide`, 'info');
+                fetchRequests(true);
             });
-    }
+            
+        const handleLocalUpdate = () => fetchRequests(true);
+        window.addEventListener('collaboration-updated', handleLocalUpdate);
 
-    return () => {
-        if (window.Echo && user) {
-            window.Echo.leave(`users.${user.id}`);
-        }
+        return () => {
+            window.removeEventListener('collaboration-updated', handleLocalUpdate);
+            if (window.Echo && user) {
+                window.Echo.private(userChannel).stopListening('.request.updated');
+            }
+        };
     }
   }, [user]);
 
-  const fetchRequests = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get('/partage/demandes');
-      setRequests(res.data.data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const filteredRequests = useMemo(() => {
+    if (activeTab === 'received') {
+        return requests.filter(r => r.owner_id === user?.id);
+    } else {
+        return requests.filter(r => r.requester_id === user?.id);
     }
-  };
+  }, [requests, activeTab, user?.id]);
 
-  const statusMap = {
-    pending: { label: 'En attente', color: 'bg-amber-50 text-amber-600', icon: <Clock size={14} /> },
-    accepted: { label: 'Accepté', color: 'bg-emerald-50 text-emerald-600', icon: <CheckCircle2 size={14} /> },
-    rejected: { label: 'Refusé', color: 'bg-rose-50 text-rose-600', icon: <XCircle size={14} /> },
-    completed: { label: 'Terminé', color: 'bg-brand-blue/10 text-brand-blue', icon: <ShieldCheck size={14} /> },
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'accepted':
+        return { label: 'ACCEPTÉ', color: 'text-emerald-600 bg-emerald-50', icon: CheckCircle2 };
+      case 'rejected':
+        return { label: 'REFUSÉ', color: 'text-rose-600 bg-rose-50', icon: AlertCircle };
+      default:
+        return { label: 'EN ATTENTE', color: 'text-amber-600 bg-amber-50', icon: Clock };
+    }
   };
 
   if (loading && requests.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 opacity-50">
-        <Loader2 className="animate-spin mb-4 text-brand-blue" />
-        <p className="text-[10px] font-black uppercase tracking-widest">Synchronisation des demandes...</p>
+      <div className="flex flex-col items-center justify-center py-32 animate-pulse">
+        <div className="relative">
+            <div className="absolute inset-0 bg-brand-blue/20 blur-2xl rounded-full" />
+            <Loader2 className="h-12 w-12 text-brand-blue animate-spin relative z-10" />
+        </div>
+        <p className="mt-6 text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Synchronisation Mirror</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-10 animate-fade-up">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 px-1">
-        <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Entraide Partagée</h1>
-            <p className="text-base font-medium text-slate-500">Suivi des demandes de médicaments au sein de vos groupes.</p>
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-10 animate-fade-up pb-24 px-1">
+      {/* Header — Fully Responsive Layout */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
+        <div className="space-y-2 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-blue/5 text-brand-blue rounded-full text-[10px] font-black uppercase tracking-widest mb-1 border border-brand-blue/10">
+                <Users size={12} /> Live Collaboration
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">Entraide Partagée</h1>
+            <p className="text-sm sm:text-base font-medium text-slate-500 max-w-lg mx-auto md:mx-0">Gérez vos échanges de médicaments avec fluidité et sécurité.</p>
+        </div>
+        <button 
+            onClick={() => fetchRequests()}
+            className="hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400 hover:text-brand-blue transition-all border border-slate-100 shadow-sm group active:scale-95"
+            title="Rafraîchir"
+        >
+            <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-700" />
+        </button>
+      </div>
+
+      {/* 🧪 Tab Switcher — Glassmorphism Edition */}
+      <div className="sticky top-2 z-40 px-2 sm:px-0">
+        <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-[28px] flex items-center gap-1 w-full max-w-lg mx-auto md:mx-0 shadow-2xl shadow-slate-200/50 border border-white">
+            <button 
+                onClick={() => setActiveTab('received')}
+                className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 py-3 rounded-[22px] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-500 ${
+                    activeTab === 'received' 
+                    ? 'bg-slate-900 text-white shadow-xl scale-[1.02]' 
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                }`}
+            >
+                <Inbox size={14} className="sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Reçues</span>
+                {requests.filter(r => r.owner_id === user?.id && r.status === 'pending').length > 0 && (
+                    <span className="h-1.5 w-1.5 bg-rose-500 rounded-full animate-pulse shadow-sm" />
+                )}
+            </button>
+            <button 
+                onClick={() => setActiveTab('sent')}
+                className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 py-3 rounded-[22px] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-500 ${
+                    activeTab === 'sent' 
+                    ? 'bg-slate-900 text-white shadow-xl scale-[1.02]' 
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                }`}
+            >
+                <Send size={14} className="sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Envoyées</span>
+            </button>
         </div>
       </div>
 
-      {requests.length === 0 ? (
-        <div className="bg-white border border-slate-100 rounded-[40px] p-20 text-center space-y-6">
-           <div className="h-20 w-20 bg-slate-50 rounded-3xl mx-auto flex items-center justify-center text-slate-200 border border-slate-50 shadow-inner">
-              <Inbox size={40} />
+      {filteredRequests.length === 0 ? (
+        <div className="bg-slate-50/50 border border-slate-100 border-dashed rounded-[40px] p-12 sm:p-24 text-center space-y-6">
+           <div className="relative mx-auto h-24 w-24 sm:h-32 sm:w-32">
+               <div className="absolute inset-0 bg-brand-blue/5 blur-3xl rounded-full" />
+               <div className={`relative h-full w-full rounded-[40px] flex items-center justify-center text-slate-100 border-2 border-dashed border-slate-200 transition-all duration-700 ${
+                   activeTab === 'received' ? 'text-brand-blue/40' : 'text-indigo-400/40'
+               }`}>
+                  {activeTab === 'received' ? <Inbox size={64} /> : <Send size={64} />}
+               </div>
            </div>
-           <div className="max-w-xs mx-auto">
-              <p className="text-lg font-bold text-slate-900">Aucune demande active</p>
-              <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed">Les demandes de partage apparaîtront ici dès qu'un membre sollicitera votre pharmacie ou vice versa.</p>
+           <div className="space-y-2">
+              <p className="text-xl sm:text-2xl font-black text-slate-900">Tout est à jour</p>
+              <p className="text-sm text-slate-400 max-w-xs mx-auto font-medium">
+                  {activeTab === 'received' 
+                    ? 'Aucune nouvelle demande de médicament pour le moment.' 
+                    : 'Vous n\'avez aucune demande active en cours de suivi.'}
+              </p>
            </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6">
-           {requests.map(req => {
-             const isOwner = req.owner_id === user?.id;
-             const status = statusMap[req.status] || statusMap.pending;
-             
-             return (
-               <div key={req.id} className="bg-white border border-slate-100 rounded-[32px] p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all group">
-                  <div className="flex items-center gap-6 w-full sm:w-auto">
-                     <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all shadow-sm border border-slate-50">
-                        <Package size={28} />
-                     </div>
-                     <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
-                           <h3 className="text-xl font-bold text-slate-900 tracking-tight">{req.medicament.nom}</h3>
-                           <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${status.color}`}>
-                              {status.icon}
-                              {status.label}
-                           </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                           <div className="flex items-center gap-1.5">
-                              <User size={12} />
-                              <span>{isOwner ? `Demandé par ${req.requester.name}` : `Propriétaire : ${req.owner.name}`}</span>
-                           </div>
-                           <div className="h-1 w-1 bg-slate-200 rounded-full" />
-                           <span>{req.groupe.nom}</span>
-                        </div>
-                     </div>
-                  </div>
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
+          {filteredRequests.map((request) => {
+            const config = getStatusConfig(request.status);
+            const isReceived = activeTab === 'received';
+            
+            return (
+                <div 
+                  key={request.id} 
+                  className={`group bg-white border border-slate-100 rounded-[32px] sm:rounded-[44px] p-5 sm:p-8 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden relative ${
+                      isReceived ? 'hover:border-brand-blue/20' : 'hover:border-indigo-500/20'
+                  }`}
+                >
+                    {/* Background Decorative Element */}
+                    <div className={`absolute -top-16 -right-16 h-48 w-48 rounded-full opacity-[0.02] transition-all duration-1000 group-hover:scale-110 ${
+                        isReceived ? 'bg-brand-blue' : 'bg-indigo-600'
+                    }`} />
 
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
-                     <button 
-                        onClick={() => onChatOpen(req)}
-                        className="flex-1 sm:flex-none h-12 px-8 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-brand-blue transition-all active:scale-[0.98] shadow-lg shadow-slate-900/10"
-                     >
-                        <MessageCircle size={16} strokeWidth={3} /> Discussion
-                     </button>
-                     <div className="h-12 w-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 group-hover:text-brand-blue transition-colors">
-                        <ArrowRight size={20} />
-                     </div>
-                  </div>
-               </div>
-             );
-           })}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-10 relative z-10">
+                        <div className="flex items-center gap-4 sm:gap-8">
+                            <div className={`h-16 w-16 sm:h-20 sm:w-20 rounded-[28px] sm:rounded-[32px] flex items-center justify-center transition-all duration-700 border border-white shadow-2xl shadow-slate-200/50 flex-shrink-0 ${
+                                isReceived 
+                                ? 'bg-slate-50 text-brand-blue group-hover:bg-brand-blue group-hover:text-white' 
+                                : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'
+                            }`}>
+                                {isReceived ? <Inbox size={32} strokeWidth={1.5} /> : <Send size={32} strokeWidth={1.5} className="-translate-y-0.5" />}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
+                                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">{request.medicament?.nom}</h3>
+                                    <span className={`w-fit px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase flex items-center gap-1.5 border ${
+                                        config.color.includes('emerald') ? 'border-emerald-100' : 
+                                        config.color.includes('rose') ? 'border-rose-100' : 'border-amber-100'
+                                    } ${config.color}`}>
+                                        <config.icon size={10} strokeWidth={3} />
+                                        {config.label}
+                                    </span>
+                                </div>
+                                
+                                <div className="flex flex-wrap items-center gap-y-3 gap-x-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center text-[9px] font-black border ${
+                                            isReceived ? 'bg-brand-blue/5 text-brand-blue border-brand-blue/10' : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                        }`}>
+                                            {isReceived ? 'RCV' : 'SNT'}
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em]">
+                                                {isReceived ? 'Demandeur' : 'Cible'}
+                                            </p>
+                                            <p className="text-sm font-bold text-slate-700">
+                                                {isReceived ? request.requester?.name : request.owner?.name}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="hidden sm:block h-6 w-px bg-slate-100" />
+                                    
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 border border-slate-100">
+                                            <LayoutDashboard size={14} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em]">Groupe</p>
+                                            <p className="text-sm font-bold text-slate-700 truncate max-w-[150px]">{request.groupe?.nom}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end">
+                            <button 
+                                onClick={() => onChatOpen(request)}
+                                className={`w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-12 rounded-[24px] text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all active:scale-[0.98] shadow-2xl relative group/btn overflow-hidden ${
+                                    isReceived 
+                                    ? 'bg-slate-900 text-white hover:bg-brand-blue shadow-slate-200' 
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
+                                }`}
+                            >
+                                <span className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                                <MessageCircle size={18} strokeWidth={2.5} className="group-hover/btn:rotate-12 transition-transform" />
+                                Discussion
+                                <ArrowUpRight size={14} className="opacity-40" />
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* Bottom Status Bar — Tiny Detail */}
+                    <div className="mt-6 pt-5 border-t border-slate-50 flex items-center justify-between opacity-50 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-2">
+                             <ShieldCheck size={12} className="text-emerald-500" />
+                             <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Canal Sécurisé</span>
+                        </div>
+                        <span className="text-[9px] font-medium text-slate-300">ID#REQ-{request.id.toString().padStart(4, '0')}</span>
+                    </div>
+                </div>
+            );
+          })}
         </div>
       )}
     </div>

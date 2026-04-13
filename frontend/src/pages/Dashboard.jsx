@@ -135,7 +135,9 @@ export default function Dashboard() {
     }
     return () => {
       if (window.Echo && user) {
-        window.Echo.leave(`users.${user.id}`);
+        const channel = window.Echo.private(`users.${user.id}`);
+        channel.stopListening('.request.updated');
+        channel.stopListening('.message.sent');
       }
     };
   }, [user, activeRequest?.id]);
