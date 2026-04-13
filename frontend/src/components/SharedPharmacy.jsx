@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Globe, Search, Share2, Info, Loader2, 
   MessageCircle, Send, Plus, ChevronRight,
-  User, Package, ShieldCheck
+  User, Package, ShieldCheck, X
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
@@ -18,6 +18,8 @@ export default function SharedPharmacy({ groupeId, onChatOpen, showToast }) {
   const [isSending, setIsSending] = useState(false);
   const [requestingId, setRequestingId] = useState(null);
   const [requestNote, setRequestNote] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     if (groupeId) {
@@ -74,6 +76,11 @@ export default function SharedPharmacy({ groupeId, onChatOpen, showToast }) {
     }
   };
 
+  const filteredMeds = medicaments.filter(med => 
+    med.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    med.profil.utilisateur.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading && medicaments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 opacity-50">
@@ -85,26 +92,65 @@ export default function SharedPharmacy({ groupeId, onChatOpen, showToast }) {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
          <div className="flex items-center gap-3">
             <div className="h-8 w-1 bg-brand-blue rounded-full" />
             <h3 className="text-sm font-black uppercase text-slate-900 tracking-widest">Pharmacie du Groupe</h3>
          </div>
+
+         <div className="relative flex items-center gap-2">
+            {showSearch ? (
+              <div className="flex items-center gap-2 animate-fade-left">
+                <div className="relative">
+                  <input 
+                    autoFocus
+                    type="text"
+                    placeholder="Chercher un médicament..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="h-10 w-48 sm:w-64 pl-10 pr-4 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-brand-blue outline-none transition-all"
+                  />
+                  <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                </div>
+                <button 
+                  onClick={() => { setShowSearch(false); setSearchQuery(''); }}
+                  className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setShowSearch(true)}
+                className="h-10 px-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-brand-blue hover:bg-brand-blue/5 rounded-xl transition-all"
+              >
+                <Search size={14} />
+                <span>Rechercher</span>
+              </button>
+            )}
+         </div>
       </div>
 
-      {medicaments.length === 0 ? (
+      {filteredMeds.length === 0 ? (
         <div className="bg-slate-50 border border-slate-100 border-dashed rounded-[32px] p-12 text-center space-y-4">
            <div className="h-16 w-16 bg-white rounded-2xl mx-auto flex items-center justify-center text-slate-200 border border-slate-100 shadow-sm">
-              <Package size={32} />
+              {searchQuery ? <Search size={32} /> : <Package size={32} />}
            </div>
            <div>
-              <p className="text-sm font-bold text-slate-900">Aucun médicament partagé</p>
-              <p className="text-[10px] font-medium text-slate-400 mt-1 max-w-[200px] mx-auto">Invitez vos membres à marquer certains médicaments comme "Partageables".</p>
+              <p className="text-sm font-bold text-slate-900">
+                {searchQuery ? "Aucun résultat trouvé" : "Aucun médicament partagé"}
+              </p>
+              <p className="text-[10px] font-medium text-slate-400 mt-1 max-w-[200px] mx-auto">
+                {searchQuery 
+                  ? `Aucun médicament ne correspond à "${searchQuery}"`
+                  : "Invitez vos membres à marquer certains médicaments comme \"Partageables\"."
+                }
+              </p>
            </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           {medicaments.map(med => (
+           {filteredMeds.map(med => (
              <div key={med.id} className="bg-white border border-slate-100 rounded-[24px] p-5 hover:shadow-xl hover:shadow-slate-200/50 transition-all group overflow-hidden relative">
                 <div className="flex items-start justify-between gap-4 relative z-10">
                    <div className="flex items-center gap-4">
