@@ -9,6 +9,15 @@ import api from '../services/api';
 import ChatDialog from './ChatDialog';
 import { useAuth } from '../hooks/useAuth';
 
+const playSound = () => {
+    try {
+        const audio = new Audio('/recieve_message.mp3');
+        audio.play().catch(e => console.log('Audio blocked:', e));
+    } catch (err) {
+        console.error('Audio play error', err);
+    }
+};
+
 /**
  * CollaborationView — Ultra-Responsive Edition
  * High-fidelity, device-agnostic interface for group collaboration.
@@ -62,6 +71,7 @@ export default function CollaborationView({ onChatOpen, showToast }) {
                         ? { ...r, unread_messages_count: (r.unread_messages_count || 0) + 1 } 
                         : r
                     ));
+                    playSound(); // 🎵 Signal sonore pour le nouveau badge
                     if (showToast) showToast(`Nouveau message de ${e.sender_name}`, 'info');
                 }
             });

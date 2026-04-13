@@ -3,6 +3,15 @@ import { Send, X, Loader2, User, Clock, CheckCircle2, AlertCircle, MessageSquare
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 
+const playSound = (type) => {
+  try {
+    const audio = new Audio(type === 'send' ? '/send_message.mp3' : '/recieve_message.mp3');
+    audio.play().catch(e => console.log('Audio notification blocked:', e));
+  } catch (err) {
+    console.error('Audio play error', err);
+  }
+};
+
 /**
  * ChatDialog — High-Fidelity Messaging Edition
  * Ultra-responsive, smooth animations, and premium chat aesthetics.
@@ -59,6 +68,7 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
                   if (prev.find(m => m.id === e.id)) return prev;
                   return [...prev, e];
               });
+              playSound('receive'); // 🎵 Nouveau message reçu
               handleMarkAsRead();
           }
         })
@@ -104,6 +114,7 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
     };
     
     setMessages(prev => [...prev, optimisticMsg]);
+    playSound('send'); // 🎵 Message envoyé
 
     try {
       setSending(true);
