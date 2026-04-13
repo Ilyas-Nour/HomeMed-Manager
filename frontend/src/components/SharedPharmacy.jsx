@@ -5,14 +5,17 @@ import {
   User, Package, ShieldCheck
 } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 /**
  * SharedPharmacy — Discovery Layer
  * Browse medications shared by group members with high-fidelity UI.
  */
 export default function SharedPharmacy({ groupeId, onChatOpen, showToast }) {
+  const { user } = useAuth();
   const [medicaments, setMedicaments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const [requestingId, setRequestingId] = useState(null);
   const [requestNote, setRequestNote] = useState('');
 
@@ -20,7 +23,23 @@ export default function SharedPharmacy({ groupeId, onChatOpen, showToast }) {
     if (groupeId) {
       fetchSharedMeds();
     }
-  }, [groupeId]);
+
+    if (window.Echo && groupeId) {
+        // Optionnel: On pourrait filtrer par type 'medicament' si besoin
+        const channel = window.Echo.private(`users.${user?.id}`);
+        if (channel) {
+            channel.listen('.data.changed', (e) => {
+                fetchSharedMeds();
+            });
+        }
+    }
+
+    return () => {
+        if (window.Echo && user) {
+            window.Echo.private(`users.${user.id}`).stopListening('.data.changed');
+        }
+    }
+  }, [groupeId, user?.id]);
 
   const fetchSharedMeds = async () => {
     try {
@@ -37,8 +56,9 @@ export default function SharedPharmacy({ groupeId, onChatOpen, showToast }) {
   };
 
   const handleSendRequest = async (medId) => {
+    if (isSending) return;
     try {
-      setLoading(true);
+      setIsSending(true);
       const res = await api.post('/partage/demandes', {
         medicament_id: medId,
         groupe_id: groupeId,
@@ -47,12 +67,10 @@ export default function SharedPharmacy({ groupeId, onChatOpen, showToast }) {
       showToast('Demande envoyée avec succès !');
       setRequestingId(null);
       setRequestNote('');
-      // Optionnel : On pourrait ouvrir le chat directement ici
-      // onChatOpen(res.data);
     } catch (err) {
-      showToast('Erreur lors de l\'envoi de la demande', 'error');
+      showToast(err.response?.data?.message || 'Erreur lors de l\'envoi de la demande', 'error');
     } finally {
-      setLoading(false);
+      setIsSending(false);
     }
   };
 
@@ -118,16 +136,18 @@ export default function SharedPharmacy({ groupeId, onChatOpen, showToast }) {
                          />
                          <div className="flex items-center gap-2">
                             <button 
-                              onClick={() => handleSendRequest(med.id)}
-                              className="flex-1 h-9 bg-brand-blue text-white rounded-lg text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-brand-blue/20 flex items-center justify-center gap-2"
-                            >
-                               <Send size={12} /> Envoyer la demande
-                            </button>
+                               onClick={() => handleSendRequest(med.id)}
+                               disabled={isSending}
+                               className="flex-1 h-9 bg-brand-blue text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-brand-blue/20 flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-[0.98]"
+                             >
+                                {isSending ? <Loader2 className="animate-spin" size={12} /> : <Send size={12} />}
+                                {isSending ? 'Envoi...' : 'Envoyer la demande'}
+                             </button>
                             <button 
                               onClick={() => setRequestingId(null)}
                               className="px-4 h-9 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-all"
                             >
-                               Annuler
+                                Annuler
                             </button>
                          </div>
                       </div>

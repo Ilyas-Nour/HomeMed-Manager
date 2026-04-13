@@ -49,6 +49,18 @@ class MedicamentRequestController extends Controller
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
+        // 🛡️ Bouclier anti-doublon : Vérifier si une demande est déjà en attente
+        $existing = MedicamentRequest::where([
+            'requester_id' => $user->id,
+            'medicament_id' => $medicament->id,
+            'groupe_id' => $groupe->id,
+            'status' => 'pending'
+        ])->exists();
+
+        if ($existing) {
+            return response()->json(['message' => 'Une demande est déjà en attente pour ce médicament.'], 422);
+        }
+
         $medRequest = MedicamentRequest::create([
             'requester_id' => $user->id,
             'owner_id' => $medicament->profil->user_id,
@@ -57,8 +69,13 @@ class MedicamentRequestController extends Controller
             'status' => 'pending',
             'notes' => $request->notes,
         ]);
+        $medRequest->load(['medicament', 'requester:id,name', 'owner:id,name', 'groupe:id,nom']);
 
-        broadcast(new RequestUpdated($medRequest))->toOthers();
+        try {
+            broadcast(new RequestUpdated($medRequest));
+        } catch (\Exception $e) {
+            \Log::error("Broadcasting failed in MedicamentRequestController@store: " . $e->getMessage());
+        }
 
         return response()->json($medRequest, 201);
     }
@@ -98,8 +115,13 @@ class MedicamentRequestController extends Controller
         }
 
         $medRequest->update(['status' => $request->status]);
+        $medRequest->load(['medicament', 'requester:id,name', 'owner:id,name', 'groupe:id,nom']);
 
-        broadcast(new RequestUpdated($medRequest))->toOthers();
+        try {
+            broadcast(new RequestUpdated($medRequest));
+        } catch (\Exception $e) {
+            \Log::error("Broadcasting failed in MedicamentRequestController@update: " . $e->getMessage());
+        }
 
         return response()->json($medRequest);
     }

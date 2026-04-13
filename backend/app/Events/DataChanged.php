@@ -38,7 +38,7 @@ class DataChanged implements ShouldBroadcast
     public function broadcastOn(): array
     {
         if ($this->is_user_channel) {
-            return [new PrivateChannel("App.Models.User.{$this->target_id}")];
+            return [new PrivateChannel("users.{$this->target_id}")];
         }
         
         return [new PrivateChannel("App.Models.Profil.{$this->target_id}")];
