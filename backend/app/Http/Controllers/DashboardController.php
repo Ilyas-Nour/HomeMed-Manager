@@ -71,15 +71,55 @@ class DashboardController extends Controller
 
         $percentage = $totalCount > 0 ? round(($takenCount / $totalCount) * 100) : 0;
 
-        // 4. Récupérer les Notifications récentes (Aujourd'hui) pour ce profil
-        $notifications = \App\Models\Notification::where('user_id', $request->user()->id)
-            ->whereDate('created_at', now()->toDateString())
+        // 6. Récupérer les Notifications existantes
+        $dbNotifications = \App\Models\Notification::where('user_id', $request->user()->id)
+            ->where('created_at', '>=', now()->subHours(24))
             ->where(function ($q) use ($profilId) {
                 $q->whereNull('profil_id')->orWhere('profil_id', $profilId);
             })
             ->orderByDesc('created_at')
-            ->limit(5)
             ->get();
+
+        // 🔥 7. Génération Dynamique des alertes pour les doses oubliées
+        $now = now();
+        $dynamicNotifications = [];
+        $nowMinutes = ($now->hour * 60) + $now->minute;
+
+        foreach ($rappels as $rappel) {
+            $prise = $rappel->prises->first();
+            if (!$prise || !$prise->pris) {
+                $parts = explode(':', $rappel->heure);
+                $prevueMinutes = ($parts[0] * 60) + $parts[1];
+
+                // Si l'heure est passée (marge 2min)
+                if ($nowMinutes > ($prevueMinutes + 2)) {
+                    // On vérifie si une notification existe déjà en DB pour éviter les doublons visuels
+                    $alreadyNotified = $dbNotifications->contains(function($n) use ($rappel) {
+                        return isset($n->data['id']) && $n->data['id'] == $rappel->id;
+                    });
+
+                    if (!$alreadyNotified) {
+                        $dynamicNotifications[] = [
+                            'id' => "v-" . $rappel->id . "-" . date('Ymd'),
+                            'type' => 'reminder',
+                            'title' => "Dose oubliée",
+                            'message' => "Vous avez oublié de prendre {$rappel->medicament->nom} ({$rappel->heure})",
+                            'data' => [
+                                'id' => $rappel->id,
+                                'heure' => $rappel->heure,
+                                'medicament' => $rappel->medicament->nom,
+                                'status' => 'missed'
+                            ],
+                            'read_at' => null,
+                            'created_at' => now()->toIso8601String()
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Fusionner les notifications réelles et dynamiques
+        $allNotifications = collect($dynamicNotifications)->concat($dbNotifications)->sortByDesc('created_at')->values();
 
         // 5. Compteur de collaboration (Demandes en attente + Messages non lus)
         $pendingRequestsCount = MedicamentRequest::where('owner_id', $request->user()->id)
@@ -112,7 +152,7 @@ class DashboardController extends Controller
                     'taken' => $takenCount
                 ]
             ],
-            'notifications' => $notifications,
+            'notifications' => $allNotifications,
             'collaboration_unread_count' => $pendingRequestsCount + $unreadMessagesCount,
         ];
     }
