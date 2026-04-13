@@ -74,6 +74,12 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
   const handleMarkAsRead = async () => {
     try {
         await api.post(`/partage/demandes/${medRequest.id}/read`);
+        
+        // 🔥 Local Sync: Tell the list that messages are now read
+        window.dispatchEvent(new CustomEvent('collaboration-updated', { 
+            detail: { requestId: medRequest.id, type: 'read' } 
+        }));
+
         onRead && onRead();
     } catch (err) {
         console.error("Erreur lecture", err);
