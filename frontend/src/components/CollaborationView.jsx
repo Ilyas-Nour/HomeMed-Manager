@@ -120,22 +120,21 @@ export default function CollaborationView({ onChatOpen, showToast }) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-10 animate-fade-up pb-24 px-1">
-      {/* Header — Fully Responsive Layout */}
+    <div className="max-w-6xl mx-auto space-y-8 sm:space-y-12 animate-fade-up pb-24 px-1">
+      {/* 🚀 Header — Standard Dashboard Style (Left Aligned) */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
-        <div className="space-y-2 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-blue/5 text-brand-blue rounded-full text-[10px] font-black uppercase tracking-widest mb-1 border border-brand-blue/10">
-                <Users size={12} /> Live Collaboration
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">Entraide Partagée</h1>
-            <p className="text-sm sm:text-base font-medium text-slate-500 max-w-lg mx-auto md:mx-0">Gérez vos échanges de médicaments avec fluidité et sécurité.</p>
+        <div className="space-y-2">
+           <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-sans">Entraide Partagée</h1>
+           <p className="text-base font-medium text-slate-500">Gérez vos échanges de médicaments avec fluidité et sécurité.</p>
         </div>
+        
         <button 
             onClick={() => fetchRequests()}
-            className="hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400 hover:text-brand-blue transition-all border border-slate-100 shadow-sm group active:scale-95"
-            title="Rafraîchir"
+            className="hidden sm:flex items-center gap-2 px-6 py-3 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-brand-blue hover:border-brand-blue/20 transition-all shadow-sm active:scale-95 group"
+            title="Actualiser"
         >
-            <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-700" />
+            <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />
+            <span>Actualiser</span>
         </button>
       </div>
 

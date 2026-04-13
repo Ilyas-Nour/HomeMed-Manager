@@ -80,6 +80,11 @@ class DashboardController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        // Optimization: Create a flat array of IDs that have already been notified today
+        $notifiedIds = $dbNotifications->map(function($n) {
+            return $n->data['id'] ?? null;
+        })->filter()->toArray();
+
         // 🔥 7. Génération Dynamique des alertes pour les doses oubliées
         $now = now();
         $dynamicNotifications = [];
@@ -93,12 +98,8 @@ class DashboardController extends Controller
 
                 // Si l'heure est passée (marge 2min)
                 if ($nowMinutes > ($prevueMinutes + 2)) {
-                    // On vérifie si une notification existe déjà en DB pour éviter les doublons visuels
-                    $alreadyNotified = $dbNotifications->contains(function($n) use ($rappel) {
-                        return isset($n->data['id']) && $n->data['id'] == $rappel->id;
-                    });
-
-                    if (!$alreadyNotified) {
+                    // Fast lookup in the pre-built array
+                    if (!in_array($rappel->id, $notifiedIds)) {
                         $dynamicNotifications[] = [
                             'id' => "v-" . $rappel->id . "-" . date('Ymd'),
                             'type' => 'reminder',
