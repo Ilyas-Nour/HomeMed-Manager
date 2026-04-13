@@ -52,6 +52,18 @@ export default function CollaborationView({ onChatOpen, showToast }) {
                 });
                 if (showToast) showToast(`Mise à jour d'entraide`, 'info');
                 fetchRequests(true);
+            })
+            .listen('.message.sent', (e) => {
+                console.log('Incoming message detected for live badge:', e);
+                // Si on n'est pas l'envoyeur, on incrémente le badge localement
+                if (e.sender_id !== user.id) {
+                    setRequests(prev => prev.map(r => 
+                        r.id === e.request_id 
+                        ? { ...r, unread_messages_count: (r.unread_messages_count || 0) + 1 } 
+                        : r
+                    ));
+                    if (showToast) showToast(`Nouveau message de ${e.sender_name}`, 'info');
+                }
             });
             
         const handleLocalUpdate = () => fetchRequests(true);
@@ -129,7 +141,7 @@ export default function CollaborationView({ onChatOpen, showToast }) {
                 }`}
             >
                 <Inbox size={14} className="sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Reçues</span>
+                <span>Reçues</span>
                 {requests.filter(r => r.owner_id === user?.id && r.status === 'pending').length > 0 && (
                     <span className="h-1.5 w-1.5 bg-rose-500 rounded-full animate-pulse shadow-sm" />
                 )}
@@ -143,7 +155,7 @@ export default function CollaborationView({ onChatOpen, showToast }) {
                 }`}
             >
                 <Send size={14} className="sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Envoyées</span>
+                <span>Mes Demandes</span>
             </button>
         </div>
       </div>
@@ -238,19 +250,30 @@ export default function CollaborationView({ onChatOpen, showToast }) {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center gap-4">
                             <button 
                                 onClick={() => onChatOpen(request)}
-                                className={`w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-12 rounded-[24px] text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all active:scale-[0.98] shadow-2xl relative group/btn overflow-hidden ${
+                                className={`h-14 sm:h-16 px-8 sm:px-12 rounded-[24px] text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all active:scale-[0.98] shadow-2xl relative group/btn ${
                                     isReceived 
                                     ? 'bg-slate-900 text-white hover:bg-brand-blue shadow-slate-200' 
                                     : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
                                 }`}
                             >
-                                <span className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                                {/* Internal Glow Container */}
+                                <div className="absolute inset-0 rounded-[24px] overflow-hidden pointer-events-none">
+                                    <span className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                                </div>
+
                                 <MessageCircle size={18} strokeWidth={2.5} className="group-hover/btn:rotate-12 transition-transform" />
                                 Discussion
-                                <ArrowUpRight size={14} className="opacity-40" />
+                                
+                                {request.unread_messages_count > 0 && (
+                                    <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center bg-rose-500 text-white text-[11px] font-black rounded-full border-2 border-white animate-bounce shadow-2xl z-50">
+                                        {request.unread_messages_count}
+                                    </span>
+                                )}
+                                
+                                <ArrowUpRight size={14} className="opacity-40 ml-1" />
                             </button>
                         </div>
                     </div>
