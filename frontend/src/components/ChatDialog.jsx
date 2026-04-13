@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, X, Loader2, User, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Send, X, Loader2, User, Clock, CheckCircle2, AlertCircle, MessageSquare } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 
 /**
- * ChatDialog — Real-time Messaging for Sharing Requests
- * High-fidelity, smooth animations, and robust scalability.
+ * ChatDialog — High-Fidelity Messaging Edition
+ * Ultra-responsive, smooth animations, and premium chat aesthetics.
  */
 export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState(medRequest.status);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
@@ -40,8 +41,7 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
     try {
       setLoading(true);
       const res = await api.get(`/partage/demandes/${medRequest.id}/messages`);
-      // L'API renvoie une pagination (cursor), on prend data
-      setMessages(res.data.data);
+      setMessages(res.data.data || []);
     } catch (err) {
       console.error(err);
       showToast('Impossible de charger les messages', 'error');
@@ -54,10 +54,8 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
     if (window.Echo) {
       window.Echo.private(`requests.${medRequest.id}`)
         .listen('.message.sent', (e) => {
-          // On n'ajoute que si ce n'est pas nous (déjà géré par l'optimistic UI)
           if (e.sender_id !== user.id) {
               setMessages(prev => {
-                  // Éviter les doublons si l'événement arrive plusieurs fois
                   if (prev.find(m => m.id === e.id)) return prev;
                   return [...prev, e];
               });
@@ -65,8 +63,10 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
           }
         })
         .listen('.request.updated', (e) => {
-           // On pourrait recharger les détails de la requête ici
-           showToast(`Statut mis à jour : ${e.medRequest.status}`, 'info');
+           if (e.medRequest?.status) {
+               setStatus(e.medRequest.status);
+               showToast(`Statut mis à jour : ${e.medRequest.status}`, 'info');
+           }
         });
     }
   };
@@ -87,7 +87,6 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
     const messageContent = newMessage;
     setNewMessage('');
     
-    // 🚀 Optimistic UI : Ajout immédiat pour supprimer les 2-3s de délai
     const tempId = `temp-${Date.now()}`;
     const optimisticMsg = {
         id: tempId,
@@ -105,13 +104,10 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
       const res = await api.post(`/partage/demandes/${medRequest.id}/messages`, {
         content: messageContent
       });
-      
-      // Remplacer le message optimiste par la réalité du serveur
       setMessages(prev => prev.map(m => m.id === tempId ? res.data : m));
     } catch (err) {
-      // Annuler l'optimisme en cas d'erreur
       setMessages(prev => prev.filter(m => m.id !== tempId));
-      setNewMessage(messageContent); // Restaurer le texte
+      setNewMessage(messageContent);
       showToast('Erreur lors de l\'envoi', 'error');
     } finally {
       setSending(false);
@@ -119,10 +115,16 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
   };
 
   const updateStatus = async (newStatus) => {
+    const previousStatus = status;
     try {
+      setStatus(newStatus);
       await api.patch(`/partage/demandes/${medRequest.id}`, { status: newStatus });
+      window.dispatchEvent(new CustomEvent('collaboration-updated', { 
+         detail: { requestId: medRequest.id, status: newStatus } 
+      }));
       showToast('Statut mis à jour');
     } catch (err) {
+      setStatus(previousStatus);
       showToast('Erreur lors de la mise à jour', 'error');
     }
   };
@@ -130,117 +132,150 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
   if (!medRequest) return null;
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={onClose} />
+    <div className="fixed inset-0 z-[1100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={onClose} />
       
-      <div className="relative w-full sm:max-w-lg bg-white h-[85vh] sm:h-[600px] flex flex-col rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden animate-fade-up">
-        {/* Header */}
-        <div className="bg-slate-900 p-6 sm:p-8 text-white relative">
-           <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                 <div className="h-12 w-12 rounded-2xl bg-brand-blue/20 flex items-center justify-center border border-brand-blue/30 overflow-hidden">
-                    <img src={`https://ui-avatars.com/api/?name=${medRequest.medicament.nom}&background=0F172A&color=fff`} alt="" />
+      {/* Dialog Container */}
+      <div className="relative w-full sm:max-w-xl bg-white h-[92vh] sm:h-[700px] flex flex-col rounded-t-[40px] sm:rounded-[44px] shadow-2xl overflow-hidden animate-fade-up border border-white/20">
+        
+        {/* Mobile Handle */}
+        <div className="sm:hidden absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/20 rounded-full z-20" />
+
+        {/* Header — Ultra Premium */}
+        <div className="bg-slate-900 p-6 sm:p-10 text-white relative overflow-hidden">
+           {/* Abstract Header Blur */}
+           <div className="absolute -top-24 -right-24 h-48 w-48 bg-brand-blue/20 blur-3xl rounded-full" />
+           <div className="absolute top-10 left-10 h-24 w-24 bg-brand-blue-lite/10 blur-2xl rounded-full" />
+
+           <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-5">
+                 <div className="h-14 w-14 rounded-[20px] bg-white/5 border border-white/10 flex items-center justify-center p-1 backdrop-blur-sm shadow-inner group">
+                    <img 
+                        src={`https://ui-avatars.com/api/?name=${medRequest.medicament.nom}&background=0F172A&color=fff&bold=true`} 
+                        alt="" 
+                        className="rounded-[16px] w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
                  </div>
                  <div>
-                    <h3 className="text-xl font-bold tracking-tight">{medRequest.medicament.nom}</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Partage • {medRequest.groupe.nom}</p>
+                    <h3 className="text-xl sm:text-2xl font-black tracking-tight leading-none mb-2">{medRequest.medicament.nom}</h3>
+                    <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 rounded-full ${status === 'accepted' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                            {status} • {medRequest.groupe.nom}
+                        </p>
+                    </div>
                  </div>
               </div>
               <button 
                 onClick={onClose}
-                className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors"
+                className="h-12 w-12 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-all active:scale-90 border border-white/5"
               >
-                <X size={20} />
+                <X size={24} />
               </button>
-           </div>
-
-           <div className="flex items-center gap-3">
-              <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                medRequest.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
-                medRequest.status === 'accepted' ? 'bg-emerald-500/20 text-emerald-400' :
-                medRequest.status === 'completed' ? 'bg-brand-blue/20 text-brand-blue-lite' : 'bg-slate-500/20 text-slate-400'
-              }`}>
-                {medRequest.status}
-              </span>
-              <div className="h-1 w-1 bg-white/20 rounded-full" />
-              <p className="text-[10px] font-medium text-slate-400">
-                Demandé par {medRequest.requester.name}
-              </p>
            </div>
         </div>
 
-        {/* Content / Messages */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 bg-slate-50/50 no-scrollbar">
+        {/* Chat / Messages Area — Clean & Spatial */}
+        <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-8 bg-slate-50/30 no-scrollbar">
            {loading ? (
              <div className="h-full flex flex-col items-center justify-center gap-4 opacity-50">
-               <Loader2 className="animate-spin text-brand-blue" />
-               <p className="text-[10px] font-black uppercase tracking-widest">Récupération du chat...</p>
+               <div className="relative">
+                   <div className="absolute inset-0 bg-brand-blue/10 blur-xl rounded-full" />
+                   <Loader2 className="animate-spin text-brand-blue relative z-10" />
+               </div>
+               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Crypter la connexion...</p>
              </div>
            ) : messages.length === 0 ? (
-             <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center text-slate-200 border border-slate-100 shadow-sm">
-                   <Clock size={32} />
+             <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+                <div className="h-24 w-24 bg-white rounded-[32px] flex items-center justify-center text-slate-100 border border-slate-100 shadow-xl relative group">
+                   <div className="absolute inset-0 bg-brand-blue/5 scale-125 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                   <MessageSquare size={48} className="relative z-10" />
                 </div>
-                <div className="max-w-[200px]">
-                   <p className="text-xs font-bold text-slate-900">Pas encore de message</p>
-                   <p className="text-[10px] font-medium text-slate-400 mt-1">Commencez la discussion pour organiser la remise.</p>
+                <div className="space-y-2">
+                   <p className="text-lg font-black text-slate-900">Commencer l'échange</p>
+                   <p className="text-xs font-medium text-slate-400 max-w-[240px] mx-auto leading-relaxed">
+                       Dites bonjour et organisez la remise du médicament en toute sécurité.
+                   </p>
                 </div>
              </div>
            ) : (
-             messages.map((msg, idx) => (
-               <div key={msg.id} className={`flex flex-col ${msg.sender_id === user?.id ? 'items-end' : 'items-start'}`}>
-                  <div className={`max-w-[85%] p-4 rounded-2xl text-sm font-medium shadow-sm ${
-                    msg.sender_id === user?.id 
-                    ? 'bg-brand-blue text-white rounded-tr-none' 
-                    : 'bg-white border border-slate-100 text-slate-900 rounded-tl-none'
-                  }`}>
-                    {msg.content}
-                  </div>
-                  <span className={`text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-2 px-1`}>
-                    {msg.sender?.name || 'Utilisateur'} • {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                  </span>
-               </div>
-             ))
+             <div className="space-y-6">
+                {messages.map((msg, idx) => {
+                    const isMe = msg.sender_id === user?.id;
+                    const prevMsg = messages[idx - 1];
+                    const isSameSender = prevMsg?.sender_id === msg.sender_id;
+                    
+                    return (
+                       <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} ${isSameSender ? '-mt-4' : 'mt-2'}`}>
+                          <div className={`relative group max-w-[85%] sm:max-w-[75%] px-5 py-4 text-sm sm:text-base font-medium shadow-sm transition-all animate-fade-in ${
+                            isMe 
+                            ? 'bg-slate-900 text-white rounded-[24px] rounded-tr-none shadow-slate-200' 
+                            : 'bg-white border border-slate-100 text-slate-800 rounded-[24px] rounded-tl-none'
+                          }`}>
+                            {msg.content}
+                            
+                            {/* Time Hover Detail */}
+                            <div className={`hidden group-hover:block absolute top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-800 text-white text-[9px] rounded-md font-black whitespace-nowrap z-20 ${
+                                isMe ? 'right-full mr-3' : 'left-full ml-3'
+                            }`}>
+                                {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </div>
+                          </div>
+                          
+                          {!isSameSender && (
+                            <span className={`text-[9px] font-black text-slate-300 uppercase tracking-widest mt-2 px-1`}>
+                                {isMe ? 'MOI' : msg.sender?.name}
+                            </span>
+                          )}
+                       </div>
+                    );
+                })}
+             </div>
            )}
            <div ref={messagesEndRef} />
         </div>
 
-        {/* Actions Bar (if user is owner and status is pending) */}
-        {user?.id === medRequest.owner_id && medRequest.status === 'pending' && (
-            <div className="px-6 py-4 bg-white border-t border-slate-100 flex items-center gap-3">
-               <button 
-                onClick={() => updateStatus('accepted')}
-                className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2"
-               >
-                 <CheckCircle2 size={14} /> Accepter
-               </button>
-               <button 
-                onClick={() => updateStatus('rejected')}
-                className="flex-1 h-10 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2"
-               >
-                 <AlertCircle size={14} /> Refuser
-               </button>
-            </div>
-        )}
+        {/* Footer — Bottom Actions & Input */}
+        <div className="p-6 sm:p-10 bg-white border-t border-slate-100 space-y-6">
+           
+           {/* Admin Controls Area */}
+           {user?.id === medRequest.owner_id && status === 'pending' && (
+              <div className="flex items-center gap-4 animate-fade-up">
+                 <button 
+                  onClick={() => updateStatus('accepted')}
+                  className="flex-1 h-14 bg-emerald-500 text-white rounded-[22px] text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-emerald-200 group/btn"
+                 >
+                   <CheckCircle2 size={18} className="group-hover:rotate-12 transition-transform" /> Accepter
+                 </button>
+                 <button 
+                  onClick={() => updateStatus('rejected')}
+                  className="flex-1 h-14 bg-rose-50 text-rose-500 rounded-[22px] text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 border border-rose-100 group/btn"
+                 >
+                   <AlertCircle size={18} className="group-hover:-rotate-12 transition-transform" /> Refuser
+                 </button>
+              </div>
+           )}
 
-        {/* Footer / Input */}
-        <div className="p-6 sm:p-8 bg-white border-t border-slate-100">
-          <form onSubmit={handleSend} className="relative flex items-center gap-3">
-             <input 
-               type="text"
-               placeholder="Votre message..."
-               value={newMessage}
-               onChange={e => setNewMessage(e.target.value)}
-               className="flex-1 h-14 bg-slate-50 border border-slate-100 rounded-2xl px-6 text-sm font-medium focus:bg-white focus:border-brand-blue outline-none transition-all pr-14"
-             />
-             <button 
-               type="submit"
-               disabled={sending || !newMessage.trim()}
-               className="h-10 w-10 bg-brand-blue text-white rounded-xl absolute right-2 flex items-center justify-center shadow-lg shadow-brand-blue/30 hover:shadow-brand-blue/40 disabled:opacity-50 transition-all active:scale-90"
-             >
-               {sending ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
-             </button>
-          </form>
+           {/* Modern Input Bar */}
+           <form onSubmit={handleSend} className="relative flex items-center gap-3">
+              <div className="flex-1 relative group">
+                <input 
+                    type="text"
+                    placeholder="Votre message ici..."
+                    value={newMessage}
+                    onChange={e => setNewMessage(e.target.value)}
+                    className="w-full h-16 bg-slate-50 border border-slate-100 rounded-[26px] px-8 text-sm sm:text-base font-semibold focus:bg-white focus:border-slate-900/10 focus:ring-4 focus:ring-slate-900/5 outline-none transition-all pr-14 placeholder:text-slate-300"
+                />
+                <button 
+                    type="submit"
+                    disabled={sending || !newMessage.trim()}
+                    className="h-11 w-11 bg-slate-900 text-white rounded-2xl absolute right-2.5 top-2.5 flex items-center justify-center shadow-2xl transition-all active:scale-90 disabled:opacity-20 group-hover:scale-105"
+                >
+                    {sending ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} className="rotate-45 -translate-x-0.5" />}
+                </button>
+              </div>
+           </form>
         </div>
       </div>
     </div>
