@@ -111,14 +111,10 @@ export default function Login() {
           <span className="absolute px-4 bg-white text-[10px] font-black text-slate-300 uppercase tracking-widest">Ou continuer avec</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-           <button className="h-12 border border-slate-100 bg-white rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm">
+        <div className="flex flex-col gap-4">
+           <button className="h-12 border border-slate-100 bg-white rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm w-full">
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-5 w-5" alt="Google" />
-              <span className="text-[11px] font-black uppercase tracking-wider">Google</span>
-           </button>
-           <button className="h-12 border border-slate-100 bg-white rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm">
-              <img src="https://www.svgrepo.com/show/475633/apple-color.svg" className="h-5 w-5" alt="Apple" />
-              <span className="text-[11px] font-black uppercase tracking-wider">Apple</span>
+              <span className="text-[11px] font-black uppercase tracking-wider">Se connecter avec Google</span>
            </button>
         </div>
 
