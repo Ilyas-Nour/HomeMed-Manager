@@ -147,6 +147,13 @@ export function NotificationProvider({ children }) {
             // Only invalidate if the event type is relevant to the dashboard (prevent loops)
             if (['prise', 'stock_update', 'group_updated'].includes(e.type)) {
                 queryClient.invalidateQueries({ queryKey: ['dashboard_data', profilActif.id] });
+                
+                // Active sound notifications for specific data changes
+                if (e.type === 'stock_update') {
+                    playSound('stock');
+                } else if (e.type === 'prise' || e.type === 'group_updated') {
+                    playSound('reminder');
+                }
             }
           });
 

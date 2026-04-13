@@ -67,6 +67,15 @@ export default function Dashboard() {
     localStorage.setItem('hide_system_reminder', 'true');
   };
 
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio('/recieve_message.mp3');
+      audio.play().catch(e => console.log('Audio blocked:', e));
+    } catch (err) {
+      console.error('Audio play error', err);
+    }
+  };
+
   const navigateToSettings = (panel = null) => {
     setSettingsPanel(panel);
     setCurrentView('settings');
@@ -122,6 +131,7 @@ export default function Dashboard() {
       window.Echo.private(`users.${user.id}`)
         .listen('.request.updated', (e) => {
             setCollabUnreadCount(prev => prev + 1);
+            playNotificationSound();
             // On ne rafraîchit pas tout le dashboard ici pour éviter les lenteurs
         })
         .listen('.message.sent', (e) => {
@@ -130,6 +140,7 @@ export default function Dashboard() {
             if (activeRequest?.id !== e.request_id) {
                 setCollabUnreadCount(prev => prev + 1);
                 showToast(`Nouveau message de ${e.sender_name}`, 'info');
+                playNotificationSound();
             }
         });
     }
