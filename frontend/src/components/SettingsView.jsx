@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  User, Bell, Shield, Lock,
+  User, Bell, ShieldCheck, Lock,
   ChevronRight, Save, Trash2, X,
   Check, Eye, EyeOff, AlertTriangle,
   UserCircle, Mail, Key, Smartphone,
@@ -153,7 +153,7 @@ function PasswordPanel({ onBack, showToast }) {
   };
 
   return (
-    <PanelLayout title="Sécurité" icon={<Shield size={22} className="text-emerald-500" />} onBack={onBack}>
+    <PanelLayout title="Sécurité" icon={<ShieldCheck size={22} className="text-emerald-500" />} onBack={onBack}>
       <form onSubmit={handleSave} className="space-y-8">
         <div className="p-6 bg-slate-950 rounded-3xl text-white flex items-start gap-4 shadow-xl shadow-slate-900/10">
           <AlertTriangle size={20} className="text-amber-400 shrink-0 mt-0.5" />
@@ -394,7 +394,7 @@ export default function SettingsView({ showToast, settingsPanel, setSettingsPane
     },
     {
       title: 'Sécurité & Accès',
-      icon: <Shield size={14} className="text-emerald-500" />,
+      icon: <ShieldCheck size={14} className="text-emerald-500" />,
       items: [
         {
           id: 'password',

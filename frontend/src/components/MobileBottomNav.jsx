@@ -1,8 +1,7 @@
-import React from 'react';
-import { 
+import {
   LayoutDashboard, Pill, 
   Calendar, ShoppingCart, 
-  Settings, FolderHeart, Shield, MessageCircle
+  Settings, Users, ShieldCheck, MessageCircle
 } from 'lucide-react';
 
 /**
@@ -14,7 +13,7 @@ export default function MobileBottomNav({ currentView, setCurrentView, user, col
     { id: 'overview',    label: 'Accueil',  icon: <LayoutDashboard size={20} /> },
     { id: 'medicaments', label: 'Médocs',   icon: <Pill size={20} /> },
     { id: 'collaboration', label: 'Entraide', icon: <MessageCircle size={20} /> },
-    { id: 'groups',      label: 'Groupes',  icon: <FolderHeart size={20} /> },
+    { id: 'groups',      label: 'Grouper',  icon: <Users size={20} /> },
     { id: 'settings',    label: 'Paramètres', icon: <Settings size={20} /> },
   ];
 
