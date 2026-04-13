@@ -61,7 +61,11 @@ class PriseController extends Controller
                 ActivityLog::log('PRISE_CANCEL', "Prise annulée : {$rappel->medicament->nom}");
             }
 
-            broadcast(new \App\Events\DataChanged('prise', $rappel->medicament->profil_id))->toOthers();
+            try {
+                broadcast(new \App\Events\DataChanged('prise', $rappel->medicament->profil_id))->toOthers();
+            } catch (\Exception $e) {
+                \Log::error("Broadcasting failed in PriseController: " . $e->getMessage());
+            }
 
             return response()->json($prise);
         });

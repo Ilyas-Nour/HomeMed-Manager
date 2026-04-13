@@ -56,7 +56,11 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
         .listen('.message.sent', (e) => {
           // On n'ajoute que si ce n'est pas nous (déjà géré par l'optimistic UI)
           if (e.sender_id !== user.id) {
-              setMessages(prev => [...prev, e]);
+              setMessages(prev => {
+                  // Éviter les doublons si l'événement arrive plusieurs fois
+                  if (prev.find(m => m.id === e.id)) return prev;
+                  return [...prev, e];
+              });
               handleMarkAsRead();
           }
         })

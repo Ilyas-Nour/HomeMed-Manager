@@ -53,7 +53,11 @@ class ChatController extends Controller
             'is_read' => false
         ]);
 
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Exception $e) {
+            \Log::error("Broadcasting failed in ChatController: " . $e->getMessage());
+        }
 
         return response()->json($message->load('sender:id,name'), 201);
     }

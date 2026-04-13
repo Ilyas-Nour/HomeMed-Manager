@@ -72,7 +72,11 @@ class MedicamentController extends Controller
 
             ActivityLog::log('MED_ADD', "Médicament ajouté : {$medicament->nom} pour {$profil->nom}");
 
-            broadcast(new \App\Events\DataChanged('medicament', $profilId))->toOthers();
+            try {
+                broadcast(new \App\Events\DataChanged('medicament', $profilId))->toOthers();
+            } catch (\Exception $e) {
+                \Log::error("Broadcasting failed in MedicamentController@store: " . $e->getMessage());
+            }
 
             return response()->json([
                 'message' => 'Médicament ajouté avec succès.',
@@ -155,7 +159,11 @@ class MedicamentController extends Controller
 
             ActivityLog::log('MED_UPDATE', "Médicament mis à jour : {$medicament->nom}");
 
-            broadcast(new \App\Events\DataChanged('medicament', $profilId))->toOthers();
+            try {
+                broadcast(new \App\Events\DataChanged('medicament', $profilId))->toOthers();
+            } catch (\Exception $e) {
+                \Log::error("Broadcasting failed in MedicamentController@update: " . $e->getMessage());
+            }
 
             return response()->json([
                 'message' => 'Médicament mis à jour avec succès.',
@@ -185,7 +193,11 @@ class MedicamentController extends Controller
 
         ActivityLog::log('MED_DELETE', "Médicament supprimé : {$nomMedicament}");
 
-        broadcast(new \App\Events\DataChanged('medicament', $profilId))->toOthers();
+        try {
+            broadcast(new \App\Events\DataChanged('medicament', $profilId))->toOthers();
+        } catch (\Exception $e) {
+            \Log::error("Broadcasting failed in MedicamentController@destroy: " . $e->getMessage());
+        }
 
         return response()->json([
             'message' => "Le médicament \"{$nomMedicament}\" a été supprimé avec succès.",
