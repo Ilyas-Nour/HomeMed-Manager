@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   LayoutDashboard, Pill,
-  Settings, Users, FolderHeart,
+  Settings, Users, Home,
   ChevronRight, ChevronDown, Check, UserPlus, X,
   ShoppingCart, Calendar, MessageCircle
 } from 'lucide-react';
@@ -27,8 +27,8 @@ export default function DashboardSidebar({
         { id: 'medicaments', label: 'Médicaments',     icon: <Pill size={18} /> },
         { id: 'planning',    label: 'Planning',        icon: <Calendar size={18} /> },
         { id: 'shopping',    label: 'Achats & Stocks', icon: <ShoppingCart size={18} /> },
-        { id: 'family',      label: 'Famille',         icon: <Users size={18} /> },
-        { id: 'groups',      label: 'Groupes',         icon: <FolderHeart size={18} /> },
+        { id: 'family',      label: 'Famille',         icon: <Home size={18} /> },
+        { id: 'groups',      label: 'Groupes',         icon: <Users size={18} /> },
         { id: 'collaboration', label: 'Entraide',      icon: <MessageCircle size={18} /> },
       ]
     },
