@@ -5,7 +5,9 @@ import { useAuth } from '../hooks/useAuth';
 
 const playSound = (type) => {
   try {
-    const audio = new Audio(type === 'send' ? '/send_message.mp3' : '/recieve_message.mp3');
+    const audio = new Audio(
+        type === 'send' ? '/send_message.mp3' : '/in_chat_recieve.mp3'
+    );
     audio.play().catch(e => console.log('Audio notification blocked:', e));
   } catch (err) {
     console.error('Audio play error', err);
@@ -230,13 +232,11 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
                             ? 'bg-slate-900 text-white rounded-[24px] rounded-tr-none shadow-slate-200' 
                             : 'bg-white border border-slate-100 text-slate-800 rounded-[24px] rounded-tl-none'
                           }`}>
-                            {msg.content}
-                            
-                            {/* Time Hover Detail */}
-                            <div className={`hidden group-hover:block absolute top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-800 text-white text-[9px] rounded-md font-black whitespace-nowrap z-20 ${
-                                isMe ? 'right-full mr-3' : 'left-full ml-3'
-                            }`}>
-                                {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            <div className="flex flex-col gap-1">
+                                <span>{msg.content}</span>
+                                <span className={`text-[9px] font-black uppercase tracking-tighter self-end opacity-40 ${isMe ? 'text-white/80' : 'text-slate-400'}`}>
+                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
                             </div>
                           </div>
                           
