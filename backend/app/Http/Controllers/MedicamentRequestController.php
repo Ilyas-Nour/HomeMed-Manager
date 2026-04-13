@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Medicament;
 use App\Models\MedicamentRequest;
+use App\Models\SharingMessage;
 use App\Models\Groupe;
 use App\Events\RequestUpdated;
 
@@ -17,13 +18,22 @@ class MedicamentRequestController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $requests = MedicamentRequest::where(function($q) use ($user) {
-                $q->where('requester_id', $user->id)
-                  ->orWhere('owner_id', $user->id);
+        $requests = MedicamentRequest::with(['medicament', 'requester:id,name', 'owner:id,name', 'groupe:id,nom'])
+            ->where(function ($query) use ($user) {
+                $query->where('requester_id', $user->id)
+                      ->orWhere('owner_id', $user->id);
             })
-            ->with(['medicament', 'requester:id,name', 'owner:id,name', 'groupe:id,nom'])
             ->latest()
             ->cursorPaginate(15);
+
+        // 🔥 Ajouter le compte des messages non lus pour chaque demande
+        $requests->getCollection()->transform(function ($request) use ($user) {
+            $request->unread_messages_count = SharingMessage::where('request_id', $request->id)
+                ->where('sender_id', '!=', $user->id)
+                ->where('is_read', false)
+                ->count();
+            return $request;
+        });
 
         return response()->json($requests);
     }

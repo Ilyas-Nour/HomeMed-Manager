@@ -32,8 +32,13 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
+        // On charge la demande pour avoir les IDs des participants
+        $request = $this->message->request;
+
         return [
             new PrivateChannel('requests.' . $this->message->request_id),
+            new PrivateChannel('users.' . $request->requester_id),
+            new PrivateChannel('users.' . $request->owner_id),
         ];
     }
 
