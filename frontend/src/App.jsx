@@ -8,6 +8,7 @@ import LoadingScreen from './components/LoadingScreen';
 import { NotificationProvider } from './contexts/NotificationContext';
 import SoundToast from './components/SoundToast';
 import ScrollToTop from './components/ScrollToTop';
+import AIChatbot from './components/AIChatbot';
 
 // Chargement paresseux (Lazy Loading) pour une expérience professionnelle fluide
 const Login    = lazy(() => import('./pages/Login'));
@@ -68,6 +69,7 @@ function App() {
                     </Suspense>
                 </BrowserRouter>
                 <SoundToast />
+                <AIChatbot />
             </NotificationProvider>
         </AuthProvider>
     );

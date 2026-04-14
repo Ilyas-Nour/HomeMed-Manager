@@ -18,6 +18,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SharedPharmacyController;
 use App\Http\Controllers\MedicamentRequestController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\AIChatController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -161,4 +162,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/demandes/{medRequest}/messages', [ChatController::class, 'store']);
         Route::post('/demandes/{medRequest}/read', [ChatController::class, 'markAsRead']);
     });
+
+    // AI Chat Bridge
+    Route::post('/ai/chat', [AIChatController::class, 'chat']);
 });
