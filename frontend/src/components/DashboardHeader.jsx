@@ -265,29 +265,55 @@ export default function DashboardHeader({
             </button>
 
             {isProfileOpen && (
-              <div className="absolute right-0 mt-4 w-60 bg-white border border-slate-100 rounded-3xl shadow-[0_10px_40px_-5px_rgba(0,0,0,0.1)] py-2 z-50 animate-fade-up">
-                 <div className="px-5 py-4 border-b border-slate-50 mb-1">
-                    <p className="text-xs font-black text-slate-900 truncate tracking-tight">{user?.name}</p>
-                    <p className="text-[10px] font-bold text-slate-400 truncate mt-0.5">{user?.email}</p>
+              <div className="absolute right-0 mt-4 w-64 bg-white border border-slate-100 rounded-[28px] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] overflow-hidden z-50 animate-fade-up">
+                 {/* Premium Profile Header */}
+                 <div className="px-6 py-5 bg-slate-50/50 border-b border-slate-100/50 flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-slate-900/20 shrink-0">
+                        {user?.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[13px] font-black text-slate-900 truncate tracking-tight">{user?.name}</p>
+                        <p className="text-[11px] font-bold text-slate-400 truncate mt-0.5">{user?.email}</p>
+                    </div>
                  </div>
-                 <div className="p-1.5 space-y-0.5">
-                    <button onClick={() => navigateToSettings('profile')} className="w-full text-left px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-indigo-50/50 hover:text-brand-blue flex items-center justify-between transition-all group">
+
+                 {/* Menu Actions */}
+                 <div className="p-2 space-y-1">
+                    <button 
+                        onClick={() => navigateToSettings('profile')} 
+                        className="w-full text-left px-4 py-3.5 rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-900 hover:text-white flex items-center justify-between transition-all duration-300 group"
+                    >
                         <div className="flex items-center gap-3">
-                           <UserCircle size={16} /> Compte
+                           <UserCircle size={18} strokeWidth={2.5} className="text-slate-400 group-hover:text-white/50" /> 
+                           <span>Compte</span>
                         </div>
-                        <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                        <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                     </button>
-                    <button onClick={() => navigateToSettings(null)} className="w-full text-left px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-indigo-50/50 hover:text-brand-blue flex items-center justify-between transition-all group">
+                    
+                    <button 
+                        onClick={() => navigateToSettings(null)} 
+                        className="w-full text-left px-4 py-3.5 rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-900 hover:text-white flex items-center justify-between transition-all duration-300 group"
+                    >
                         <div className="flex items-center gap-3">
-                            <Settings size={16} /> Réglages
+                            <Settings size={18} strokeWidth={2.5} className="text-slate-400 group-hover:text-white/50" /> 
+                            <span>Réglages</span>
                         </div>
-                        <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                        <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                     </button>
                  </div>
-                 <div className="h-px bg-slate-50 my-1 mx-4" />
-                 <div className="p-1.5">
-                    <button onClick={logout} className="w-full text-left px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider text-rose-500 hover:bg-rose-50 flex items-center gap-3 transition-all">
-                      <LogOut size={16} /> Déconnexion
+
+                 <div className="h-px bg-slate-100/50 mx-4" />
+
+                 <div className="p-2">
+                    <button 
+                        onClick={logout} 
+                        className="w-full text-left px-4 py-4 rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 flex items-center justify-between transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <LogOut size={18} strokeWidth={2.5} /> 
+                        <span>Déconnexion</span>
+                      </div>
+                      <ArrowRight size={14} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                     </button>
                  </div>
               </div>
