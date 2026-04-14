@@ -33,6 +33,13 @@ use Illuminate\Support\Facades\Route;
 // ——————————————————————————————————————————
 // Routes publiques — Authentification
 // ——————————————————————————————————————————
+Route::get('/test', function () {
+    return response()->json([
+        'message' => 'API is working!',
+        'status' => 'success'
+    ]);
+});
+
 Route::prefix('auth')->group(function () {
     // Inscription d'un nouvel utilisateur
     Route::post('/inscription', [AuthController::class, 'register']);
@@ -140,15 +147,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // ——————————————————————————————————————————
     // Partage & Collaborations (Requirement Sharing)
     // ——————————————————————————————————————————
-        Route::get('/collaboration/count', [NotificationController::class, 'collaborationCount']);
-        Route::get('groupes/{groupe}/pharmacie', [SharedPharmacyController::class, 'index']);
-    
+    Route::get('/collaboration/count', [NotificationController::class, 'collaborationCount']);
+    Route::get('groupes/{groupe}/pharmacie', [SharedPharmacyController::class, 'index']);
+
     Route::prefix('partage')->group(function () {
         Route::get('/demandes', [MedicamentRequestController::class, 'index']);
         Route::post('/demandes', [MedicamentRequestController::class, 'store']);
         Route::get('/demandes/{medRequest}', [MedicamentRequestController::class, 'show']);
         Route::patch('/demandes/{medRequest}', [MedicamentRequestController::class, 'update']);
-        
+
         // Chat lié à une demande
         Route::get('/demandes/{medRequest}/messages', [ChatController::class, 'index']);
         Route::post('/demandes/{medRequest}/messages', [ChatController::class, 'store']);
