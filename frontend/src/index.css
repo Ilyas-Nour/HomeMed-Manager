@@ -41,7 +41,7 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     letter-spacing: -0.0125em;
-    @apply text-slate-900 bg-slate-50 selection:bg-brand-blue/10 selection:text-brand-blue;
+    @apply text-slate-900 bg-white selection:bg-brand-blue/10 selection:text-brand-blue;
   }
 
   body, button, input, select, textarea {
