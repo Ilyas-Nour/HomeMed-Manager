@@ -12,8 +12,8 @@ import { useAuth } from '../hooks/useAuth';
 
 
 /**
- * CollaborationView — Ultra-Responsive Edition
- * High-fidelity, device-agnostic interface for group collaboration.
+ * CollaborationView — Balanced Professional Edition
+ * High-fidelity, compact, and highly functional interface for collaboration.
  */
 export default function CollaborationView({ onChatOpen, showToast }) {
   const { user } = useAuth();
@@ -52,19 +52,16 @@ export default function CollaborationView({ onChatOpen, showToast }) {
                         return [newRequest, ...prev];
                     }
                 });
-                if (showToast) showToast(`Mise à jour d'entraide`, 'info');
                 fetchRequests(true);
             })
             .listen('.message.sent', (e) => {
-                console.log('Incoming message detected for live badge:', e);
-                // Si on n'est pas l'envoyeur, on incrémente le badge localement
                 if (e.sender_id !== user.id) {
                     setRequests(prev => prev.map(r => 
                         r.id === e.request_id 
                         ? { ...r, unread_messages_count: (r.unread_messages_count || 0) + 1 } 
                         : r
                     ));
-                    if (showToast) showToast(`Nouveau message de ${e.sender_name}`, 'info');
+                    if (showToast) showToast(`Message de ${e.sender_name}`, 'info');
                 }
             });
             
@@ -91,201 +88,174 @@ export default function CollaborationView({ onChatOpen, showToast }) {
   const getStatusConfig = (status) => {
     switch (status) {
       case 'accepted':
-        return { label: 'ACCEPTÉ', color: 'text-emerald-600 bg-emerald-50', icon: CheckCircle2 };
+        return { label: 'Accepté', color: 'text-emerald-600 bg-emerald-50 border-emerald-100', icon: CheckCircle2 };
       case 'rejected':
-        return { label: 'REFUSÉ', color: 'text-rose-600 bg-rose-50', icon: AlertCircle };
+        return { label: 'Refusé', color: 'text-rose-600 bg-rose-50 border-rose-100', icon: AlertCircle };
       default:
-        return { label: 'EN ATTENTE', color: 'text-amber-600 bg-amber-50', icon: Clock };
+        return { label: 'En attente', color: 'text-amber-600 bg-amber-50 border-amber-100', icon: Clock };
     }
+  };
+
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const getAvatarColor = (name) => {
+    const hash = name?.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) || 0;
+    const colors = ['bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-emerald-500', 'bg-rose-500', 'bg-amber-500'];
+    return colors[hash % colors.length];
   };
 
   if (loading && requests.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-32 animate-pulse">
-        <div className="relative">
-            <div className="absolute inset-0 bg-brand-blue/20 blur-2xl rounded-full" />
-            <Loader2 className="h-12 w-12 text-brand-blue animate-spin relative z-10" />
-        </div>
-        <p className="mt-6 text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Synchronisation Mirror</p>
+        <Loader2 className="h-10 w-10 text-brand-blue animate-spin" />
+        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Chargement...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 sm:space-y-12 animate-fade-up pb-24 px-1">
-      {/* 🚀 Header — Standard Dashboard Style (Left Aligned) */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
-        <div className="space-y-2">
-           <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-sans">Entraide Partagée</h1>
-           <p className="text-base font-medium text-slate-500">Gérez vos échanges de médicaments avec fluidité et sécurité.</p>
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 animate-fade-up pb-24 px-1">
+      {/* 🚀 Header — Compact & Bold */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
+        <div className="space-y-1">
+           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Entraide Partagée</h1>
+           <p className="text-sm font-medium text-slate-500">Gérez vos échanges de médicaments avec fluidité.</p>
         </div>
         
         <button 
             onClick={() => fetchRequests()}
-            className="hidden sm:flex items-center gap-2 px-6 py-3 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-brand-blue hover:border-brand-blue/20 transition-all shadow-sm active:scale-95 group"
-            title="Actualiser"
+            className="w-fit flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-brand-blue transition-all active:scale-95"
         >
-            <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />
+            <RefreshCw size={12} />
             <span>Actualiser</span>
         </button>
       </div>
 
-      {/* 🧪 Tab Switcher — Glassmorphism Edition */}
-      <div className="sticky top-2 z-40 px-2 sm:px-0">
-        <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-[28px] flex items-center gap-1 w-full max-w-lg mx-auto md:mx-0 shadow-2xl shadow-slate-200/50 border border-white">
+      {/* 🧪 Tab Switcher — Professional Dark Edition */}
+      <div className="sticky top-4 z-40">
+        <div className="bg-slate-900 p-1.5 rounded-2xl flex items-center gap-1 w-full max-w-sm shadow-xl border border-white/5">
             <button 
                 onClick={() => setActiveTab('received')}
-                className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 py-3 rounded-[22px] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-500 ${
-                    activeTab === 'received' 
-                    ? 'bg-slate-900 text-white shadow-xl scale-[1.02]' 
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    activeTab === 'received' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
             >
-                <Inbox size={14} className="sm:w-4 sm:h-4" />
+                <Inbox size={14} />
                 <span>Reçues</span>
                 {requests.filter(r => r.owner_id === user?.id && r.status === 'pending').length > 0 && (
-                    <span className="h-1.5 w-1.5 bg-rose-500 rounded-full animate-pulse shadow-sm" />
+                    <span className="h-1 w-1 bg-rose-500 rounded-full" />
                 )}
             </button>
             <button 
                 onClick={() => setActiveTab('sent')}
-                className={`flex-1 flex items-center justify-center gap-2 sm:gap-3 py-3 rounded-[22px] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-500 ${
-                    activeTab === 'sent' 
-                    ? 'bg-slate-900 text-white shadow-xl scale-[1.02]' 
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    activeTab === 'sent' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
             >
-                <Send size={14} className="sm:w-4 sm:h-4" />
+                <Send size={14} />
                 <span>Mes Demandes</span>
             </button>
         </div>
       </div>
 
       {filteredRequests.length === 0 ? (
-        <div className="bg-slate-50/50 border border-slate-100 border-dashed rounded-[40px] p-12 sm:p-24 text-center space-y-6">
-           <div className="relative mx-auto h-24 w-24 sm:h-32 sm:w-32">
-               <div className="absolute inset-0 bg-brand-blue/5 blur-3xl rounded-full" />
-               <div className={`relative h-full w-full rounded-[40px] flex items-center justify-center text-slate-100 border-2 border-dashed border-slate-200 transition-all duration-700 ${
-                   activeTab === 'received' ? 'text-brand-blue/40' : 'text-indigo-400/40'
-               }`}>
-                  {activeTab === 'received' ? <Inbox size={64} /> : <Send size={64} />}
-               </div>
+        <div className="bg-slate-50 border border-slate-100 border-dashed rounded-3xl p-12 text-center space-y-6">
+           <div className="relative mx-auto h-32 w-32 opacity-20 filter grayscale">
+               <img src="/empty_collaboration_state.png" alt="Vide" className="w-full h-full object-contain" />
            </div>
-           <div className="space-y-2">
-              <p className="text-xl sm:text-2xl font-black text-slate-900">Tout est à jour</p>
-              <p className="text-sm text-slate-400 max-w-xs mx-auto font-medium">
-                  {activeTab === 'received' 
-                    ? 'Aucune nouvelle demande de médicament pour le moment.' 
-                    : 'Vous n\'avez aucune demande active en cours de suivi.'}
-              </p>
+           <div className="space-y-1">
+              <p className="text-lg font-black text-slate-900">Tout est à jour</p>
+              <p className="text-sm text-slate-400 max-w-[240px] mx-auto font-medium">Aucune demande active pour le moment.</p>
            </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 gap-4">
           {filteredRequests.map((request) => {
             const config = getStatusConfig(request.status);
             const isReceived = activeTab === 'received';
+            const partnerName = isReceived ? request.requester?.name : request.owner?.name;
             
             return (
                 <div 
                   key={request.id} 
-                  className={`group bg-white border border-slate-100 rounded-[32px] sm:rounded-[44px] p-5 sm:p-8 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden relative ${
-                      isReceived ? 'hover:border-brand-blue/20' : 'hover:border-indigo-500/20'
-                  }`}
+                  className="group bg-white border border-slate-100 rounded-3xl p-4 sm:p-6 hover:shadow-lg hover:border-slate-200 transition-all duration-300"
                 >
-                    {/* Background Decorative Element */}
-                    <div className={`absolute -top-16 -right-16 h-48 w-48 rounded-full opacity-[0.02] transition-all duration-1000 group-hover:scale-110 ${
-                        isReceived ? 'bg-brand-blue' : 'bg-indigo-600'
-                    }`} />
-
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-10 relative z-10">
-                        <div className="flex items-center gap-4 sm:gap-8">
-                            <div className={`h-16 w-16 sm:h-20 sm:w-20 rounded-[28px] sm:rounded-[32px] flex items-center justify-center transition-all duration-700 border border-white shadow-2xl shadow-slate-200/50 flex-shrink-0 ${
-                                isReceived 
-                                ? 'bg-slate-50 text-brand-blue group-hover:bg-brand-blue group-hover:text-white' 
-                                : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        {/* 1. Med Info + Icon */}
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className={`h-12 w-12 rounded-2xl flex items-center justify-center border border-white shadow-sm flex-shrink-0 ${
+                                isReceived ? 'bg-blue-50 text-blue-600' : 'bg-indigo-50 text-indigo-600'
                             }`}>
-                                {isReceived ? <Inbox size={32} strokeWidth={1.5} /> : <Send size={32} strokeWidth={1.5} className="-translate-y-0.5" />}
+                                {isReceived ? <Inbox size={20} /> : <Send size={20} className="-translate-y-0.5" />}
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
-                                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">{request.medicament?.nom}</h3>
-                                    <span className={`w-fit px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase flex items-center gap-1.5 border ${
-                                        config.color.includes('emerald') ? 'border-emerald-100' : 
-                                        config.color.includes('rose') ? 'border-rose-100' : 'border-amber-100'
-                                    } ${config.color}`}>
-                                        <config.icon size={10} strokeWidth={3} />
-                                        {config.label}
-                                    </span>
-                                </div>
-                                
-                                <div className="flex flex-wrap items-center gap-y-3 gap-x-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center text-[9px] font-black border ${
-                                            isReceived ? 'bg-brand-blue/5 text-brand-blue border-brand-blue/10' : 'bg-indigo-50 text-indigo-600 border-indigo-100'
-                                        }`}>
-                                            {isReceived ? 'RCV' : 'SNT'}
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em]">
-                                                {isReceived ? 'Demandeur' : 'Cible'}
-                                            </p>
-                                            <p className="text-sm font-bold text-slate-700">
-                                                {isReceived ? request.requester?.name : request.owner?.name}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="hidden sm:block h-6 w-px bg-slate-100" />
-                                    
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 border border-slate-100">
-                                            <LayoutDashboard size={14} />
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em]">Groupe</p>
-                                            <p className="text-sm font-bold text-slate-700 truncate max-w-[150px]">{request.groupe?.nom}</p>
-                                        </div>
-                                    </div>
+                            <div className="min-w-0">
+                                <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">{request.medicament?.nom}</h3>
+                                <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 mt-1 rounded-full border text-[9px] font-bold uppercase tracking-wider ${config.color}`}>
+                                    <config.icon size={10} strokeWidth={3} />
+                                    {config.label}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        {/* 2. Metadata (Desktop Only Separator) */}
+                        <div className="hidden lg:flex items-center gap-10 px-8 border-x border-slate-50 min-w-fit">
+                            <div className="flex items-center gap-3">
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-[10px] font-black ${getAvatarColor(partnerName)}`}>
+                                    {getInitials(partnerName)}
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{isReceived ? 'Demandeur' : 'Cible'}</p>
+                                    <p className="text-sm font-bold text-slate-700">{partnerName}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                                    <LayoutDashboard size={14} />
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Groupe</p>
+                                    <p className="text-sm font-bold text-slate-700 truncate max-w-[120px]">{request.groupe?.nom}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 3. Mobile Metadata */}
+                        <div className="lg:hidden flex items-center justify-between py-3 border-y border-slate-50/50">
+                            <div className="flex items-center gap-2">
+                                <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-[8px] font-black ${getAvatarColor(partnerName)}`}>
+                                    {getInitials(partnerName)}
+                                </div>
+                                <span className="text-xs font-bold text-slate-600">{partnerName}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-400">
+                                <LayoutDashboard size={12} />
+                                <span className="text-xs font-medium truncate max-w-[100px]">{request.groupe?.nom}</span>
+                            </div>
+                        </div>
+
+                        {/* 4. Action Button */}
+                        <div className="flex items-center w-full lg:w-auto">
                             <button 
                                 onClick={() => onChatOpen(request)}
-                                className={`h-14 sm:h-16 px-8 sm:px-12 rounded-[24px] text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all active:scale-[0.98] shadow-2xl relative group/btn ${
-                                    isReceived 
-                                    ? 'bg-slate-900 text-white hover:bg-brand-blue shadow-slate-200' 
-                                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
+                                className={`w-full lg:w-60 h-11 px-6 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-[0.98] relative ${
+                                    isReceived ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-brand-blue text-white hover:opacity-90'
                                 }`}
                             >
-                                {/* Internal Glow Container */}
-                                <div className="absolute inset-0 rounded-[24px] overflow-hidden pointer-events-none">
-                                    <span className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                                </div>
-
-                                <MessageCircle size={18} strokeWidth={2.5} className="group-hover/btn:rotate-12 transition-transform" />
+                                <MessageCircle size={16} strokeWidth={2.5} />
                                 Discussion
-                                
                                 {request.unread_messages_count > 0 && (
-                                    <span className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center bg-rose-500 text-white text-[11px] font-black rounded-full border-2 border-white animate-bounce shadow-2xl z-50">
+                                    <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center bg-rose-500 text-white text-[10px] font-black rounded-full border-2 border-white">
                                         {request.unread_messages_count}
                                     </span>
                                 )}
-                                
-                                <ArrowUpRight size={14} className="opacity-40 ml-1" />
+                                <ArrowUpRight size={14} className="opacity-40" />
                             </button>
                         </div>
-                    </div>
-                    
-                    {/* Bottom Status Bar — Tiny Detail */}
-                    <div className="mt-6 pt-5 border-t border-slate-50 flex items-center justify-between opacity-50 group-hover:opacity-100 transition-opacity">
-                        <div className="flex items-center gap-2">
-                             <ShieldCheck size={12} className="text-emerald-500" />
-                             <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Canal Sécurisé</span>
-                        </div>
-                        <span className="text-[9px] font-medium text-slate-300">ID#REQ-{request.id.toString().padStart(4, '0')}</span>
                     </div>
                 </div>
             );
