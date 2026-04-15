@@ -60,7 +60,26 @@ class AIChatController extends Controller
                 ], $response->status());
             }
 
-            return $response->json();
+            $aiData = $response->json();
+            $text = $aiData['choices'][0]['message']['content'] ?? '';
+
+            // --- Interception d'Action ---
+            if (preg_match('/\[ACTION:\s*(.*?)\]/s', $text, $matches)) {
+                $actionJson = $matches[1];
+                $action = json_decode($actionJson, true);
+                if ($action) {
+                    try {
+                        $this->handleAiAction($user, $action);
+                    } catch (\Exception $e) {
+                        \Log::error("AI Action Failed: " . $e->getMessage());
+                    }
+                }
+                // Nettoyer la réponse pour l'utilisateur
+                $cleanText = preg_replace('/\[ACTION:\s*(.*?)\]/s', '', $text);
+                $aiData['choices'][0]['message']['content'] = trim($cleanText);
+            }
+
+            return response()->json($aiData);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Chat error', 'error' => $e->getMessage()], 500);
         }
@@ -148,6 +167,53 @@ class AIChatController extends Controller
     }
 
     /**
+     * Execute an action requested by the AI.
+     */
+    private function handleAiAction(User $user, array $action)
+    {
+        $type = $action['type'] ?? '';
+        $data = $action['data'] ?? [];
+
+        switch ($type) {
+            case 'UPDATE_PROFILE':
+                if (isset($data['name'])) {
+                    $user->update(['name' => $data['name']]);
+                }
+                break;
+
+            case 'UPDATE_MEDICAMENT':
+                $medId = $data['id'] ?? null;
+                if ($medId) {
+                    $med = Medicament::where('id', $medId)
+                        ->whereHas('profil', fn($q) => $q->where('user_id', $user->id))
+                        ->first();
+                    if ($med) {
+                        $updateData = [];
+                        if (isset($data['quantite'])) $updateData['quantite_restante'] = $data['quantite'];
+                        if (isset($data['nom'])) $updateData['nom'] = $data['nom'];
+                        if (isset($data['dosage'])) $updateData['dosage'] = $data['dosage'];
+                        if (isset($data['expiration'])) $updateData['date_expiration'] = $data['expiration'];
+                        $med->update($updateData);
+                    }
+                }
+                break;
+
+            case 'HANDLE_REQUEST':
+                $requestId = $data['id'] ?? null;
+                $status = $data['status'] ?? '';
+                if ($requestId && in_array($status, ['accepted', 'rejected'])) {
+                    $req = MedicamentRequest::where('id', $requestId)
+                        ->where('owner_id', $user->id)
+                        ->first();
+                    if ($req) {
+                        $req->update(['status' => $status]);
+                    }
+                }
+                break;
+        }
+    }
+
+    /**
      * Build the system prompt with injected context.
      */
     private function buildSystemPrompt(array $context)
@@ -158,6 +224,20 @@ class AIChatController extends Controller
 Ta mission est d'agir avec l'expertise d'un pharmacien d'officine au Maroc.
 
 IMPORTANT : Tu as accès aux données réelles de l'utilisateur (Context ci-dessous). Utilise ces données pour donner des réponses personnalisées et des rappels précis.
+
+CAPACITÉS D'ACTION (POUVOIR RÉEL) :
+Tu peux modifier les données de l'utilisateur. Pour déclencher une action, ajoute ce tag à la fin de ton message :
+[ACTION: {"type": "TYPE_ACTION", "data": { ... }}]
+
+Types d'actions supportés :
+1. UPDATE_PROFILE : Changer le nom. Data: {"name": "Nouveau Nom"}
+2. UPDATE_MEDICAMENT : Modifier un médoc (stock, nom, dosage). Data: {"id": ID_MED, "quantite": NOMBRE, "nom": "NOM", "dosage": "DOSAGE"}
+3. HANDLE_REQUEST : Gérer les demandes. Data: {"id": ID_REQ, "status": "accepted" | "rejected"}
+
+Règles :
+- Action uniquement si demandée explicitement ou logiquement nécessaire.
+- JAMAIS de changement de mot de passe.
+- Confirme toujours l'action en texte dans la réponse.
 
 CONTEXTE DE L'UTILISATEUR (NE JAMAIS MENTIONNER D'AUTRES UTILISATEURS) :
 $contextJson
