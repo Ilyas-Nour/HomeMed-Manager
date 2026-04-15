@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { 
-  Users, Plus, MailOpen, Shield, Trash2, 
-  ChevronDown, UserPlus, Info, CheckCircle2,
-  Users2, ArrowRight, X, Mail, Loader2, AlertCircle,
-  Share2, Globe, Clock
-} from 'lucide-react';
+  Users, Plus, EnvelopeOpen, Shield, Trash, 
+  CaretDown, UserPlus, Info, CheckCircle,
+  UsersThree, ArrowRight, X, EnvelopeSimple, CircleNotch, WarningCircle,
+  ShareNetwork, Globe, Clock
+} from '@phosphor-icons/react';
 import api from '../services/api';
 import ConfirmModal from './ConfirmModal';
 import SharedPharmacy from './SharedPharmacy';
@@ -136,7 +136,7 @@ export default function GroupsView({ onChatOpen, showToast }) {
             onClick={() => setIsGroupModalOpen(true)}
             className="bg-brand-blue text-white h-11 px-6 rounded-xl text-sm font-bold shadow-lg shadow-brand-blue/20 hover:shadow-xl hover:shadow-brand-blue/30 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
         >
-            <Plus size={18} strokeWidth={2.5} />
+            <Plus size={18} weight="bold" />
             <span>Créer un groupe</span>
         </button>
       </div>
@@ -146,10 +146,10 @@ export default function GroupsView({ onChatOpen, showToast }) {
           message.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'
         }`}>
           <div className="flex items-center gap-3">
-             {message.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+             {message.type === 'success' ? <CheckCircle size={18} weight="bold" /> : <WarningCircle size={18} weight="bold" />}
              <span className="text-xs font-black uppercase tracking-widest">{message.text}</span>
           </div>
-          <button onClick={() => setMessage(null)}><X size={14} /></button>
+          <button onClick={() => setMessage(null)}><X size={14} weight="bold" /></button>
         </div>
       )}
 
@@ -176,7 +176,7 @@ export default function GroupsView({ onChatOpen, showToast }) {
                   <div className={`h-14 w-14 flex items-center justify-center rounded-2xl transition-all duration-500 border border-white shadow-sm ${
                     expandedGroupId === groupe.id ? 'bg-brand-blue text-white rotate-3 scale-110' : 'bg-slate-50 text-slate-400'
                   }`}>
-                    <Shield size={24} />
+                    <Shield size={24} weight="bold" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-slate-900 tracking-tight">{groupe.nom}</h3>
@@ -193,16 +193,16 @@ export default function GroupsView({ onChatOpen, showToast }) {
                     onClick={() => {setActiveGroupId(groupe.id); setIsInviteModalOpen(true);}}
                     className="h-10 px-6 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-indigo-50 text-brand-blue hover:bg-brand-blue hover:text-white transition-all flex items-center gap-2 active:scale-95"
                    >
-                     <UserPlus size={14} strokeWidth={2.5} /> Inviter
+                     <UserPlus size={14} weight="bold" /> Inviter
                    </button>
                    <button 
                     onClick={(e) => confirmDeleteGroup(groupe.id, e)}
                     className="btn-ghost"
                    >
-                     <Trash2 size={16} />
+                     <Trash size={16} weight="bold" />
                    </button>
                    <div className={`ml-2 transition-transform duration-500 ${expandedGroupId === groupe.id ? 'rotate-180' : ''}`}>
-                      <ChevronDown size={18} className="text-slate-300" />
+                      <CaretDown size={18} weight="bold" className="text-slate-300" />
                    </div>
                 </div>
 
@@ -215,7 +215,7 @@ export default function GroupsView({ onChatOpen, showToast }) {
                    <div className="p-8 sm:p-10 space-y-12">
                       <div className="space-y-6">
                          <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-3">
-                           <Users2 size={14} className="text-brand-blue" /> Membres du Groupe
+                           <UsersThree size={14} weight="bold" className="text-brand-blue" /> Membres du Groupe
                          </h4>
                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {groupe.participants?.map(m => (
@@ -228,7 +228,7 @@ export default function GroupsView({ onChatOpen, showToast }) {
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{m.pivot.role}</p>
                                  </div>
                                  <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center opacity-0 group-hover/member:opacity-100 transition-all">
-                                    <CheckCircle2 size={12} strokeWidth={3} />
+                                    <CheckCircle size={12} weight="bold" />
                                  </div>
                               </div>
                             ))}
@@ -248,13 +248,13 @@ export default function GroupsView({ onChatOpen, showToast }) {
                       {groupe.invitations?.length > 0 && (
                          <div className="space-y-6 pt-10 border-t border-slate-100">
                             <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-3">
-                               <Mail size={14} className="text-indigo-400" /> Invitations en cours
+                               <EnvelopeSimple size={14} weight="bold" className="text-indigo-400" /> Invitations en cours
                             </h4>
                             <div className="flex flex-wrap gap-4">
                                {groupe.invitations.filter(i => i.statut === 'en_attente').map(inv => (
                                  <div key={inv.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white/40 border border-slate-100 border-dashed transition-all hover:bg-white">
                                     <div className="h-10 w-10 bg-white shadow-sm flex items-center justify-center text-slate-200 rounded-xl">
-                                       <MailOpen size={18} />
+                                       <EnvelopeOpen size={18} weight="bold" />
                                     </div>
                                     <div>
                                        <p className="text-xs font-black text-slate-500">{inv.email}</p>
@@ -273,23 +273,28 @@ export default function GroupsView({ onChatOpen, showToast }) {
         </div>
       )}
 
-      {/* Invite Modal */}
+      {/* Invite Modal — Premium SaaS */}
       {isInviteModalOpen && createPortal(
-        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center overflow-hidden">
-           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setIsInviteModalOpen(false)} />
-           <div className="relative w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-[32px] animate-fade-up overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
+           <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-xl animate-fade-in" onClick={() => setIsInviteModalOpen(false)} />
+           <div className="relative w-full sm:max-w-md bg-white rounded-t-[40px] sm:rounded-[40px] animate-fade-up overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] border border-white/20">
               <div className="p-8 sm:p-10">
-                 <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h3 className="text-2xl font-black text-slate-900 tracking-tighter">Inviter</h3>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Partagez vos responsabilités</p>
+                 <div className="flex items-center justify-between mb-10">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 bg-indigo-50 text-brand-blue rounded-2xl flex items-center justify-center shadow-inner">
+                           <UserPlus size={24} weight="bold" />
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">Inviter</h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">Réseau de Confiance</p>
+                        </div>
                     </div>
-                    <button onClick={() => setIsInviteModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all"><X size={22} /></button>
+                    <button onClick={() => setIsInviteModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-2xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 transform hover:rotate-90"><X size={20} weight="bold" /></button>
                  </div>
                  
-                 <form onSubmit={handleInvite} className="space-y-6">
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Adresse E-mail</label>
+                 <form onSubmit={handleInvite} className="space-y-8">
+                    <div className="space-y-3">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Adresse E-mail du membre</label>
                        <input 
                          autoFocus
                          type="email" 
@@ -297,20 +302,23 @@ export default function GroupsView({ onChatOpen, showToast }) {
                          placeholder="nom@exemple.com" 
                          value={emailInvite} 
                          onChange={e => setEmailInvite(e.target.value)} 
-                         className="w-full h-12 px-6 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all" 
+                         className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-8 focus:ring-brand-blue/5 outline-none transition-all duration-300" 
                        />
                     </div>
-                    <button type="submit" disabled={loading} className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-brand-blue/30 hover:shadow-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95">
+                    <button type="submit" disabled={loading} className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/10 hover:bg-brand-blue hover:shadow-brand-blue/20 transition-all duration-500 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95">
                        {loading ? (
                          <>
-                           <Loader2 className="animate-spin" size={20} />
-                           <span>Envoi...</span>
+                           <CircleNotch className="animate-spin" size={20} weight="bold" />
+                           <span>Envoi en cours</span>
                          </>
                        ) : (
-                         "Rejoindre le Groupe"
+                         <>
+                           <ShareNetwork size={18} weight="bold" />
+                           <span>Envoyer l'invitation</span>
+                         </>
                        )}
                     </button>
-                    <button type="button" onClick={() => setIsInviteModalOpen(false)} className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Ignorer</button>
+                    <button type="button" onClick={() => setIsInviteModalOpen(false)} className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Plus tard</button>
                  </form>
               </div>
            </div>
@@ -318,22 +326,27 @@ export default function GroupsView({ onChatOpen, showToast }) {
         document.body
       )}
 
-      {/* New Group Modal */}
+      {/* New Group Modal — Premium SaaS */}
       {isGroupModalOpen && createPortal(
-        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center overflow-hidden">
-           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setIsGroupModalOpen(false)} />
-           <div className="relative w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-[32px] animate-fade-up overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
+           <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-xl animate-fade-in" onClick={() => setIsGroupModalOpen(false)} />
+           <div className="relative w-full sm:max-w-md bg-white rounded-t-[40px] sm:rounded-[40px] animate-fade-up overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] border border-white/20">
               <div className="p-8 sm:p-10">
-                 <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h3 className="text-2xl font-black text-slate-900 tracking-tighter">Nouveau Groupe</h3>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Créez votre cercle de confiance</p>
+                 <div className="flex items-center justify-between mb-10">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                           <UsersThree size={24} weight="bold" />
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">Nouveau Groupe</h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">Expansion du Cercle</p>
+                        </div>
                     </div>
-                    <button onClick={() => setIsGroupModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all"><X size={22} /></button>
+                    <button onClick={() => setIsGroupModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-2xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 transform hover:rotate-90"><X size={20} weight="bold" /></button>
                  </div>
 
-                 <form onSubmit={handleCreateGroup} className="space-y-6">
-                    <div className="space-y-2">
+                 <form onSubmit={handleCreateGroup} className="space-y-8">
+                    <div className="space-y-3">
                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nom de la Collaboration</label>
                        <input 
                          autoFocus
@@ -342,20 +355,23 @@ export default function GroupsView({ onChatOpen, showToast }) {
                          placeholder="ex: Maison Dupont, Equipe Soins..." 
                          value={nomGroupe} 
                          onChange={e => setNomGroupe(e.target.value)} 
-                         className="w-full h-12 px-6 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all" 
+                         className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-8 focus:ring-brand-blue/5 outline-none transition-all duration-300" 
                        />
                     </div>
-                    <button type="submit" disabled={loading} className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-brand-blue/30 hover:shadow-2xl hover:-translate-y-1 transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-3">
+                    <button type="submit" disabled={loading} className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/10 hover:bg-brand-blue hover:shadow-brand-blue/20 transition-all duration-500 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-4">
                        {loading ? (
                          <>
-                           <Loader2 className="animate-spin" size={20} />
-                           <span>Création...</span>
+                           <CircleNotch className="animate-spin" size={20} weight="bold" />
+                           <span>Initialisation...</span>
                          </>
                        ) : (
-                         "Lancer le Groupe"
+                         <>
+                           <CheckCircle size={18} weight="bold" />
+                           <span>Lancer le Groupe</span>
+                         </>
                        )}
                     </button>
-                    <button type="button" onClick={() => setIsGroupModalOpen(false)} className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Ignorer</button>
+                    <button type="button" onClick={() => setIsGroupModalOpen(false)} className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">Annuler</button>
                  </form>
               </div>
            </div>
