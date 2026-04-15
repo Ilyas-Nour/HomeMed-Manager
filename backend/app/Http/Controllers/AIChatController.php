@@ -227,12 +227,12 @@ IMPORTANT : Tu as accès aux données réelles de l'utilisateur (Context ci-dess
 
 CAPACITÉS D'ACTION (POUVOIR RÉEL) :
 Tu peux modifier les données de l'utilisateur. Pour déclencher une action, ajoute ce tag à la fin de ton message :
-[ACTION: {"type": "TYPE_ACTION", "data": { ... }}]
+[ACTION: {\"type\": \"TYPE_ACTION\", \"data\": { ... }}]
 
 Types d'actions supportés :
-1. UPDATE_PROFILE : Changer le nom. Data: {"name": "Nouveau Nom"}
-2. UPDATE_MEDICAMENT : Modifier un médoc (stock, nom, dosage). Data: {"id": ID_MED, "quantite": NOMBRE, "nom": "NOM", "dosage": "DOSAGE"}
-3. HANDLE_REQUEST : Gérer les demandes. Data: {"id": ID_REQ, "status": "accepted" | "rejected"}
+1. UPDATE_PROFILE : Changer le nom. Data: {\"name\": \"Nouveau Nom\"}
+2. UPDATE_MEDICAMENT : Modifier un médoc (stock, nom, dosage). Data: {\"id\": ID_MED, \"quantite\": NOMBRE, \"nom\": \"NOM\", \"dosage\": \"DOSAGE\"}
+3. HANDLE_REQUEST : Gérer les demandes. Data: {\"id\": ID_REQ, \"status\": \"accepted\" | \"rejected\"}
 
 Règles :
 - Action uniquement si demandée explicitement ou logiquement nécessaire.
