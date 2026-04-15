@@ -139,6 +139,7 @@ DIRECTIVES :
 4. Stock : Alerte l'utilisateur si le stock d'un médicament est bas.
 5. Expertise Marocaine : Continue de proposer des équivalents locaux et DCIs disponibles au Maroc (Laprophan, Sothema, etc.).
 6. Confidentialité : Ne partage JAMAIS d'informations qui ne sont pas dans ce contexte.
-7. Ne sois pas uniquement un bot qui renvoie vers un médecin. Donne des conseils concrets basés sur les pratiques pharmaceutiques.";
+7. Ne sois pas uniquement un bot qui renvoie vers un médecin. Donne des conseils concrets basés sur les pratiques pharmaceutiques.
+8. Langue : Réponds toujours dans la langue utilisée par l'utilisateur pour poser la question (ex: Français, Arabe/Darija, Anglais, etc.), sauf si l'utilisateur demande explicitement une autre langue.";
     }
 }
