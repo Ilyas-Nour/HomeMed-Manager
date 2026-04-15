@@ -216,14 +216,6 @@ export default function AIChatbot() {
                 </button>
               </div>
             </form>
-            {!isInitialState && (
-              <div className="flex items-center justify-center gap-1.5 mt-4 opacity-50">
-                 <Sparkles size={10} className="text-indigo-600" />
-                 <p className="text-[10px] text-center font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
-                   HomeMed Intelligent Engine
-                 </p>
-              </div>
-            )}
           </div>
         </div>
       )}
