@@ -81,10 +81,10 @@ export default function AIChatbot() {
   const isInitialState = messages.length <= 1;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[2000] flex flex-col items-end">
+    <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-[2000] flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[95vw] sm:w-[440px] h-auto max-h-[calc(100vh-140px)] bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden animate-fade-up ring-1 ring-black/[0.02]">
+        <div className="mb-4 w-[calc(100vw-2rem)] sm:w-[440px] h-auto max-h-[calc(100vh-180px)] lg:max-h-[calc(100vh-140px)] bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden animate-fade-up ring-1 ring-black/[0.02]">
           
           {/* Header — Minimalist & Transparent */}
           <div className="px-6 py-5 flex items-center justify-between bg-white/50 backdrop-blur-md border-b border-slate-50 relative z-50">
