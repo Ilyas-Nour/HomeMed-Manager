@@ -3,12 +3,12 @@ import { createPortal } from 'react-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import { 
-  X, Save, Pill, ClipboardList, Info, 
-  Calendar, FlaskConical, AlertCircle, 
-  Clock, Plus, Trash2, CheckCircle2, 
-  Activity, ActivitySquare, ShieldCheck,
-  ChevronDown, Loader2
-} from 'lucide-react';
+  X, Check, Pill, ClipboardText, Info, 
+  CalendarBlank, Flask, WarningCircle, 
+  Clock, Plus, Trash, CheckCircle, 
+  Pulse, SquareHalf, ShieldCheck,
+  CaretDown, CircleNotch
+} from '@phosphor-icons/react';
 import ConfirmModal from './ConfirmModal';
 
 /**
@@ -133,163 +133,164 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={onClose} />
+    <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
+      {/* Dynamic Backdrop */}
+      <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-xl animate-fade-in" onClick={onClose} />
       
-      <div className="relative w-full sm:max-w-xl bg-white shadow-2xl rounded-t-[32px] sm:rounded-[32px] overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh] animate-fade-up">
-        {/* Mobile drag handle */}
-        <div className="flex justify-center pt-3 sm:hidden shrink-0">
-          <div className="w-10 h-1 bg-slate-200" />
+      <div className="relative w-full sm:max-w-xl bg-white shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] rounded-t-[40px] sm:rounded-[40px] overflow-hidden flex flex-col max-h-[96vh] sm:max-h-[90vh] animate-fade-up border border-white/20">
+        {/* Mobile Drag Handle — Minimalist */}
+        <div className="flex justify-center pt-4 sm:hidden shrink-0">
+          <div className="w-12 h-1.5 bg-slate-100 rounded-full" />
         </div>
         
-        {/* Header */}
-        <div className="px-6 py-3 border-b border-slate-50 flex items-center justify-between bg-white shrink-0">
-           <div className="flex items-center gap-3">
-              <div className="h-9 w-9 sm:h-10 sm:w-10 bg-slate-50 border border-slate-100 flex items-center justify-center text-brand-blue">
-                 <Pill size={17} strokeWidth={2.5} />
+        {/* Header — Glassmorphic & Clean */}
+        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-white/50 backdrop-blur-sm sticky top-0 z-20 shrink-0">
+           <div className="flex items-center gap-5">
+              <div className="h-12 w-12 bg-slate-50 border border-slate-100/50 rounded-2xl flex items-center justify-center text-brand-blue shadow-inner">
+                 <Pill size={22} weight="bold" />
               </div>
               <div>
-                 <h2 className="text-sm font-bold text-slate-900 leading-none">
+                 <h2 className="text-xl font-black text-slate-900 tracking-tighter leading-none">
                     {medicamentToEdit ? 'Modifier le Traitement' : 'Nouveau Médicament'}
                  </h2>
-                 <p className="text-xs font-medium text-slate-500 mt-0.5">Dossier Clinique</p>
+                 <p className="text-[10px] font-black text-brand-blue uppercase mt-1.5 tracking-widest">Dossier Clinique Patient</p>
               </div>
            </div>
            <button
              onClick={onClose}
-             className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all"
+             className="h-10 w-10 flex items-center justify-center rounded-2xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 group"
            >
-              <X size={17} />
+              <X size={20} weight="bold" className="group-hover:rotate-90 transition-transform duration-300" />
            </button>
         </div>
 
         {/* Content Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-8 sm:p-10 space-y-8 no-scrollbar scroll-smooth">
            
-           <form onSubmit={handleSubmit} id="med-form" className="space-y-5">
+           <form onSubmit={handleSubmit} id="med-form" className="space-y-8">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  {/* Nome e Type */}
-                 <div className="med-form-field relative">
-                    <label className="med-form-label">Nom du Médicament</label>
-                    <input
-                      type="text" required placeholder="Chercher un médicament..."
-                      value={formData.nom} 
-                      onChange={e => handleNomChange(e.target.value)}
-                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                      className={`med-input ${validationErrors.nom ? 'border-red-500' : ''}`}
-                    />
-                    {showSuggestions && suggestions.length > 0 && (
-                      <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 shadow-xl z-50 p-1 overflow-hidden animate-fade-up">
-                        {suggestions.map(s => (
-                          <button key={s.id} type="button" onClick={() => selectSuggestion(s)} className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-brand-blue transition-all flex items-center gap-3">
-                            <Pill size={14} /> {s.nom}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                 <div className="space-y-3 relative">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nom du Médicament</label>
+                    <div className="relative group/input">
+                      <input
+                        type="text" required placeholder="Chercher un médicament..."
+                        value={formData.nom} 
+                        onChange={e => handleNomChange(e.target.value)}
+                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                        className={`w-full h-14 pl-6 pr-6 bg-slate-50/50 border ${validationErrors.nom ? 'border-rose-300 ring-4 ring-rose-50' : 'border-slate-100'} rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-[8px] focus:ring-brand-blue/5 outline-none transition-all duration-300`}
+                      />
+                      {showSuggestions && suggestions.length > 0 && (
+                        <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-slate-100 rounded-2xl shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] z-50 p-2 overflow-hidden animate-fade-up">
+                          {suggestions.map(s => (
+                            <button key={s.id} type="button" onClick={() => selectSuggestion(s)} className="w-full text-left px-4 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-brand-blue transition-all flex items-center gap-4">
+                              <Pill size={16} weight="bold" className="text-slate-300" /> {s.nom}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                  </div>
                  
-                 <div className="med-form-field relative">
-                    <label className="med-form-label">Forme Galénique</label>
-                    <div className="relative">
+                 <div className="space-y-3 relative">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Forme Galénique</label>
+                    <div className="relative group/input">
                       <select
                         value={formData.type}
                         onChange={e => setFormData({ ...formData, type: e.target.value })}
-                        className="med-input appearance-none px-4 bg-slate-50 border border-slate-200 focus:bg-white transition-all text-xs font-semibold"
+                        className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none appearance-none focus:bg-white focus:border-brand-blue/30 focus:ring-[8px] focus:ring-brand-blue/5 transition-all duration-300"
                       >
                         {typesMed.map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                          <ChevronDown size={14} />
-                        </div>
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                         <CaretDown size={14} weight="bold" />
                       </div>
                     </div>
                  </div>
               </div>
 
               {/* Posologie */}
-              <div className="med-form-field">
-                 <label className="med-form-label">Posologie et Instructions Appliquées</label>
+              <div className="space-y-3">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Posologie & Instructions</label>
                  <textarea
                    required placeholder="Ex: 1 unité après chaque repas principal..."
                    value={formData.posologie} onChange={e => setFormData({ ...formData, posologie: e.target.value })}
-                   className="med-input min-h-[64px] py-3 px-4 bg-slate-50/50 focus:bg-white resize-none leading-relaxed text-sm font-medium border border-slate-100 rounded-xl transition-all"
+                   className="w-full min-h-[100px] py-5 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-[8px] focus:ring-brand-blue/5 outline-none transition-all duration-300 resize-none leading-relaxed"
                  />
               </div>
 
-              {/* Cycle de Traitement */}
-              <div className="pt-2">
-                 <div className="grid grid-cols-2 gap-4">
-                   <div className="med-form-field">
-                      <label className="med-form-label">Date Début</label>
+              {/* Traitement Cycle */}
+              <div className="space-y-3">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cycle de Traitement</label>
+                 <div className="grid grid-cols-2 gap-6 p-1">
+                   <div className="relative group/input">
                       <input
                         type="date" required
                         value={formData.date_debut} onChange={e => setFormData({ ...formData, date_debut: e.target.value })}
-                        className="med-input border-slate-100 bg-slate-50/50 rounded-xl"
+                        className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:bg-white outline-none transition-all"
                       />
+                      <div className="absolute -top-2 left-4 px-2 bg-white text-[9px] font-black text-brand-blue uppercase tracking-widest">Départ</div>
                    </div>
-                   <div className="med-form-field">
-                      <label className="med-form-label">Fin Estimée</label>
+                   <div className="relative group/input">
                       <input
                         type="date"
                         value={formData.date_fin || ''} onChange={e => setFormData({ ...formData, date_fin: e.target.value })}
-                        className="med-input border-slate-100 bg-slate-50/50 rounded-xl"
+                        className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:bg-white outline-none transition-all"
                       />
+                      <div className="absolute -top-2 left-4 px-2 bg-white text-[9px] font-black text-slate-300 uppercase tracking-widest text-opacity-80">Fin Prévue</div>
                    </div>
                  </div>
               </div>
 
-              {/* Stock et Expiration */}
-              <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl grid grid-cols-3 gap-4">
-                 <div className="med-form-field">
-                    <label className="med-form-label">Stock Initial</label>
+              {/* Stock Details */}
+              <div className="bg-slate-50/30 border border-slate-100/50 p-6 sm:p-8 rounded-[32px] grid grid-cols-3 gap-6 relative">
+                 <div className="absolute top-0 left-8 -translate-y-1/2 px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-slate-900/10">Gestion Logs</div>
+                 
+                 <div className="space-y-3">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center block">Initial</label>
                     <input
                       type="number" min="0" required
                       value={formData.quantite}
                       onChange={e => setFormData({ ...formData, quantite: parseInt(e.target.value) || 0 })}
-                      className="med-input text-center font-bold border-slate-200 rounded-xl"
+                      className="w-full h-14 bg-white border border-slate-100 rounded-2xl text-center text-lg font-black text-slate-900 focus:ring-4 focus:ring-brand-blue/5 transition-all shadow-sm"
                     />
                  </div>
-                 <div className="med-form-field">
-                    <label className="med-form-label">Seuil Critique</label>
+                 <div className="space-y-3">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center block">Seuil</label>
                     <input
                       type="number" min="0"
                       value={formData.seuil_alerte}
                       onChange={e => setFormData({ ...formData, seuil_alerte: parseInt(e.target.value) || 0 })}
-                      className="med-input text-center font-bold text-brand-amber border-slate-200 rounded-xl"
+                      className="w-full h-14 bg-white border border-slate-100 rounded-2xl text-center text-lg font-black text-rose-500 focus:ring-4 focus:ring-rose-500/5 transition-all shadow-sm"
                     />
                  </div>
-                 <div className="med-form-field">
-                    <label className="med-form-label">Expiration</label>
+                 <div className="space-y-3 text-center">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center block">Expiration</label>
                     <input
                       type="date"
                       value={formData.date_expiration || ''} onChange={e => setFormData({ ...formData, date_expiration: e.target.value })}
-                      className="med-input text-[11px] font-bold border-slate-200 bg-white rounded-xl"
+                      className="w-full h-14 bg-white border border-slate-100 rounded-2xl px-2 text-[10px] font-black text-slate-900 focus:ring-4 focus:ring-slate-500/5 transition-all shadow-sm"
                     />
-                 </div>
-              </div>
-
-              {/* Rappels */}
-              <div className="space-y-4 pt-4 border-t border-slate-50">
-                 <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2">
-                       <Clock size={16} className="text-brand-blue" />
-                       <h3 className="text-sm font-semibold text-slate-800">Protocoles de Rappel</h3>
+                 </div>              {/* Protocoles de Rappel */}
+              <div className="space-y-6 pt-6 border-t border-slate-50">
+                 <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-3">
+                       <Clock size={20} weight="bold" className="text-brand-blue" />
+                       <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Protocoles de Rappel</h3>
                     </div>
                     <button 
                       type="button" 
                       onClick={handleAddRappel} 
-                      className="text-[10px] font-bold text-brand-blue hover:text-blue-800 bg-brand-blue/5 hover:bg-brand-blue/10 px-3 py-1.5 transition-all flex items-center gap-2 uppercase tracking-tight"
+                      className="h-10 px-5 rounded-2xl bg-indigo-50 text-brand-blue text-[10px] font-black uppercase tracking-widest hover:bg-brand-blue hover:text-white transition-all duration-300 flex items-center gap-2 active:scale-95 shadow-sm"
                     >
-                       <Plus size={16} strokeWidth={2} /> Créer un horaire
+                       <Plus size={16} weight="bold" /> <span>Créer horaire</span>
                     </button>
                  </div>
                  
-                 <div className="space-y-3 min-h-[40px]">
+                 <div className="space-y-4 min-h-[40px]">
                     {rappels.map((rappel, idx) => (
-                      <div key={idx} className="flex items-center gap-4 bg-white border border-slate-100 p-3 group hover:border-brand-blue/20 transition-all shadow-sm">
+                      <div key={idx} className="flex items-center gap-5 bg-slate-50/50 border border-slate-100/50 p-4 rounded-3xl group hover:bg-white hover:border-brand-blue/20 transition-all duration-300 shadow-sm animate-fade-in">
                          <div className="flex-1 relative">
                             <select 
                               value={rappel.moment}
@@ -298,15 +299,15 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                                 newR[idx].moment = e.target.value;
                                 setRappels(newR);
                               }}
-                              className="w-full h-10 px-4 bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-600 outline-none appearance-none"
+                              className="w-full h-12 px-5 bg-white border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-600 outline-none appearance-none focus:border-brand-blue/30 transition-all"
                             >
                               {moments.map(m => <option key={m} value={m}>{m}</option>)}
                             </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300">
-                               <ChevronDown size={14} />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300">
+                               <CaretDown size={14} weight="bold" />
                             </div>
                          </div>
-                         <div className="w-32">
+                         <div className="w-36">
                             <input 
                               type="time" 
                               required
@@ -316,21 +317,24 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                                 newR[idx].heure = e.target.value;
                                 setRappels(newR);
                               }}
-                              className="w-full h-10 px-3 bg-slate-50 border border-slate-100 text-sm font-bold text-slate-700 outline-none focus:border-brand-blue transition-all"
+                              className="w-full h-12 px-4 bg-white border border-slate-100 rounded-2xl text-sm font-black text-slate-900 focus:border-brand-blue/30 transition-all text-center"
                             />
                          </div>
                          <button 
                            type="button" 
                            onClick={() => removeRappel(idx)}
-                           className="h-9 w-9 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all group-hover:opacity-100 opacity-40"
+                           className="h-11 w-11 flex items-center justify-center rounded-2xl text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all group-hover:opacity-100 opacity-60"
                          >
-                            <Trash2 size={16} />
+                            <Trash size={18} weight="bold" />
                          </button>
                       </div>
                     ))}
                     {rappels.length === 0 && (
-                       <div className="text-center py-8 border border-dashed border-slate-200 bg-slate-50/50">
-                          <p className="text-xs font-medium text-slate-500">Aucun rappel configuré pour ce traitement.</p>
+                       <div className="py-12 border-2 border-dashed border-slate-100 rounded-[32px] bg-slate-50/20 flex flex-col items-center justify-center text-center">
+                          <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm text-slate-200">
+                             <Clock size={28} weight="bold" />
+                          </div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aucun rappel configuré</p>
                        </div>
                     )}
                  </div>
@@ -338,33 +342,35 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
            </form>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 sm:px-6 py-4 sm:py-5 border-t border-slate-100 bg-white flex items-center justify-between shrink-0">
+        {/* Footer — Precision Anchored */}
+        <div className="px-8 py-6 border-t border-slate-100 bg-white/80 backdrop-blur-md flex items-center justify-between shrink-0">
            <button
              type="button"
              onClick={onClose}
-             className="text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+             className="text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
            >
-              Annuler
+              Fermer
            </button>
            <button
              type="submit"
              form="med-form"
              disabled={loading}
-             className="med-btn-primary min-w-[160px] sm:min-w-[200px] h-11 sm:h-12 shadow-md shadow-brand-blue/10"
+             className="min-w-[220px] h-14 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/10 hover:bg-brand-blue hover:shadow-brand-blue/20 transition-all duration-500 disabled:opacity-50 active:scale-95 flex items-center justify-center"
            >
                {loading ? (
-                  <div className="flex items-center gap-2">
-                     <Loader2 className="animate-spin" size={18} />
-                     <span className="font-bold text-xs uppercase tracking-tight">Enregistrement...</span>
+                  <div className="flex items-center gap-3">
+                     <CircleNotch className="animate-spin" size={20} weight="bold" />
+                     <span>Traitement...</span>
                   </div>
                ) : (
-                  <div className="flex items-center gap-2">
-                     <CheckCircle2 size={17} />
-                     <span className="font-bold text-xs uppercase tracking-tight">Valider</span>
+                  <div className="flex items-center gap-3">
+                     <Check size={20} weight="bold" />
+                     <span>Enregistrer</span>
                   </div>
                )}
            </button>
+        </div>
+</button>
         </div>
       </div>
     </div>,
