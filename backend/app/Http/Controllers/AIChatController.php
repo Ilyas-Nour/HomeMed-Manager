@@ -49,7 +49,7 @@ class AIChatController extends Controller
                 'HTTP-Referer' => config('app.url'),
                 'X-Title' => 'HomeMed Manager',
             ])->post('https://openrouter.ai/api/v1/chat/completions', [
-                'model' => 'google/gemini-flash-1.5',
+                'model' => 'openai/gpt-3.5-turbo',
                 'messages' => $messages,
             ]);
 
