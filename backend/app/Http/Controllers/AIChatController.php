@@ -6,6 +6,8 @@ use App\Models\Medicament;
 use App\Models\Profil;
 use App\Models\Rappel;
 use App\Models\User;
+use App\Models\MedicamentRequest;
+use App\Models\SharingMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
@@ -114,6 +116,34 @@ class AIChatController extends Controller
             $context['family_profiles'][] = $pData;
         }
 
+        // --- Context : Partage & Messages ---
+        $unreadMessages = SharingMessage::whereHas('request', function($q) use ($user) {
+            $q->where('owner_id', $user->id)->orWhere('requester_id', $user->id);
+        })->where('sender_id', '!=', $user->id)
+          ->where('is_read', false)
+          ->with(['sender', 'request.medicament'])
+          ->get();
+
+        $activeRequests = MedicamentRequest::where(function($q) use ($user) {
+            $q->where('owner_id', $user->id)->orWhere('requester_id', $user->id);
+        })->with(['medicament', 'requester', 'owner'])
+          ->where('status', 'pending')
+          ->get();
+
+        $context['activity_feed'] = [
+            'unread_messages' => $unreadMessages->map(fn($m) => [
+                'from' => $m->sender->name,
+                'medication' => $m->request->medicament->nom,
+                'content_preview' => substr($m->content, 0, 50) . '...'
+            ]),
+            'pending_requests_count' => $activeRequests->count(),
+            'pending_requests_details' => $activeRequests->map(fn($r) => [
+                'type' => $r->owner_id == $user->id ? 'Reçue de' : 'Envoyée à',
+                'person' => $r->owner_id == $user->id ? $r->requester->name : $r->owner->name,
+                'medication' => $r->medicament->nom
+            ]),
+        ];
+
         return $context;
     }
 
@@ -138,8 +168,9 @@ DIRECTIVES PRIORITAIRES :
 3. Famille : Précise pour quel membre de la famille (profil) les médicaments sont destinés.
 4. Rappels : Utilise le planning pour dire ce qui a été pris ou ce qui reste à prendre aujourd'hui.
 5. Stock : Alerte l'utilisateur si le stock d'un médicament est bas (quantité proche de zéro).
-6. Expertise Marocaine : Continue de proposer des équivalents locaux et DCIs disponibles au Maroc (Laprophan, Sothema, etc.).
-7. Confidentialité : Ne partage JAMAIS d'informations qui ne sont pas dans ce contexte.
-8. Conseils : Ne sois pas uniquement un bot qui renvoie vers un médecin. Donne des conseils concrets basés sur les pratiques pharmaceutiques.";
+6. Partage & Messages : Informe l'utilisateur s'il a des messages non lus ou des demandes de médicaments en attente basées sur la section 'activity_feed' du contexte.
+7. Expertise Marocaine : Continue de proposer des équivalents locaux et DCIs disponibles au Maroc (Laprophan, Sothema, etc.).
+8. Confidentialité : Ne partage JAMAIS d'informations qui ne sont pas dans ce contexte.
+9. Conseils : Ne sois pas uniquement un bot qui renvoie vers un médecin. Donne des conseils concrets basés sur les pratiques pharmaceutiques.";
     }
 }
