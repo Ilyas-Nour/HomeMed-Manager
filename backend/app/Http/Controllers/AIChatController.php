@@ -64,18 +64,20 @@ class AIChatController extends Controller
             $text = $aiData['choices'][0]['message']['content'] ?? '';
 
             // --- Interception d'Action ---
-            if (preg_match('/\[ACTION:\s*(.*?)\]/s', $text, $matches)) {
+            if (preg_match('/\[ACTION:\s*(.*?)\]/si', $text, $matches)) {
                 $actionJson = $matches[1];
+                \Log::info("AI Action Detected: " . $actionJson);
                 $action = json_decode($actionJson, true);
                 if ($action) {
                     try {
                         $this->handleAiAction($user, $action);
+                        \Log::info("AI Action Executed: " . $action['type']);
                     } catch (\Exception $e) {
                         \Log::error("AI Action Failed: " . $e->getMessage());
                     }
                 }
                 // Nettoyer la réponse pour l'utilisateur
-                $cleanText = preg_replace('/\[ACTION:\s*(.*?)\]/s', '', $text);
+                $cleanText = preg_replace('/\[ACTION:\s*(.*?)\]/si', '', $text);
                 $aiData['choices'][0]['message']['content'] = trim($cleanText);
             }
 
@@ -113,6 +115,7 @@ class AIChatController extends Controller
 
             foreach ($profil->medicaments as $med) {
                 $mData = [
+                    'id' => $med->id,
                     'name' => $med->nom,
                     'dosage' => $med->dosage,
                     'stock' => $med->quantite_restante,
@@ -157,6 +160,7 @@ class AIChatController extends Controller
             ]),
             'pending_requests_count' => $activeRequests->count(),
             'pending_requests_details' => $activeRequests->map(fn($r) => [
+                'id' => $r->id,
                 'type' => $r->owner_id == $user->id ? 'Reçue de' : 'Envoyée à',
                 'person' => $r->owner_id == $user->id ? $r->requester->name : $r->owner->name,
                 'medication' => $r->medicament->nom
