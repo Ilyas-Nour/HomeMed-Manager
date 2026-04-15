@@ -1,8 +1,8 @@
 import {
-  LayoutDashboard, Pill, 
-  Calendar, ShoppingCart, 
-  Settings, Users, ShieldCheck, MessageCircle
-} from 'lucide-react';
+  Gauge, Pill, 
+  ChatCircle, Users, 
+  Gear
+} from '@phosphor-icons/react';
 
 /**
  * MobileBottomNav — Product Precision
@@ -10,26 +10,21 @@ import {
  */
 export default function MobileBottomNav({ currentView, setCurrentView, user, collabBadge = 0 }) {
   const navItems = [
-    { id: 'overview',    label: 'Accueil',  icon: <LayoutDashboard size={20} /> },
-    { id: 'medicaments', label: 'Médocs',   icon: <Pill size={20} /> },
-    { id: 'collaboration', label: 'Entraide', icon: <MessageCircle size={20} /> },
-    { id: 'groups',      label: 'Grouper',  icon: <Users size={20} /> },
-    { id: 'settings',    label: 'Paramètres', icon: <Settings size={20} /> },
+    { id: 'overview',    label: 'Accueil',  icon: <Gauge size={20} weight="bold" /> },
+    { id: 'medicaments', label: 'Médocs',   icon: <Pill size={20} weight="bold" /> },
+    { id: 'collaboration', label: 'Entraide', icon: <ChatCircle size={20} weight="bold" /> },
+    { id: 'groups',      label: 'Grouper',  icon: <Users size={20} weight="bold" /> },
+    { id: 'settings',    label: 'Paramètres', icon: <Gear size={20} weight="bold" /> },
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30">
-      <div className="bg-white/80 backdrop-blur-xl border-t border-slate-200/80 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] h-16 flex items-center justify-around px-2 relative overflow-hidden">
+    <div className="lg:hidden fixed bottom-6 left-0 right-0 z-[100] px-6">
+      <div className="bg-slate-900/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] h-18 py-3 rounded-[32px] flex items-center justify-around relative overflow-hidden ring-1 ring-white/5">
         
-        {/* Subtle top indicator/accent */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-slate-50" />
-
         {navItems.map(item => {
           const isActive = currentView === (item.id === 'settings' && user?.role === 'admin' && currentView === 'admin' ? 'admin' : item.id);
-          // Special case for 'Settings/Admin' toggle on mobile
           const handleClick = () => {
             if (item.id === 'settings' && user?.role === 'admin') {
-               // On toggle between settings and admin if possible, or just go to settings
                setCurrentView('settings');
             } else {
                setCurrentView(item.id);
@@ -40,22 +35,22 @@ export default function MobileBottomNav({ currentView, setCurrentView, user, col
             <button
               key={item.id}
               onClick={handleClick}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 relative ${
-                isActive ? 'text-brand-blue' : 'text-slate-400 hover:text-slate-600'
+              className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-500 relative ${
+                isActive ? 'text-white' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
-              <div className={`transition-transform duration-300 relative ${isActive ? 'scale-110 -translate-y-0.5' : ''}`}>
+              <div className={`transition-all duration-500 relative ${isActive ? 'scale-125 -translate-y-1' : 'group-hover:scale-110'}`}>
                 {item.icon}
                 {item.id === 'collaboration' && collabBadge > 0 && (
-                  <div className="absolute -top-1 -right-1 h-3 w-3 bg-brand-blue rounded-full border-2 border-white shadow-sm" />
+                  <div className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-rose-500 rounded-full border-2 border-slate-900 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
                 )}
               </div>
-              <span className={`text-[8px] font-black uppercase tracking-widest mt-1 transition-opacity ${isActive ? 'opacity-100' : 'opacity-60'}`}>
+              <span className={`text-[7px] font-black uppercase tracking-[0.2em] mt-2 transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-40 scale-90'}`}>
                 {item.label}
               </span>
               
               {isActive && (
-                <div className="absolute -bottom-1 w-1 h-1 bg-brand-blue rounded-full" />
+                <div className="absolute bottom-0 w-5 h-1 bg-brand-blue rounded-full shadow-[0_0_12px_rgba(79,70,229,0.5)] animate-fade-in" />
               )}
             </button>
           );
