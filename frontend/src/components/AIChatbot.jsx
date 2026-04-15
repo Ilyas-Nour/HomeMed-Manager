@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, X, Bot, User, Activity, Loader2, MinusCircle, Sparkles, Heart } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import aiService from '../services/aiService';
 
 /**
@@ -156,7 +157,20 @@ export default function AIChatbot() {
                         ? 'bg-indigo-600 text-white rounded-[1.5rem] rounded-tr-none shadow-lg shadow-indigo-600/10' 
                         : 'bg-slate-50 text-slate-800 rounded-[1.5rem] rounded-tl-none border border-slate-100'
                       }`}>
-                        {msg.content}
+                        {isUser ? (
+                          <div className="whitespace-pre-wrap">{msg.content}</div>
+                        ) : (
+                          <ReactMarkdown 
+                            components={{
+                              ul: ({node, ...props}) => <ul className="list-disc ml-6 space-y-1.5 my-3" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal ml-6 space-y-1.5 my-3" {...props} />,
+                              li: ({node, ...props}) => <li className="font-semibold" {...props} />,
+                              p: ({node, ...props}) => <p className="whitespace-pre-wrap mb-2 last:mb-0" {...props} />,
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        )}
                       </div>
                       <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-2 px-1">
                         {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
