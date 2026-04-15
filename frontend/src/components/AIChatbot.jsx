@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, X, Bot, User, Sparkles, Loader2, MinusCircle } from 'lucide-react';
+import { MessageSquare, Send, X, Bot, User, Activity, Loader2, MinusCircle } from 'lucide-react';
 import aiService from '../services/aiService';
 
 /**
@@ -55,105 +55,124 @@ export default function AIChatbot() {
     <div className="fixed bottom-6 right-6 z-[2000] flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[90vw] sm:w-[400px] h-[500px] sm:h-[600px] bg-white border border-slate-200 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-up">
-          {/* Header */}
-          <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-brand-blue/20 flex items-center justify-center border border-white/10">
-                <Sparkles size={20} className="text-brand-blue" />
+        <div className="mb-4 w-[90vw] sm:w-[420px] h-[550px] sm:h-[650px] bg-white/90 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden animate-fade-up ring-1 ring-black/5">
+          
+          {/* Header — Sophisticated & Deep */}
+          <div className="p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative flex items-center justify-between border-b border-white/5">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-indigo-400/20 relative group overflow-hidden">
+                <div className="absolute inset-0 bg-indigo-500/10 animate-pulse group-hover:bg-indigo-500/20 transition-all" />
+                <Activity size={22} className="text-indigo-400 relative z-10" />
               </div>
               <div>
-                <h3 className="text-sm font-bold tracking-tight">HomeMed Assistant</h3>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">En ligne</span>
-                </div>
+                <h3 className="text-[15px] font-black tracking-tight leading-tight text-indigo-400">HomeMed AI</h3>
               </div>
             </div>
             <button 
               onClick={() => setIsOpen(false)}
-              className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-slate-400 transition-all"
+              className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-white/10 text-white/40 hover:text-white transition-all active:scale-90 border border-white/5"
             >
-              <X size={18} />
+              <X size={20} />
             </button>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/30 no-scrollbar">
-            {messages.map((msg, idx) => (
-              <div 
-                key={idx} 
-                className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} animate-fade-in`}
-              >
-                <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm border ${
-                  msg.role === 'user' 
-                  ? 'bg-slate-100 border-slate-200 text-slate-600' 
-                  : 'bg-brand-blue border-brand-blue text-white'
-                }`}>
-                  {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
-                </div>
+          {/* Messages Area — Spacious & Clean */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/10 no-scrollbar">
+            {messages.map((msg, idx) => {
+              const isUser = msg.role === 'user';
+              return (
+                <div 
+                  key={idx} 
+                  className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fade-in`}
+                >
+                  <div className={`flex gap-3 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                    {/* Compact Avatar */}
+                    <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm border ${
+                      isUser 
+                      ? 'bg-white border-slate-200 text-slate-400' 
+                      : 'bg-indigo-600 border-indigo-500 text-white'
+                    }`}>
+                      {isUser ? <User size={14} className="opacity-50" /> : <Bot size={14} />}
+                    </div>
 
-                <div className={`max-w-[80%] p-3 text-sm font-medium shadow-sm ${
-                  msg.role === 'user' 
-                  ? 'bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tr-none' 
-                  : 'bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-none'
-                }`}>
-                  {msg.content}
+                    {/* Message Bubble */}
+                    <div className={`relative px-4 py-3 text-[13px] font-semibold leading-relaxed transition-all ${
+                      isUser 
+                      ? 'bg-gradient-to-tr from-indigo-600 to-violet-600 text-white rounded-[1.25rem] rounded-tr-none shadow-lg shadow-indigo-600/20' 
+                      : 'bg-white border border-slate-100 text-slate-800 rounded-[1.25rem] rounded-tl-none shadow-sm'
+                    }`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                  
+                  {/* Subtle Timestamp */}
+                  <span className={`text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1.5 ${isUser ? 'mr-11' : 'ml-11'}`}>
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             
             {isThinking && (
               <div className="flex gap-3 items-start animate-fade-in">
-                <div className="h-8 w-8 rounded-lg bg-brand-blue border border-brand-blue text-white flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-xl bg-indigo-600 border border-indigo-500 text-white flex items-center justify-center shrink-0 shadow-sm">
                   <Bot size={14} />
                 </div>
-                <div className="bg-white border border-slate-100 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2">
-                  <Loader2 size={14} className="animate-spin text-brand-blue" />
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">L'IA réfléchit...</span>
+                <div className="bg-white border border-slate-100 p-4 rounded-[1.25rem] rounded-tl-none shadow-sm flex items-center gap-3">
+                  <div className="flex gap-1">
+                    <span className="h-1 w-1 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="h-1 w-1 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="h-1 w-1 bg-indigo-600 rounded-full animate-bounce"></span>
+                  </div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Analyse en cours</span>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Footer / Input Area */}
-          <div className="p-4 bg-white border-t border-slate-100">
+          {/* Footer — Integrated & Floating Input */}
+          <div className="p-6 bg-white/50 backdrop-blur-md border-t border-slate-100/50 relative z-30 mb-2">
             <form onSubmit={handleSend} className="relative group">
               <input 
                 type="text"
-                placeholder="Posez votre question..."
+                placeholder="Votre message..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-5 pr-12 text-sm font-semibold focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all duration-300 placeholder:text-slate-300"
+                className="w-full h-14 bg-white border border-slate-200 rounded-[1.25rem] px-6 pr-14 text-[13px] font-bold text-slate-800 focus:bg-white focus:border-indigo-600/30 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all duration-300 placeholder:text-slate-300 shadow-sm group-hover:shadow-md"
               />
               <button 
                 type="submit"
                 disabled={!input.trim() || isThinking}
-                className="absolute right-2 top-2 h-8 w-8 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-brand-blue transition-all active:scale-90 disabled:opacity-20"
+                className="absolute right-2 top-2 h-10 w-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-600 transition-all active:scale-90 disabled:opacity-20 shadow-lg shadow-slate-900/10"
               >
-                <Send size={14} className="rotate-45" />
+                <Send size={16} className="rotate-45" />
               </button>
             </form>
-            <p className="mt-3 text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest">
-              Alimenté par HomeMed AI
-            </p>
+            <div className="flex items-center justify-center gap-1.5 mt-4 opacity-40 group hover:opacity-100 transition-opacity">
+               <Activity size={10} className="text-indigo-600" />
+               <p className="text-[9px] text-center font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
+                 HomeMed Intelligent Engine
+               </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Floating Toggle Button */}
+      {/* Floating Toggle Button — Balanced & Sharp */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`h-14 w-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-300 active:scale-90 ${
+        className={`h-16 w-16 rounded-3xl flex items-center justify-center shadow-[0_15px_35px_-5px_rgba(0,0,0,0.2)] transition-all duration-500 active:scale-90 relative group ${
           isOpen 
-          ? 'bg-white text-slate-900 border border-slate-200' 
-          : 'bg-slate-900 text-white hover:bg-brand-blue hover:-translate-y-1'
+          ? 'bg-white text-slate-900 border border-slate-100 hover:rotate-90' 
+          : 'bg-slate-900 text-white hover:bg-slate-800 hover:-translate-y-2'
         }`}
       >
-        {isOpen ? <MinusCircle size={28} /> : <MessageSquare size={28} />}
-        {!isOpen && (
-          <span className="absolute -top-1 -right-1 h-4 w-4 bg-brand-blue rounded-full border-2 border-white animate-pulse" />
+        {isOpen ? <X size={28} /> : (
+          <div className="relative">
+            <MessageSquare size={28} className="relative z-10" />
+            <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-indigo-500 rounded-full border-2 border-slate-900 animate-pulse group-hover:scale-125 transition-transform" />
+          </div>
         )}
       </button>
     </div>
