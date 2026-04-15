@@ -49,7 +49,7 @@ class AIChatController extends Controller
                 'HTTP-Referer' => config('app.url'),
                 'X-Title' => 'HomeMed Manager',
             ])->post('https://openrouter.ai/api/v1/chat/completions', [
-                'model' => 'openai/gpt-3.5-turbo',
+                'model' => 'google/gemini-flash-1.5',
                 'messages' => $messages,
             ]);
 
@@ -63,20 +63,21 @@ class AIChatController extends Controller
             $aiData = $response->json();
             $text = $aiData['choices'][0]['message']['content'] ?? '';
 
-            // --- Interception d'Action ---
-            if (preg_match('/\[ACTION:\s*(.*?)\]/si', $text, $matches)) {
-                $actionJson = $matches[1];
-                \Log::info("AI Action Detected: " . $actionJson);
-                $action = json_decode($actionJson, true);
-                if ($action) {
-                    try {
-                        $this->handleAiAction($user, $action);
-                        \Log::info("AI Action Executed: " . $action['type']);
-                    } catch (\Exception $e) {
-                        \Log::error("AI Action Failed: " . $e->getMessage());
+            // --- Interception d'Action (Supporte plusieurs actions) ---
+            if (preg_match_all('/\[ACTION:\s*(.*?)\]/si', $text, $matches)) {
+                foreach ($matches[1] as $actionJson) {
+                    \Log::info("AI Action Detected: " . $actionJson);
+                    $action = json_decode($actionJson, true);
+                    if ($action) {
+                        try {
+                            $this->handleAiAction($user, $action);
+                            \Log::info("AI Action Executed: " . $action['type']);
+                        } catch (\Exception $e) {
+                            \Log::error("AI Action Failed: " . $e->getMessage());
+                        }
                     }
                 }
-                // Nettoyer la réponse pour l'utilisateur
+                // Nettoyer tous les tags de la réponse
                 $cleanText = preg_replace('/\[ACTION:\s*(.*?)\]/si', '', $text);
                 $aiData['choices'][0]['message']['content'] = trim($cleanText);
             }
@@ -230,16 +231,21 @@ Ta mission est d'agir avec l'expertise d'un pharmacien d'officine au Maroc.
 IMPORTANT : Tu as accès aux données réelles de l'utilisateur (Context ci-dessous). Utilise ces données pour donner des réponses personnalisées et des rappels précis.
 
 CAPACITÉS D'ACTION (POUVOIR RÉEL) :
-Tu peux modifier les données de l'utilisateur. Pour déclencher une action, ajoute ce tag à la fin de ton message :
+Tu peux modifier les données de l'utilisateur. C'est OBLIGATOIRE : dès que tu dis à l'utilisateur que tu modifies quelque chose ou que tu acceptes une demande, tu DOIS inclure le tag correspondant. Si tu ne l'inclus pas, rien ne sera modifié.
+
+Pour déclencher une action, ajoute ce tag à la fin de ton message :
 [ACTION: {\"type\": \"TYPE_ACTION\", \"data\": { ... }}]
+
+Tu peux envoyer PLUSIEURS tags à la suite si nécessaire (ex: pour accepter plusieurs demandes).
 
 Types d'actions supportés :
 1. UPDATE_PROFILE : Changer le nom. Data: {\"name\": \"Nouveau Nom\"}
 2. UPDATE_MEDICAMENT : Modifier un médoc (stock, nom, dosage). Data: {\"id\": ID_MED, \"quantite\": NOMBRE, \"nom\": \"NOM\", \"dosage\": \"DOSAGE\"}
 3. HANDLE_REQUEST : Gérer les demandes. Data: {\"id\": ID_REQ, \"status\": \"accepted\" | \"rejected\"}
 
-Règles :
-- Action uniquement si demandée explicitement ou logiquement nécessaire.
+Règles de fer :
+- Tu as les IDs dans le contexte. Utilise-les !
+- Ne mens jamais à l'utilisateur : si tu dis \"C'est fait\", le tag ACTION DOIT être présent.
 - JAMAIS de changement de mot de passe.
 - Confirme toujours l'action en texte dans la réponse.
 
