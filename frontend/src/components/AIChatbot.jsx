@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, X, Bot, User, Activity, Loader2, MinusCircle } from 'lucide-react';
+import { MessageSquare, Send, X, Bot, User, Activity, Loader2, MinusCircle, Sparkles, Heart } from 'lucide-react';
 import aiService from '../services/aiService';
 
 /**
@@ -51,127 +51,183 @@ export default function AIChatbot() {
     }
   };
 
+  const quickActions = [
+    { id: 'reminders', text: 'Quels sont mes rappels ?', icon: <Activity size={14} /> },
+    { id: 'stock', text: 'Vérifier mon stock', icon: <Bot size={14} /> },
+    { id: 'equivalents', text: 'Équivalents (Maroc)', icon: <Sparkles size={14} /> },
+    { id: 'advice', text: 'Conseils traitement', icon: <Bot size={14} /> },
+  ];
+
+  const handleQuickAction = async (text) => {
+    if (isThinking) return;
+    const userMessage = { role: 'user', content: text };
+    setMessages(prev => [...prev, userMessage]);
+    setIsThinking(true);
+    try {
+      const history = messages.concat(userMessage);
+      const botResponse = await aiService.sendMessage(history);
+      setMessages(prev => [...prev, { role: 'assistant', content: botResponse }]);
+    } catch (error) {
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "Désolé, j'ai rencontré une erreur technique. Veuillez réessayer plus tard." 
+      }]);
+    } finally {
+      setIsThinking(false);
+    }
+  };
+
+  const isInitialState = messages.length <= 1;
+
   return (
     <div className="fixed bottom-6 right-6 z-[2000] flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[90vw] sm:w-[420px] h-auto max-h-[calc(100vh-140px)] bg-white/90 backdrop-blur-2xl border border-white/40 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden animate-fade-up ring-1 ring-black/5">
+        <div className="mb-4 w-[95vw] sm:w-[440px] h-auto max-h-[calc(100vh-140px)] bg-white border border-slate-100 rounded-[2.5rem] shadow-[0_30px_90px_-20px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden animate-fade-up ring-1 ring-black/[0.02]">
           
-          {/* Header — Sophisticated & Deep */}
-          <div className="p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative flex items-center justify-between border-b border-white/5">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-indigo-400/20 relative group overflow-hidden">
-                <div className="absolute inset-0 bg-indigo-500/10 animate-pulse group-hover:bg-indigo-500/20 transition-all" />
-                <Activity size={22} className="text-indigo-400 relative z-10" />
+          {/* Header — Minimalist & Transparent */}
+          <div className="px-6 py-5 flex items-center justify-between bg-white/50 backdrop-blur-md border-b border-slate-50 relative z-50">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center animate-pulse">
+                <Heart size={16} className="text-white fill-white" />
               </div>
-              <div>
-                <h3 className="text-[15px] font-black tracking-tight leading-tight text-indigo-400">HomeMed AI</h3>
-              </div>
+              <h3 className="text-sm font-black tracking-tight text-slate-800">HomeMed AI</h3>
             </div>
             <button 
               onClick={() => setIsOpen(false)}
-              className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-white/10 text-white/40 hover:text-white transition-all active:scale-90 border border-white/5"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-all active:scale-90"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
 
-          {/* Messages Area — Spacious & Clean */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/10 no-scrollbar">
-            {messages.map((msg, idx) => {
-              const isUser = msg.role === 'user';
-              return (
-                <div 
-                  key={idx} 
-                  className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fade-in`}
-                >
-                  <div className={`flex gap-3 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                    {/* Compact Avatar */}
-                    <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm border ${
-                      isUser 
-                      ? 'bg-white border-slate-200 text-slate-400' 
-                      : 'bg-indigo-600 border-indigo-500 text-white'
-                    }`}>
-                      {isUser ? <User size={14} className="opacity-50" /> : <Bot size={14} />}
-                    </div>
+          {/* Messages Area / Welcome Screen */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar scroll-smooth bg-white">
+            {isInitialState ? (
+              <div className="h-full flex flex-col items-center justify-center space-y-8 py-10 animate-fade-in">
+                {/* The Orb — Pulsing Mesh Gradient */}
+                <div className="relative h-32 w-32 group">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500 via-teal-400 to-sky-300 rounded-full blur-2xl opacity-40 animate-pulse group-hover:opacity-60 transition-opacity" />
+                  <div className="relative h-full w-full rounded-full bg-gradient-to-br from-white/80 via-white/20 to-transparent backdrop-blur-sm border border-white/50 shadow-inner flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-2 bg-gradient-to-tr from-emerald-400/30 via-teal-400/30 to-sky-400/30 rounded-full animate-[spin_8s_linear_infinite]" />
+                    <div className="absolute inset-4 bg-gradient-to-bl from-cyan-400/20 via-blue-400/20 to-indigo-400/20 rounded-full animate-[spin_12s_linear_infinite_reverse]" />
+                    <Heart size={32} className="text-emerald-500 fill-emerald-500 relative z-10 animate-pulse" />
+                  </div>
+                </div>
 
-                    {/* Message Bubble */}
-                    <div className={`relative px-4 py-3 text-[13px] font-semibold leading-relaxed transition-all ${
-                      isUser 
-                      ? 'bg-gradient-to-tr from-indigo-600 to-violet-600 text-white rounded-[1.25rem] rounded-tr-none shadow-lg shadow-indigo-600/20' 
-                      : 'bg-white border border-slate-100 text-slate-800 rounded-[1.25rem] rounded-tl-none shadow-sm'
-                    }`}>
-                      {msg.content}
-                    </div>
-                  </div>
-                  
-                  {/* Subtle Timestamp */}
-                  <span className={`text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-1.5 ${isUser ? 'mr-11' : 'ml-11'}`}>
-                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                <div className="text-center space-y-2">
+                  <h2 className="text-2xl font-black tracking-tight text-slate-900">
+                    Ask HomeMed AI anything
+                  </h2>
+                  <p className="text-sm font-medium text-slate-400">
+                    Votre assistant santé intelligent, 24/7.
+                  </p>
                 </div>
-              );
-            })}
-            
-            {isThinking && (
-              <div className="flex gap-3 items-start animate-fade-in">
-                <div className="h-8 w-8 rounded-xl bg-indigo-600 border border-indigo-500 text-white flex items-center justify-center shrink-0 shadow-sm">
-                  <Bot size={14} />
-                </div>
-                <div className="bg-white border border-slate-100 p-4 rounded-[1.25rem] rounded-tl-none shadow-sm flex items-center gap-3">
-                  <div className="flex gap-1">
-                    <span className="h-1 w-1 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="h-1 w-1 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="h-1 w-1 bg-indigo-600 rounded-full animate-bounce"></span>
-                  </div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Analyse en cours</span>
+
+                {/* Quick Actions Grid */}
+                <div className="w-full grid grid-cols-2 gap-3 mt-4">
+                  {quickActions.map((action) => (
+                    <button
+                      key={action.id}
+                      onClick={() => handleQuickAction(action.text)}
+                      className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-left hover:bg-slate-100 transition-all group active:scale-[0.98]"
+                    >
+                      <div className="h-8 w-8 rounded-lg bg-white border border-slate-100 shadow-sm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <span className="text-indigo-600">{action.icon}</span>
+                      </div>
+                      <span className="text-xs font-bold text-slate-700 leading-snug">
+                        {action.text}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
+            ) : (
+              <div className="space-y-6">
+                {messages.map((msg, idx) => {
+                  const isUser = msg.role === 'user';
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} animate-fade-in`}
+                    >
+                      <div className={`max-w-[85%] px-5 py-3.5 text-sm font-semibold leading-relaxed ${
+                        isUser 
+                        ? 'bg-indigo-600 text-white rounded-[1.5rem] rounded-tr-none shadow-lg shadow-indigo-600/10' 
+                        : 'bg-slate-50 text-slate-800 rounded-[1.5rem] rounded-tl-none border border-slate-100'
+                      }`}>
+                        {msg.content}
+                      </div>
+                      <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-2 px-1">
+                        {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  );
+                })}
+                
+                {isThinking && (
+                  <div className="flex flex-col items-start animate-fade-in pl-1">
+                    <div className="bg-slate-50 border border-slate-100 px-5 py-4 rounded-[1.5rem] rounded-tl-none flex items-center gap-3">
+                      <div className="flex gap-1.5">
+                        <span className="h-1.5 w-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="h-1.5 w-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="h-1.5 w-1.5 bg-indigo-500 rounded-full animate-bounce"></span>
+                      </div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IA réfléchit</span>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
 
-          {/* Footer — Integrated & Floating Input */}
-          <div className="p-6 bg-white/50 backdrop-blur-md border-t border-slate-100/50 relative z-30 mb-2">
+          {/* Footer — Floating Pill Input */}
+          <div className="p-6 bg-white shrink-0">
             <form onSubmit={handleSend} className="relative group">
-              <input 
-                type="text"
-                placeholder="Votre message..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="w-full h-14 bg-white border border-slate-200 rounded-[1.25rem] px-6 pr-14 text-[13px] font-bold text-slate-800 focus:bg-white focus:border-indigo-600/30 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all duration-300 placeholder:text-slate-300 shadow-sm group-hover:shadow-md"
-              />
-              <button 
-                type="submit"
-                disabled={!input.trim() || isThinking}
-                className="absolute right-2 top-2 h-10 w-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-600 transition-all active:scale-90 disabled:opacity-20 shadow-lg shadow-slate-900/10"
-              >
-                <Send size={16} className="rotate-45" />
-              </button>
+              <div className="relative flex items-center">
+                <input 
+                  type="text"
+                  placeholder={isInitialState ? "Message..." : "Votre question..."}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  className="w-full h-14 bg-slate-50/50 border border-slate-100 rounded-full px-7 pr-16 text-sm font-bold text-slate-800 focus:bg-white focus:border-indigo-500/20 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all duration-300 placeholder:text-slate-300"
+                />
+                <button 
+                  type="submit"
+                  disabled={!input.trim() || isThinking}
+                  className="absolute right-2 h-11 w-11 bg-slate-900 text-white rounded-full flex items-center justify-center hover:bg-indigo-600 transition-all active:scale-90 disabled:opacity-20 shadow-lg shadow-black/10"
+                >
+                  <Send size={18} className="-rotate-90 translate-y-[1px]" />
+                </button>
+              </div>
             </form>
-            <div className="flex items-center justify-center gap-1.5 mt-4 opacity-40 group hover:opacity-100 transition-opacity">
-               <Activity size={10} className="text-indigo-600" />
-               <p className="text-[9px] text-center font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
-                 HomeMed Intelligent Engine
-               </p>
-            </div>
+            {!isInitialState && (
+              <div className="flex items-center justify-center gap-1.5 mt-4 opacity-50">
+                 <Sparkles size={10} className="text-indigo-600" />
+                 <p className="text-[10px] text-center font-black text-slate-400 uppercase tracking-[0.2em] leading-none">
+                   HomeMed Intelligent Engine
+                 </p>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Floating Toggle Button — Balanced & Sharp */}
+      {/* Floating Toggle Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`h-16 w-16 rounded-3xl flex items-center justify-center shadow-[0_15px_35px_-5px_rgba(0,0,0,0.2)] transition-all duration-500 active:scale-90 relative group ${
+        className={`h-16 w-16 rounded-[2rem] flex items-center justify-center shadow-[0_20px_50px_-10px_rgba(0,0,0,0.2)] transition-all duration-500 active:scale-90 relative overflow-hidden group ${
           isOpen 
-          ? 'bg-white text-slate-900 border border-slate-100 hover:rotate-90' 
-          : 'bg-slate-900 text-white hover:bg-slate-800 hover:-translate-y-2'
+          ? 'bg-slate-900 text-white hover:bg-black' 
+          : 'bg-white text-slate-900 border border-slate-100 hover:-translate-y-2'
         }`}
       >
+        <div className={`absolute inset-0 bg-gradient-to-tr from-emerald-500 to-teal-400 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${isOpen ? 'hidden' : 'block'}`} />
         {isOpen ? <X size={28} /> : (
           <div className="relative">
-            <MessageSquare size={28} className="relative z-10" />
-            <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-indigo-500 rounded-full border-2 border-slate-900 animate-pulse group-hover:scale-125 transition-transform" />
+            <Heart size={28} className="relative z-10 text-emerald-500 fill-emerald-500 animate-pulse" />
+            <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-emerald-500 rounded-full border-2 border-white animate-ping" />
           </div>
         )}
       </button>
