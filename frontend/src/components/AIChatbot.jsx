@@ -55,7 +55,7 @@ export default function AIChatbot() {
     <div className="fixed bottom-6 right-6 z-[2000] flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[90vw] sm:w-[420px] h-[550px] sm:h-[650px] bg-white/90 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden animate-fade-up ring-1 ring-black/5">
+        <div className="mb-4 w-[90vw] sm:w-[420px] h-auto max-h-[calc(100vh-140px)] bg-white/90 backdrop-blur-2xl border border-white/40 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden animate-fade-up ring-1 ring-black/5">
           
           {/* Header — Sophisticated & Deep */}
           <div className="p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative flex items-center justify-between border-b border-white/5">
