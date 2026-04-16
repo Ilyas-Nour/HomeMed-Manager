@@ -33,8 +33,8 @@ class AIChatController extends Controller
             return response()->json(['message' => 'Le service IA est temporairement désactivé par l\'administrateur.'], 503);
         }
 
-        // Read API key from DB settings, fall back to .env
-        $apiKey = Setting::get('ai_api_key') ?: env('OPENROUTER_API_KEY');
+        // Read API key from DB settings, fall back to config
+        $apiKey = Setting::get('ai_api_key') ?: config('services.openrouter.key');
         if (!$apiKey) {
             return response()->json(['message' => 'Service IA indisponible (Clé API manquante). Contactez l\'administrateur.'], 500);
         }
