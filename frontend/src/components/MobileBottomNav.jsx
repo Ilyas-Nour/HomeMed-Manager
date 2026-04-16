@@ -10,19 +10,24 @@ import {
  */
 export default function MobileBottomNav({ currentView, setCurrentView, user, collabBadge = 0 }) {
   const navItems = [
-    { id: 'overview',    label: 'Accueil',  icon: <Gauge size={20} weight="bold" /> },
-    { id: 'medicaments', label: 'Médocs',   icon: <Pill size={20} weight="bold" /> },
-    { id: 'collaboration', label: 'Entraide', icon: <ChatCircle size={20} weight="bold" /> },
-    { id: 'groups',      label: 'Grouper',  icon: <Users size={20} weight="bold" /> },
-    { id: 'settings',    label: 'Paramètres', icon: <Gear size={20} weight="bold" /> },
+    { id: 'overview',    label: 'Accueil',  icon: (w) => <Gauge size={22} weight={w} /> },
+    { id: 'medicaments', label: 'Médocs',   icon: (w) => <Pill size={22} weight={w} /> },
+    { id: 'collaboration', label: 'Entraide', icon: (w) => <ChatCircle size={22} weight={w} /> },
+    { id: 'groups',      label: 'Grouper',  icon: (w) => <Users size={22} weight={w} /> },
+    { id: 'settings',    label: 'Réglages', icon: (w) => <Gear size={22} weight={w} /> },
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-6 left-0 right-0 z-[100] px-6">
-      <div className="bg-slate-900/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] h-18 py-3 rounded-[32px] flex items-center justify-around relative overflow-hidden ring-1 ring-white/5">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] animate-fade-up">
+      <div className="bg-white/95 backdrop-blur-3xl border-t border-slate-100/50 shadow-[0_-15px_40px_rgba(0,0,0,0.04)] pb-safe pt-3 px-4 h-auto flex items-center justify-between relative overflow-hidden rounded-t-[32px]">
         
+        {/* Subtle top indicator bar */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-slate-100/50 rounded-full mt-1" />
+
         {navItems.map(item => {
           const isActive = currentView === (item.id === 'settings' && user?.role === 'admin' && currentView === 'admin' ? 'admin' : item.id);
+          const weight = isActive ? "fill" : "bold";
+          
           const handleClick = () => {
             if (item.id === 'settings' && user?.role === 'admin') {
                setCurrentView('settings');
@@ -35,22 +40,33 @@ export default function MobileBottomNav({ currentView, setCurrentView, user, col
             <button
               key={item.id}
               onClick={handleClick}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-500 relative ${
-                isActive ? 'text-white' : 'text-slate-500 hover:text-slate-300'
-              }`}
+              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-300 relative group`}
             >
-              <div className={`transition-all duration-500 relative ${isActive ? 'scale-125 -translate-y-1' : 'group-hover:scale-110'}`}>
-                {item.icon}
-                {item.id === 'collaboration' && collabBadge > 0 && (
-                  <div className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-rose-500 rounded-full border-2 border-slate-900 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
-                )}
-              </div>
-              <span className={`text-[7px] font-black uppercase tracking-[0.2em] mt-2 transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-40 scale-90'}`}>
-                {item.label}
-              </span>
-              
+              {/* Active Indicator Glow */}
               {isActive && (
-                <div className="absolute bottom-0 w-5 h-1 bg-brand-blue rounded-full shadow-[0_0_12px_rgba(79,70,229,0.5)] animate-fade-in" />
+                <div className="absolute inset-0 mx-auto w-12 h-12 bg-indigo-50/80 rounded-2xl -translate-y-1 animate-fade-in" />
+              )}
+              
+              <div className={`transition-all duration-500 relative flex flex-col items-center ${
+                isActive ? 'text-brand-blue -translate-y-1 scale-110' : 'text-slate-400 group-hover:text-slate-600'
+              }`}>
+                <div className="relative">
+                    {item.icon(weight)}
+                    {item.id === 'collaboration' && collabBadge > 0 && (
+                        <div className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-rose-500 rounded-full border-2 border-white shadow-sm animate-pulse" />
+                    )}
+                </div>
+                
+                <span className={`text-[8px] font-black uppercase tracking-[0.15em] mt-1.5 transition-all duration-300 ${
+                  isActive ? 'opacity-100' : 'opacity-40'
+                }`}>
+                  {item.label}
+                </span>
+              </div>
+              
+              {/* Bottom Dot */}
+              {isActive && (
+                <div className="absolute -bottom-1 w-1 h-1 bg-brand-blue rounded-full shadow-[0_0_8px_rgba(79,70,229,0.4)]" />
               )}
             </button>
           );

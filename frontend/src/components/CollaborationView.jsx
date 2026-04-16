@@ -164,13 +164,20 @@ export default function CollaborationView({ onChatOpen, showToast }) {
       </div>
 
       {filteredRequests.length === 0 ? (
-        <div className="bg-slate-50 border border-slate-100 border-dashed rounded-3xl p-12 text-center space-y-6">
-           <div className="relative mx-auto h-32 w-32 opacity-20 filter grayscale">
-               <img src="/empty_collaboration_state.png" alt="Vide" className="w-full h-full object-contain" />
+        <div className="bg-white border-2 border-dashed border-slate-100 rounded-[40px] p-16 text-center space-y-6 relative overflow-hidden group">
+           {/* Decorative Background Glow */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-slate-50 rounded-full blur-3xl opacity-50 group-hover:scale-110 transition-transform duration-700" />
+           
+           <div className="relative mx-auto h-24 w-24 bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center justify-center text-slate-200 group-hover:text-brand-blue group-hover:border-brand-blue/10 transition-all duration-500">
+               <Inbox size={48} strokeWidth={1.5} className="group-hover:scale-110 transition-transform duration-500" />
            </div>
-           <div className="space-y-1">
-              <p className="text-lg font-black text-slate-900">Tout est à jour</p>
-              <p className="text-sm text-slate-400 max-w-[240px] mx-auto font-medium">Aucune demande active pour le moment.</p>
+
+           <div className="space-y-2 relative z-10">
+              <p className="text-xl font-black text-slate-900 tracking-tight">Tout est à jour</p>
+              <p className="text-sm text-slate-400 max-w-[280px] mx-auto font-medium leading-relaxed">
+                  Aucune demande active. <br /> 
+                  Vos échanges et partages apparaîtront ici.
+              </p>
            </div>
         </div>
       ) : (

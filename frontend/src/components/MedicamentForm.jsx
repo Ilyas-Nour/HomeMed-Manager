@@ -272,7 +272,9 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                       value={formData.date_expiration || ''} onChange={e => setFormData({ ...formData, date_expiration: e.target.value })}
                       className="w-full h-14 bg-white border border-slate-100 rounded-2xl px-2 text-[10px] font-black text-slate-900 focus:ring-4 focus:ring-slate-500/5 transition-all shadow-sm"
                     />
-                 </div>              {/* Protocoles de Rappel */}
+                 </div>
+              </div>
+              {/* Protocoles de Rappel */}
               <div className="space-y-6 pt-6 border-t border-slate-50">
                  <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-3">
@@ -369,11 +371,9 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                   </div>
                )}
            </button>
+          </div>
         </div>
-</button>
-        </div>
-      </div>
-    </div>,
+      </div>,
     document.body
   );
 }

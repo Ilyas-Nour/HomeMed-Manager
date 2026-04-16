@@ -199,7 +199,6 @@ export default function MedicamentDetailsModal({ isOpen, onClose, medicament, on
         </div>
       </div>
     </div>,
-    </div>,
     document.body
   );
 }

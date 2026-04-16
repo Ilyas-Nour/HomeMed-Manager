@@ -101,6 +101,5 @@ export default function MedicamentCard({ medicament, onEdit, onDelete, onDetails
       {/* Decorative Bottom Line */}
       <div className={`absolute inset-x-0 bottom-0 h-1 transition-all duration-500 origin-left scale-x-0 group-hover:scale-x-100 ${isStockLow ? 'bg-rose-500' : 'bg-brand-blue'}`} />
     </div>
-    </div>
   );
 }
