@@ -277,11 +277,11 @@ export default function GroupsView({ onChatOpen, showToast }) {
       {isInviteModalOpen && createPortal(
         <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
            <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-xl animate-fade-in" onClick={() => setIsInviteModalOpen(false)} />
-           <div className="relative w-full sm:max-w-md bg-white rounded-t-[40px] sm:rounded-[40px] animate-fade-up overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] border border-white/20">
+           <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl animate-fade-up overflow-hidden shadow-xl border border-slate-100">
               <div className="p-8 sm:p-10">
                  <div className="flex items-center justify-between mb-10">
                     <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 bg-indigo-50 text-brand-blue rounded-2xl flex items-center justify-center shadow-inner">
+                        <div className="h-12 w-12 bg-indigo-50 text-brand-blue rounded-xl flex items-center justify-center shadow-sm">
                            <UserPlus size={24} weight="bold" />
                         </div>
                         <div>
@@ -289,7 +289,7 @@ export default function GroupsView({ onChatOpen, showToast }) {
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">Réseau de Confiance</p>
                         </div>
                     </div>
-                    <button onClick={() => setIsInviteModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-2xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 transform hover:rotate-90"><X size={20} weight="bold" /></button>
+                    <button onClick={() => setIsInviteModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 transform hover:rotate-90"><X size={20} weight="bold" /></button>
                  </div>
                  
                  <form onSubmit={handleInvite} className="space-y-8">
@@ -302,10 +302,10 @@ export default function GroupsView({ onChatOpen, showToast }) {
                          placeholder="nom@exemple.com" 
                          value={emailInvite} 
                          onChange={e => setEmailInvite(e.target.value)} 
-                         className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-8 focus:ring-brand-blue/5 outline-none transition-all duration-300" 
+                         className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-lg text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all duration-300" 
                        />
                     </div>
-                    <button type="submit" disabled={loading} className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/10 hover:bg-brand-blue hover:shadow-brand-blue/20 transition-all duration-500 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95">
+                    <button type="submit" disabled={loading} className="w-full h-14 bg-[#20835b] hover:bg-[#1a6b4a] text-white rounded-lg font-black text-xs uppercase tracking-[0.2em] shadow-md transition-all duration-500 disabled:opacity-50 flex items-center justify-center gap-3 active:scale-95">
                        {loading ? (
                          <>
                            <CircleNotch className="animate-spin" size={20} weight="bold" />
@@ -330,11 +330,11 @@ export default function GroupsView({ onChatOpen, showToast }) {
       {isGroupModalOpen && createPortal(
         <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
            <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-xl animate-fade-in" onClick={() => setIsGroupModalOpen(false)} />
-           <div className="relative w-full sm:max-w-md bg-white rounded-t-[40px] sm:rounded-[40px] animate-fade-up overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] border border-white/20">
+           <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl animate-fade-up overflow-hidden shadow-xl border border-slate-100">
               <div className="p-8 sm:p-10">
                  <div className="flex items-center justify-between mb-10">
                     <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                        <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
                            <UsersThree size={24} weight="bold" />
                         </div>
                         <div>
@@ -342,7 +342,7 @@ export default function GroupsView({ onChatOpen, showToast }) {
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">Expansion du Cercle</p>
                         </div>
                     </div>
-                    <button onClick={() => setIsGroupModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-2xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 transform hover:rotate-90"><X size={20} weight="bold" /></button>
+                    <button onClick={() => setIsGroupModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 transform hover:rotate-90"><X size={20} weight="bold" /></button>
                  </div>
 
                  <form onSubmit={handleCreateGroup} className="space-y-8">
@@ -355,10 +355,10 @@ export default function GroupsView({ onChatOpen, showToast }) {
                          placeholder="ex: Maison Dupont, Equipe Soins..." 
                          value={nomGroupe} 
                          onChange={e => setNomGroupe(e.target.value)} 
-                         className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-8 focus:ring-brand-blue/5 outline-none transition-all duration-300" 
+                         className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-lg text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all duration-300" 
                        />
                     </div>
-                    <button type="submit" disabled={loading} className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/10 hover:bg-brand-blue hover:shadow-brand-blue/20 transition-all duration-500 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-4">
+                    <button type="submit" disabled={loading} className="w-full h-14 bg-[#20835b] hover:bg-[#1a6b4a] text-white rounded-lg font-black text-xs uppercase tracking-[0.2em] shadow-md transition-all duration-500 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-4">
                        {loading ? (
                          <>
                            <CircleNotch className="animate-spin" size={20} weight="bold" />

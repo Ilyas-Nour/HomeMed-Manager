@@ -59,7 +59,7 @@ export default function SoundToast() {
           <div className="flex items-center gap-3 mt-8">
             <button 
               onClick={() => markPris(activePopup)}
-              className="flex-[2] bg-brand-blue text-white hover:bg-slate-900 transition-all h-11 flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest shadow-lg shadow-brand-blue/10 active:scale-95"
+              className="flex-[2] bg-brand-blue text-white hover:bg-[#20835b] transition-all h-11 flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest shadow-lg shadow-brand-blue/10 active:scale-95"
             >
               <CheckCircle2 size={16} /> J'ai pris ma dose
             </button>

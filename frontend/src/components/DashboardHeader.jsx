@@ -281,7 +281,7 @@ export default function DashboardHeader({
                  <div className="p-2 space-y-1">
                     <button 
                         onClick={() => navigateToSettings('profile')} 
-                        className="w-full text-left px-4 py-3.5 rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-900 hover:text-white flex items-center justify-between transition-all duration-300 group"
+                        className="w-full text-left px-4 py-3.5 rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-[#20835b] hover:text-white flex items-center justify-between transition-all duration-300 group"
                     >
                         <div className="flex items-center gap-3">
                            <UserCircle size={18} strokeWidth={2.5} className="text-slate-400 group-hover:text-white/50" /> 
@@ -292,7 +292,7 @@ export default function DashboardHeader({
                     
                     <button 
                         onClick={() => navigateToSettings(null)} 
-                        className="w-full text-left px-4 py-3.5 rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-900 hover:text-white flex items-center justify-between transition-all duration-300 group"
+                        className="w-full text-left px-4 py-3.5 rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-[#20835b] hover:text-white flex items-center justify-between transition-all duration-300 group"
                     >
                         <div className="flex items-center gap-3">
                             <Settings size={18} strokeWidth={2.5} className="text-slate-400 group-hover:text-white/50" /> 

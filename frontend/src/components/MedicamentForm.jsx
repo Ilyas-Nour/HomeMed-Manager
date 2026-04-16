@@ -137,7 +137,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
       {/* Dynamic Backdrop */}
       <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-xl animate-fade-in" onClick={onClose} />
       
-      <div className="relative w-full sm:max-w-xl bg-white shadow-[0_40px_100px_-20px_rgba(0,0,0,0.35)] rounded-t-[40px] sm:rounded-[40px] overflow-hidden flex flex-col max-h-[96vh] sm:max-h-[90vh] animate-fade-up border border-white/20">
+      <div className="relative w-full sm:max-w-xl bg-white shadow-2xl border border-slate-100 rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[96vh] sm:max-h-[90vh] animate-fade-up">
         {/* Mobile Drag Handle — Minimalist */}
         <div className="flex justify-center pt-4 sm:hidden shrink-0">
           <div className="w-12 h-1.5 bg-slate-100 rounded-full" />
@@ -146,7 +146,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
         {/* Header — Glassmorphic & Clean */}
         <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-white/50 backdrop-blur-sm sticky top-0 z-20 shrink-0">
            <div className="flex items-center gap-5">
-              <div className="h-12 w-12 bg-slate-50 border border-slate-100/50 rounded-2xl flex items-center justify-center text-brand-blue shadow-inner">
+              <div className="h-12 w-12 bg-slate-50 border border-slate-100/50 rounded-xl flex items-center justify-center text-brand-blue shadow-sm">
                  <Pill size={22} weight="bold" />
               </div>
               <div>
@@ -158,7 +158,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
            </div>
            <button
              onClick={onClose}
-             className="h-10 w-10 flex items-center justify-center rounded-2xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 group"
+             className="h-10 w-10 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 group"
            >
               <X size={20} weight="bold" className="group-hover:rotate-90 transition-transform duration-300" />
            </button>
@@ -179,12 +179,12 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                         value={formData.nom} 
                         onChange={e => handleNomChange(e.target.value)}
                         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                        className={`w-full h-14 pl-6 pr-6 bg-slate-50/50 border ${validationErrors.nom ? 'border-rose-300 ring-4 ring-rose-50' : 'border-slate-100'} rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-[8px] focus:ring-brand-blue/5 outline-none transition-all duration-300`}
+                        className={`w-full h-14 pl-6 pr-6 bg-slate-50/50 border ${validationErrors.nom ? 'border-rose-300 ring-2 ring-rose-50' : 'border-slate-100'} rounded-lg text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all duration-300`}
                       />
                       {showSuggestions && suggestions.length > 0 && (
-                        <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-slate-100 rounded-2xl shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] z-50 p-2 overflow-hidden animate-fade-up">
+                        <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white border border-slate-100 rounded-lg shadow-lg z-50 p-2 overflow-hidden animate-fade-up">
                           {suggestions.map(s => (
-                            <button key={s.id} type="button" onClick={() => selectSuggestion(s)} className="w-full text-left px-4 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-brand-blue transition-all flex items-center gap-4">
+                            <button key={s.id} type="button" onClick={() => selectSuggestion(s)} className="w-full text-left px-4 py-3 rounded-md text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-brand-blue transition-all flex items-center gap-4">
                               <Pill size={16} weight="bold" className="text-slate-300" /> {s.nom}
                             </button>
                           ))}
@@ -199,7 +199,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                       <select
                         value={formData.type}
                         onChange={e => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 outline-none appearance-none focus:bg-white focus:border-brand-blue/30 focus:ring-[8px] focus:ring-brand-blue/5 transition-all duration-300"
+                        className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-lg text-sm font-bold text-slate-900 outline-none appearance-none focus:bg-white focus:border-brand-blue/30 focus:ring-4 focus:ring-brand-blue/5 transition-all duration-300"
                       >
                         {typesMed.map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
@@ -216,61 +216,59 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                  <textarea
                    required placeholder="Ex: 1 unité après chaque repas principal..."
                    value={formData.posologie} onChange={e => setFormData({ ...formData, posologie: e.target.value })}
-                   className="w-full min-h-[100px] py-5 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-[8px] focus:ring-brand-blue/5 outline-none transition-all duration-300 resize-none leading-relaxed"
+                   className="w-full min-h-[100px] py-5 px-6 bg-slate-50/50 border border-slate-100 rounded-lg text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-brand-blue/30 focus:ring-4 focus:ring-brand-blue/5 outline-none transition-all duration-300 resize-none leading-relaxed"
                  />
               </div>
 
               {/* Traitement Cycle */}
-              <div className="space-y-3">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cycle de Traitement</label>
-                 <div className="grid grid-cols-2 gap-6 p-1">
+              <div className="space-y-6">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">Cycle de Traitement</label>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-2">
                    <div className="relative group/input">
+                      <div className="absolute -top-2.5 left-5 px-2 bg-white text-[9px] font-black text-brand-blue uppercase tracking-widest z-10">Départ</div>
                       <input
                         type="date" required
                         value={formData.date_debut} onChange={e => setFormData({ ...formData, date_debut: e.target.value })}
-                        className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:bg-white outline-none transition-all"
+                        className="w-full h-14 px-6 bg-slate-50/20 border border-slate-100 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-brand-blue/30 focus:shadow-sm outline-none transition-all relative z-0"
                       />
-                      <div className="absolute -top-2 left-4 px-2 bg-white text-[9px] font-black text-brand-blue uppercase tracking-widest">Départ</div>
                    </div>
                    <div className="relative group/input">
+                      <div className="absolute -top-2.5 left-5 px-2 bg-white text-[9px] font-black text-slate-300 uppercase tracking-widest z-10">Fin Prévue</div>
                       <input
                         type="date"
                         value={formData.date_fin || ''} onChange={e => setFormData({ ...formData, date_fin: e.target.value })}
-                        className="w-full h-14 px-6 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:bg-white outline-none transition-all"
+                        className="w-full h-14 px-6 bg-slate-50/20 border border-slate-100 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:border-brand-blue/30 focus:shadow-sm outline-none transition-all relative z-0"
                       />
-                      <div className="absolute -top-2 left-4 px-2 bg-white text-[9px] font-black text-slate-300 uppercase tracking-widest text-opacity-80">Fin Prévue</div>
                    </div>
                  </div>
               </div>
 
               {/* Stock Details */}
-              <div className="bg-slate-50/30 border border-slate-100/50 p-6 sm:p-8 rounded-[32px] grid grid-cols-3 gap-6 relative">
-                 <div className="absolute top-0 left-8 -translate-y-1/2 px-3 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-slate-900/10">Gestion Logs</div>
-                 
+              <div className="bg-slate-50/20 border border-slate-100 rounded-2xl p-8 grid grid-cols-3 gap-6 shadow-sm">
                  <div className="space-y-3">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center block">Initial</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Initial</label>
                     <input
                       type="number" min="0" required
                       value={formData.quantite}
                       onChange={e => setFormData({ ...formData, quantite: parseInt(e.target.value) || 0 })}
-                      className="w-full h-14 bg-white border border-slate-100 rounded-2xl text-center text-lg font-black text-slate-900 focus:ring-4 focus:ring-brand-blue/5 transition-all shadow-sm"
+                      className="w-full h-14 bg-white border border-slate-100 rounded-xl text-center text-lg font-black text-slate-900 focus:bg-white focus:border-brand-blue/30 focus:shadow-sm outline-none transition-all"
                     />
                  </div>
                  <div className="space-y-3">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center block">Seuil</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Seuil</label>
                     <input
                       type="number" min="0"
                       value={formData.seuil_alerte}
                       onChange={e => setFormData({ ...formData, seuil_alerte: parseInt(e.target.value) || 0 })}
-                      className="w-full h-14 bg-white border border-slate-100 rounded-2xl text-center text-lg font-black text-rose-500 focus:ring-4 focus:ring-rose-500/5 transition-all shadow-sm"
+                      className="w-full h-14 bg-white border border-slate-100 rounded-xl text-center text-lg font-black text-rose-500 focus:bg-white focus:border-brand-blue/30 focus:shadow-sm outline-none transition-all"
                     />
                  </div>
-                 <div className="space-y-3 text-center">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center block">Expiration</label>
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center block">Expiration</label>
                     <input
                       type="date"
                       value={formData.date_expiration || ''} onChange={e => setFormData({ ...formData, date_expiration: e.target.value })}
-                      className="w-full h-14 bg-white border border-slate-100 rounded-2xl px-2 text-[10px] font-black text-slate-900 focus:ring-4 focus:ring-slate-500/5 transition-all shadow-sm"
+                      className="w-full h-14 bg-white border border-slate-100 rounded-xl px-2 text-[11px] font-black text-slate-900 focus:bg-white focus:border-brand-blue/30 focus:shadow-sm outline-none transition-all"
                     />
                  </div>
               </div>
@@ -284,7 +282,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                     <button 
                       type="button" 
                       onClick={handleAddRappel} 
-                      className="h-10 px-5 rounded-2xl bg-indigo-50 text-brand-blue text-[10px] font-black uppercase tracking-widest hover:bg-brand-blue hover:text-white transition-all duration-300 flex items-center gap-2 active:scale-95 shadow-sm"
+                      className="h-10 px-5 rounded-lg bg-indigo-50 text-brand-blue text-[10px] font-black uppercase tracking-widest hover:bg-brand-blue hover:text-white transition-all duration-300 flex items-center gap-2 active:scale-95 shadow-sm"
                     >
                        <Plus size={16} weight="bold" /> <span>Créer horaire</span>
                     </button>
@@ -292,7 +290,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                  
                  <div className="space-y-4 min-h-[40px]">
                     {rappels.map((rappel, idx) => (
-                      <div key={idx} className="flex items-center gap-5 bg-slate-50/50 border border-slate-100/50 p-4 rounded-3xl group hover:bg-white hover:border-brand-blue/20 transition-all duration-300 shadow-sm animate-fade-in">
+                      <div key={idx} className="flex items-center gap-5 bg-slate-50/50 border border-slate-100/50 p-4 rounded-xl group hover:bg-white hover:border-brand-blue/20 transition-all duration-300 shadow-sm animate-fade-in">
                          <div className="flex-1 relative">
                             <select 
                               value={rappel.moment}
@@ -301,7 +299,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                                 newR[idx].moment = e.target.value;
                                 setRappels(newR);
                               }}
-                              className="w-full h-12 px-5 bg-white border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-600 outline-none appearance-none focus:border-brand-blue/30 transition-all"
+                              className="w-full h-12 px-5 bg-white border border-slate-100 rounded-lg text-[11px] font-black uppercase tracking-widest text-slate-600 outline-none appearance-none focus:border-brand-blue/30 transition-all"
                             >
                               {moments.map(m => <option key={m} value={m}>{m}</option>)}
                             </select>
@@ -319,20 +317,20 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
                                 newR[idx].heure = e.target.value;
                                 setRappels(newR);
                               }}
-                              className="w-full h-12 px-4 bg-white border border-slate-100 rounded-2xl text-sm font-black text-slate-900 focus:border-brand-blue/30 transition-all text-center"
+                              className="w-full h-12 px-4 bg-white border border-slate-100 rounded-lg text-sm font-black text-slate-900 focus:border-brand-blue/30 transition-all text-center"
                             />
                          </div>
                          <button 
                            type="button" 
                            onClick={() => removeRappel(idx)}
-                           className="h-11 w-11 flex items-center justify-center rounded-2xl text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all group-hover:opacity-100 opacity-60"
+                           className="h-11 w-11 flex items-center justify-center rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all group-hover:opacity-100 opacity-60"
                          >
                             <Trash size={18} weight="bold" />
                          </button>
                       </div>
                     ))}
                     {rappels.length === 0 && (
-                       <div className="py-12 border-2 border-dashed border-slate-100 rounded-[32px] bg-slate-50/20 flex flex-col items-center justify-center text-center">
+                       <div className="py-12 border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/20 flex flex-col items-center justify-center text-center">
                           <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm text-slate-200">
                              <Clock size={28} weight="bold" />
                           </div>
@@ -357,7 +355,7 @@ export default function MedicamentForm({ isOpen, onClose, profilId, medicamentTo
              type="submit"
              form="med-form"
              disabled={loading}
-             className="min-w-[220px] h-14 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/10 hover:bg-brand-blue hover:shadow-brand-blue/20 transition-all duration-500 disabled:opacity-50 active:scale-95 flex items-center justify-center"
+             className="min-w-[220px] h-14 bg-[#20835b] hover:bg-[#1a6b4a] text-white rounded-lg font-black text-xs uppercase tracking-[0.2em] shadow-md transition-all duration-500 disabled:opacity-50 active:scale-95 flex items-center justify-center"
            >
                {loading ? (
                   <div className="flex items-center gap-3">

@@ -220,7 +220,7 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
                           
                           <div className={`relative group max-w-[85%] sm:max-w-[80%] px-4 py-3 text-sm font-medium transition-all shadow-sm ${
                             isMe 
-                            ? 'bg-slate-900 text-white rounded-2xl rounded-tr-none' 
+                            ? 'bg-[#20835b] text-white rounded-2xl rounded-tr-none' 
                             : 'bg-white border border-slate-100 text-slate-800 rounded-2xl rounded-tl-none'
                           }`}>
                             <div className="flex flex-col gap-1">
@@ -272,7 +272,7 @@ export default function ChatDialog({ medRequest, onClose, showToast, onRead }) {
                 <button 
                     type="submit"
                     disabled={sending || !newMessage.trim()}
-                    className="h-8 w-8 bg-slate-900 text-white rounded-lg absolute right-2 top-2 flex items-center justify-center transition-all active:scale-90 disabled:opacity-20"
+                    className="h-8 w-8 bg-[#20835b] text-white rounded-lg absolute right-2 top-2 flex items-center justify-center transition-all active:scale-90 disabled:opacity-20 hover:bg-[#1a6b4a]"
                 >
                     {sending ? <Loader2 className="animate-spin" size={14} /> : <Send size={14} className="rotate-45 -translate-x-0.5" />}
                 </button>

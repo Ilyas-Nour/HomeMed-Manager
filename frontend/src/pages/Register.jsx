@@ -119,7 +119,7 @@ export default function Register() {
              <button 
               type="submit"
               disabled={loading}
-              className="auth-btn flex items-center justify-center gap-3 bg-slate-900 border-none scale-100 shadow-2xl shadow-slate-200 active:scale-95"
+              className="auth-btn flex items-center justify-center gap-3 bg-[#20835b] hover:bg-[#1a6b4a] text-white border-none scale-100 shadow-2xl shadow-slate-200 active:scale-95"
              >
               {loading ? (
                 <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

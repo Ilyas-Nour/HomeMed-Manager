@@ -250,7 +250,7 @@ export default function CollaborationView({ onChatOpen, showToast }) {
                             <button 
                                 onClick={() => onChatOpen(request)}
                                 className={`w-full lg:w-60 h-11 px-6 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-[0.98] relative ${
-                                    isReceived ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-brand-blue text-white hover:opacity-90'
+                                    isReceived ? 'bg-[#20835b] text-white hover:bg-[#1a6b4a]' : 'bg-brand-blue text-white hover:opacity-90'
                                 }`}
                             >
                                 <MessageCircle size={16} strokeWidth={2.5} />

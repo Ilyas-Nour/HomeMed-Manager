@@ -124,14 +124,14 @@ export default function FamilyMode({ onProfileSwitch, setCurrentView }) {
         {isModalOpen && createPortal(
             <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setIsModalOpen(false)} />
-                <div className="relative w-full sm:max-w-md bg-white shadow-2xl rounded-t-[32px] sm:rounded-[32px] animate-fade-up overflow-hidden">
+                <div className="relative w-full sm:max-w-md bg-white shadow-xl border border-slate-100 rounded-t-2xl sm:rounded-2xl animate-fade-up overflow-hidden">
                     <div className="p-8 sm:p-10">
                       <div className="flex items-center justify-between mb-8">
                          <div className="space-y-1">
                              <h3 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">Nouveau Profil</h3>
                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Élargissez votre cercle santé</p>
                          </div>
-                         <button onClick={() => setIsModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all">
+                         <button onClick={() => setIsModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all">
                             <X size={24} />
                          </button>
                       </div>
@@ -146,7 +146,7 @@ export default function FamilyMode({ onProfileSwitch, setCurrentView }) {
                                 value={nom}
                                 onChange={e => setNom(e.target.value)}
                                 placeholder="ex: Sarah Connor"
-                                className="w-full h-12 px-6 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all"
+                                className="w-full h-12 px-6 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-brand-blue outline-none transition-all"
                               />
                           </div>
                           <div className="space-y-2">
@@ -156,7 +156,7 @@ export default function FamilyMode({ onProfileSwitch, setCurrentView }) {
                                   required
                                   value={relation}
                                   onChange={e => setRelation(e.target.value)}
-                                  className="w-full h-12 px-6 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-900 appearance-none focus:bg-white focus:border-brand-blue outline-none transition-all"
+                                  className="w-full h-12 px-6 bg-slate-50 border border-slate-100 rounded-lg text-sm font-bold text-slate-900 appearance-none focus:bg-white focus:border-brand-blue outline-none transition-all"
                                 >
                                     <option value="">Sélectionner une relation</option>
                                     <option value="Moi-même">Moi-même</option>
@@ -177,7 +177,7 @@ export default function FamilyMode({ onProfileSwitch, setCurrentView }) {
                               <button 
                                 type="submit" 
                                 disabled={loading} 
-                                className="w-full h-12 bg-brand-blue text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-brand-blue/20 hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 active:scale-95"
+                                className="w-full h-12 bg-brand-blue text-white rounded-lg font-black text-xs uppercase tracking-[0.2em] shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 active:scale-95"
                               >
                                  {loading ? 'Création...' : 'Créer le Profil'}
                               </button>

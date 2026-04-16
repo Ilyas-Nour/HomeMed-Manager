@@ -57,7 +57,7 @@ export default function ConfirmModal({ isOpen, title, message, onConfirm, onCanc
              <button
                 onClick={onConfirm}
                 disabled={loading}
-                className="group relative w-full h-14 bg-slate-900 rounded-2xl overflow-hidden shadow-lg shadow-red-200/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                className="group relative w-full h-14 bg-[#20835b] hover:bg-[#1a6b4a] text-white rounded-lg overflow-hidden shadow-lg shadow-red-200/20 active:scale-[0.98] transition-all disabled:opacity-50"
              >
                 {/* Solid color background fallback for accessibility */}
                 <div className="absolute inset-0 bg-red-600" />

@@ -93,7 +93,7 @@ export default function Login() {
           <button 
             type="submit"
             disabled={loading}
-            className="auth-btn flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 shadow-2xl shadow-slate-200"
+            className="auth-btn flex items-center justify-center gap-3 bg-[#20835b] hover:bg-[#1a6b4a] text-white shadow-2xl shadow-slate-200"
           >
             {loading ? (
               <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

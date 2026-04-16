@@ -82,7 +82,7 @@ export default function MedicamentCard({ medicament, onEdit, onDelete, onDetails
       <div className="mt-6 flex gap-3 relative z-20">
         <button 
           onClick={() => onDetails(medicament)}
-          className="flex-1 h-12 px-6 rounded-2xl bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-brand-blue hover:shadow-xl hover:shadow-brand-blue/20 transition-all flex items-center justify-center gap-3 active:scale-95 cursor-pointer group/btn"
+          className="flex-1 h-12 px-6 rounded-2xl bg-[#20835b] text-white text-[11px] font-black uppercase tracking-widest hover:bg-[#1a6b4a] transition-all flex items-center justify-center gap-3 active:scale-95 cursor-pointer group/btn"
         >
           <span>Détails</span>
           <ArrowRight size={16} weight="bold" className="transition-transform group-hover/btn:translate-x-1" />

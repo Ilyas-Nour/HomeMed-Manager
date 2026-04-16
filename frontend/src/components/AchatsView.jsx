@@ -256,14 +256,14 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
       {isAddModalOpen && createPortal(
         <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setIsAddModalOpen(false)}></div>
-          <div className="relative w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-[40px] shadow-2xl animate-fade-up overflow-hidden">
+          <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-100 animate-fade-up overflow-hidden">
             <div className="p-8 sm:p-10">
               <div className="flex items-center justify-between mb-8">
                 <div>
                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter">Nouvel Article</h3>
                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Réapprovisionnez votre stock</p>
                 </div>
-                <button onClick={() => setIsAddModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all"><X size={22} /></button>
+                <button onClick={() => setIsAddModalOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-900 hover:bg-slate-50 transition-all"><X size={22} /></button>
               </div>
 
               <form onSubmit={handleAddItem} className="space-y-6">
@@ -348,7 +348,7 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
                 <button 
                   type="submit" 
                   disabled={addMutation.isPending}
-                  className="w-full h-14 bg-brand-blue text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-brand-blue/30 hover:shadow-2xl hover:-translate-y-0.5 transition-all mt-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
+                  className="w-full h-14 bg-brand-blue text-white rounded-lg font-black text-sm uppercase tracking-widest shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all mt-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
                 >
                    {addMutation.isPending ? (
                      <>
@@ -370,7 +370,7 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
       {selectedAchat && createPortal(
         <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setSelectedAchat(null)}></div>
-          <div className="relative w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-[40px] shadow-2xl animate-fade-up overflow-hidden">
+          <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-100 animate-fade-up overflow-hidden">
             <div className={`h-2.5 ${selectedAchat.statut === 'completed' ? 'bg-emerald-500' : 'bg-brand-blue'} shadow-sm`}></div>
             <div className="p-8 sm:p-10">
               <div className="flex items-start justify-between mb-10">
@@ -387,7 +387,7 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
                     {selectedAchat.medicament?.nom || selectedAchat.medicament_nom_temp}
                   </h3>
                 </div>
-                <button onClick={() => setSelectedAchat(null)} className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-slate-900 transition-colors"><X size={24} /></button>
+                <button onClick={() => setSelectedAchat(null)} className="h-10 w-10 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-900 transition-colors"><X size={24} /></button>
               </div>
 
               <div className="space-y-8">
@@ -434,7 +434,7 @@ export default function AchatsView({ showToast, activeProfileId, medicamentsData
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleDelete(selectedAchat.id); }}
                   disabled={deleteMutation.isPending}
-                  className="h-10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+                  className="h-10 rounded-lg text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
                 >
                   {deleteMutation.isPending ? <Loader2 className="animate-spin" size={12} /> : null}
                   Supprimer de la liste

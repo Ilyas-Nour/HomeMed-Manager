@@ -210,7 +210,7 @@ export default function AIChatbot() {
                 <button 
                   type="submit"
                   disabled={!input.trim() || isThinking}
-                  className="absolute right-2 h-11 w-11 bg-slate-900 text-white rounded-full flex items-center justify-center hover:bg-indigo-600 transition-all active:scale-90 disabled:opacity-20 shadow-lg shadow-black/10"
+                  className="absolute right-2 h-11 w-11 bg-[#20835b] hover:bg-[#1a6b4a] text-white rounded-full flex items-center justify-center transition-all active:scale-90 disabled:opacity-20 shadow-lg shadow-black/10"
                 >
                   <Send size={18} className="-rotate-90 translate-y-[1px]" />
                 </button>
@@ -225,7 +225,7 @@ export default function AIChatbot() {
         onClick={() => setIsOpen(!isOpen)}
         className={`h-16 w-16 rounded-[2rem] flex items-center justify-center shadow-[0_20px_50px_-10px_rgba(0,0,0,0.2)] transition-all duration-500 active:scale-90 relative overflow-hidden group ${
           isOpen 
-          ? 'bg-slate-900 text-white hover:bg-black' 
+          ? 'bg-[#20835b] text-white hover:bg-[#1a6b4a]' 
           : 'bg-white text-slate-900 border border-slate-100 hover:-translate-y-2'
         }`}
       >

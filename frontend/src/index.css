@@ -171,8 +171,8 @@
 }
 
 .auth-btn {
-  @apply w-full h-12 bg-slate-900 text-white rounded-2xl font-bold text-sm
-         hover:bg-slate-800 hover:-translate-y-0.5 active:scale-[0.98]
+  @apply w-full h-12 bg-[#20835b] hover:bg-[#1a6b4a] text-white rounded-2xl font-bold text-sm
+         hover:-translate-y-0.5 active:scale-[0.98]
          transition-all duration-300 shadow-xl shadow-slate-200;
 }
 

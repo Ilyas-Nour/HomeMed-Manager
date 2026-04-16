@@ -191,7 +191,7 @@ export default function MedicamentDetailsModal({ isOpen, onClose, medicament, on
         <div className="px-8 py-6 border-t border-slate-100 bg-white/80 backdrop-blur-md sticky bottom-0 shrink-0">
           <button
             onClick={onClose}
-            className="w-full h-14 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/10 hover:bg-brand-blue hover:shadow-brand-blue/20 transition-all duration-500 active:scale-95 flex items-center justify-center gap-4"
+            className="w-full h-14 bg-[#20835b] text-white rounded-lg font-black text-xs uppercase tracking-[0.2em] shadow-md hover:bg-[#1a6b4a] transition-all duration-500 active:scale-95 flex items-center justify-center gap-4"
           >
             <ShieldCheck size={20} weight="bold" />
             <span>Clôturer le Dossier</span>

@@ -200,7 +200,7 @@ export default function SharedPharmacy({ groupeId, onChatOpen, showToast }) {
                    ) : (
                       <button 
                         onClick={() => setRequestingId(med.id)}
-                        className="w-full h-11 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-brand-blue transition-all active:scale-[0.98]"
+                        className="w-full h-11 bg-[#20835b] hover:bg-[#1a6b4a] text-white rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
                       >
                          <Plus size={14} strokeWidth={3} />
                          Demander
