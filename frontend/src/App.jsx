@@ -47,29 +47,17 @@ function App() {
                     <ScrollToTop />
                     <Suspense fallback={<LoadingScreen />}>
                         <Routes>
-                            {/* Redirection Racine */}
+                            {/* ... existing routes ... */}
                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                            
-                            <Route path="/login" element={
-                                <PublicRoute><Login /></PublicRoute>
-                            } />
-                            
-                            <Route path="/register" element={
-                                <PublicRoute><Register /></PublicRoute>
-                            } />
-
-                            {/* Point d'entrée unique de la Renaissance */}
-                            <Route path="/dashboard" element={
-                                <PrivateRoute><Dashboard /></PrivateRoute>
-                            } />
-
-                            {/* Gestion des erreurs 404 */}
+                            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                            <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />
                         </Routes>
                     </Suspense>
+                    <AIChatbot />
                 </BrowserRouter>
                 <SoundToast />
-                <AIChatbot />
             </NotificationProvider>
         </AuthProvider>
     );

@@ -3,11 +3,24 @@ import { MessageSquare, Send, X, Bot, User, Activity, Loader2, MinusCircle, Spar
 import ReactMarkdown from 'react-markdown';
 import aiService from '../services/aiService';
 
+import { useAuth } from '../hooks/useAuth';
+import { useLocation } from 'react-router-dom';
+
 /**
  * AIChatbot — Premium Medical Assistant Interface
  * A floating, AI-powered chatbot that provides intelligent assistance using OpenRouter.
  */
 export default function AIChatbot() {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+  
+  // Hide chatbot on login, register, or when app is loading
+  const isAuthPage = ['/login', '/register'].includes(location.pathname);
+  
+  if (!isAuthenticated || loading || isAuthPage) {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Bonjour ! Je suis HomeMed Assistant. Comment puis-je vous aider avec vos médicaments aujourd\'hui ?' }
