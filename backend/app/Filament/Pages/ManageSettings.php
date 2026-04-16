@@ -32,7 +32,13 @@ class ManageSettings extends Page
 
         foreach ($keys as $key) {
             $setting = Setting::where('key', $key)->first();
-            $this->data[$key] = $setting?->value ?? '';
+            $val = $setting?->value ?? '';
+            
+            // Convert 'true'/'false' strings to boolean for Toggle components
+            if ($val === 'true') $val = true;
+            if ($val === 'false') $val = false;
+            
+            $this->data[$key] = $val;
         }
     }
 
