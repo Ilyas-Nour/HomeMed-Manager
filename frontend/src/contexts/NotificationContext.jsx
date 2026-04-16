@@ -43,6 +43,16 @@ export function NotificationProvider({ children }) {
         read: !!n.read_at,
         timestamp: n.created_at
       }));
+
+      // Déclenchement automatique du popup pour un rappel tout juste arrivé (moins de 2 min)
+      const latestReminder = mapped.find(n => n.type === 'reminder' && !n.read);
+      if (latestReminder) {
+          const diffInMinutes = Math.abs(new Date() - new Date(latestReminder.timestamp)) / (1000 * 60);
+          if (diffInMinutes < 2) {
+              setActivePopup(latestReminder.data);
+          }
+      }
+
       setNotifications(mapped);
       notificationsRef.current = mapped;
     }
@@ -144,14 +154,14 @@ export function NotificationProvider({ children }) {
         echo.private(channelName)
           .listen('DataChanged', (e) => {
             console.log('Real-time update received:', e);
-            // Only invalidate if the event type is relevant to the dashboard (prevent loops)
-            if (['prise', 'stock_update', 'group_updated'].includes(e.type)) {
+            // On invalide les données si le type concerne les notifications ou l'inventaire
+            if (['prise', 'stock_update', 'group_updated', 'new_notification'].includes(e.type)) {
                 queryClient.invalidateQueries({ queryKey: ['dashboard_data', profilActif.id] });
                 
-                // Active sound notifications for specific data changes
+                // On déclenche le son pour alerter l'utilisateur
                 if (e.type === 'stock_update') {
                     playSound('stock');
-                } else if (e.type === 'prise' || e.type === 'group_updated') {
+                } else if (e.type === 'new_notification' || e.type === 'prise' || e.type === 'group_updated') {
                     playSound('reminder');
                 }
             }
