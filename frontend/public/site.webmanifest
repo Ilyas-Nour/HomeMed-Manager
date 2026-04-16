@@ -1,6 +1,6 @@
 {
-    "name": "",
-    "short_name": "",
+    "name": "HomeMed Manager",
+    "short_name": "HomeMed",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
