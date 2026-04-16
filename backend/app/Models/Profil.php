@@ -50,6 +50,14 @@ class Profil extends Model
     }
 
     /**
+     * Alias pour la relation utilisateur.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->utilisateur();
+    }
+
+    /**
      * Relation : Un profil possède plusieurs médicaments.
      * La suppression du profil entraîne la suppression des médicaments (cascade définie en DB).
      */
