@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "comment": "Force redeploy after dependency fix",
   "rewrites": [
     {
       "source": "/(.*)",
