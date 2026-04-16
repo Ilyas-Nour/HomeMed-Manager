@@ -41,6 +41,8 @@ Route::get('/test', function () {
     ]);
 });
 
+Route::get('/settings/public', [\App\Http\Controllers\SystemSettingsController::class, 'index']);
+
 Route::prefix('auth')->group(function () {
     // Inscription d'un nouvel utilisateur
     Route::post('/inscription', [AuthController::class, 'register']);

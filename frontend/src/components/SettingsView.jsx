@@ -5,7 +5,7 @@ import {
   Check, Eye, EyeOff, AlertTriangle,
   UserCircle, Mail, Key, Smartphone,
   ArrowLeft, ToggleLeft, ToggleRight,
-  Users, LogOut, Loader2, ArrowRight
+  Users, LogOut, Loader2, ArrowRight, LifeBuoy, Phone
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
@@ -335,6 +335,57 @@ function NotificationsPanel({ onBack, showToast }) {
 }
 
 
+/* ─── Sub‑panel: Support ─── */
+function SupportPanel({ onBack, publicSettings }) {
+  return (
+    <PanelLayout title="Besoin d'aide ?" icon={<LifeBuoy size={22} className="text-rose-500" />} onBack={onBack}>
+      <div className="space-y-8">
+        <div className="p-8 bg-slate-900 rounded-[32px] text-white relative overflow-hidden group shadow-2xl shadow-slate-900/20">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 transition-transform duration-700 group-hover:scale-150"></div>
+          <p className="text-xl font-black tracking-tight mb-2 relative z-10">Une question ?</p>
+          <p className="text-slate-400 text-sm font-medium relative z-10">Notre équipe est à votre disposition pour vous aider à gérer votre pharmacie familiale.</p>
+        </div>
+
+        <div className="space-y-4">
+          {publicSettings?.support_email && (
+            <a href={`mailto:${publicSettings.support_email}`} className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-3xl hover:shadow-xl hover:shadow-slate-100 transition-all group">
+              <div className="h-12 w-12 bg-indigo-50 text-brand-blue rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3">
+                <Mail size={20} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Email de support</p>
+                <p className="text-base font-black text-slate-900">{publicSettings.support_email}</p>
+              </div>
+              <ChevronRight size={18} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
+            </a>
+          )}
+
+          {publicSettings?.support_phone && (
+            <a href={`tel:${publicSettings.support_phone}`} className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-3xl hover:shadow-xl hover:shadow-slate-100 transition-all group">
+              <div className="h-12 w-12 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3">
+                <Phone size={20} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Téléphone</p>
+                <p className="text-base font-black text-slate-900">{publicSettings.support_phone}</p>
+              </div>
+              <ChevronRight size={18} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
+            </a>
+          )}
+        </div>
+
+        <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-4">
+          <Check size={16} className="text-emerald-500" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+            Support disponible du Lundi au Vendredi, 9h - 18h.
+          </p>
+        </div>
+      </div>
+    </PanelLayout>
+  );
+}
+
+
 /* ─── Shared Panel Layout Wrapper ─── */
 function PanelLayout({ title, icon, onBack, children }) {
   return (
@@ -363,6 +414,20 @@ function PanelLayout({ title, icon, onBack, children }) {
 export default function SettingsView({ showToast, settingsPanel, setSettingsPanel }) {
   const { user, logout } = useAuth();
   const [activePanel, setActivePanel] = useState(settingsPanel);
+  const [publicSettings, setPublicSettings] = useState(null);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await api.get('/settings/public');
+      setPublicSettings(res.data);
+    } catch (e) {
+      console.error('Failed to fetch public settings', e);
+    }
+  };
 
   React.useEffect(() => {
     setActivePanel(settingsPanel);
@@ -377,6 +442,7 @@ export default function SettingsView({ showToast, settingsPanel, setSettingsPane
   if (activePanel === 'profile')       return <ProfilePanel onBack={handleBack} showToast={showToast} />;
   if (activePanel === 'notifications') return <NotificationsPanel onBack={handleBack} showToast={showToast} />;
   if (activePanel === 'password')      return <PasswordPanel onBack={handleBack} showToast={showToast} />;
+  if (activePanel === 'support')       return <SupportPanel onBack={handleBack} publicSettings={publicSettings} />;
 
   const sections = [
     {
@@ -402,6 +468,19 @@ export default function SettingsView({ showToast, settingsPanel, setSettingsPane
           desc: 'Clés de sécurité et authentification.',
           icon: <Key size={18} />,
           color: 'text-indigo-600 bg-indigo-50'
+        }
+      ]
+    },
+    {
+      title: 'Aide & Assistance',
+      icon: <LifeBuoy size={14} className="text-rose-500" />,
+      items: [
+        {
+          id: 'support',
+          label: "Besoin d'aide ?",
+          desc: 'Contactez notre équipe de support.',
+          icon: <LifeBuoy size={18} />,
+          color: 'text-rose-500 bg-rose-50'
         }
       ]
     },
