@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Medicament;
 use App\Models\Profil;
 use App\Models\Rappel;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\MedicamentRequest;
 use App\Models\SharingMessage;
@@ -27,10 +28,19 @@ class AIChatController extends Controller
         $user = $request->user();
         $context = $this->getContextSummary($user);
         
-        $apiKey = env('OPENROUTER_API_KEY');
-        if (!$apiKey) {
-            return response()->json(['message' => 'AI Service unavailable (Missing API Key)'], 500);
+        // Check if AI is enabled
+        if (!Setting::get('ai_enabled', true)) {
+            return response()->json(['message' => 'Le service IA est temporairement désactivé par l\'administrateur.'], 503);
         }
+
+        // Read API key from DB settings, fall back to .env
+        $apiKey = Setting::get('ai_api_key') ?: env('OPENROUTER_API_KEY');
+        if (!$apiKey) {
+            return response()->json(['message' => 'Service IA indisponible (Clé API manquante). Contactez l\'administrateur.'], 500);
+        }
+
+        // Read model from DB settings, fall back to default
+        $aiModel = Setting::get('ai_model', 'openai/gpt-3.5-turbo');
 
         $systemPrompt = $this->buildSystemPrompt($context);
 
@@ -47,9 +57,9 @@ class AIChatController extends Controller
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
                 'HTTP-Referer' => config('app.url'),
-                'X-Title' => 'HomeMed Manager',
+                'X-Title' => Setting::get('app_name', 'HomeMed Manager'),
             ])->post('https://openrouter.ai/api/v1/chat/completions', [
-                'model' => 'openai/gpt-3.5-turbo',
+                'model' => $aiModel,
                 'messages' => $messages,
             ]);
 
@@ -119,7 +129,7 @@ class AIChatController extends Controller
                     'id' => $med->id,
                     'name' => $med->nom,
                     'dosage' => $med->dosage,
-                    'stock' => $med->quantite_restante,
+                    'stock' => $med->quantite,
                     'expiry' => $med->date_expiration,
                     'reminders' => [],
                 ];
@@ -194,7 +204,7 @@ class AIChatController extends Controller
                         ->first();
                     if ($med) {
                         $updateData = [];
-                        if (isset($data['quantite'])) $updateData['quantite_restante'] = $data['quantite'];
+                        if (isset($data['quantite'])) $updateData['quantite'] = $data['quantite'];
                         if (isset($data['nom'])) $updateData['nom'] = $data['nom'];
                         if (isset($data['dosage'])) $updateData['dosage'] = $data['dosage'];
                         if (isset($data['expiration'])) $updateData['date_expiration'] = $data['expiration'];
@@ -225,8 +235,10 @@ class AIChatController extends Controller
     {
         $contextJson = json_encode($context, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
-        return "Tu es \"HomeMed Pharmacien Expert\", un assistant spécialisé dans le marché pharmaceutique Marocain.
-Ta mission est d'agir avec l'expertise d'un pharmacien d'officine au Maroc.
+        // Use custom system prompt from settings if available
+        $basePrompt = Setting::get('ai_system_prompt', "Tu es \"HomeMed Pharmacien Expert\", un assistant spécialisé dans le marché pharmaceutique Marocain.\nTa mission est d'agir avec l'expertise d'un pharmacien d'officine au Maroc.");
+
+        return $basePrompt . "
 
 IMPORTANT : Tu as accès aux données réelles de l'utilisateur (Context ci-dessous). Utilise ces données pour donner des réponses personnalisées et des rappels précis.
 
