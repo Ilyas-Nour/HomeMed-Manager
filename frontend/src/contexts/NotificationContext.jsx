@@ -149,6 +149,8 @@ export function NotificationProvider({ children }) {
     if (isAuthenticated && profilActif) {
       // Integration temps réel via Echo
       import('../services/echo').then(({ default: echo }) => {
+        if (!echo) return;
+        
         const channelName = `App.Models.Profil.${profilActif.id}`;
         
         echo.private(channelName)
