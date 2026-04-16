@@ -232,7 +232,7 @@ export default function AIChatbot() {
         <div className={`absolute inset-0 bg-gradient-to-tr from-emerald-500 to-teal-400 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${isOpen ? 'hidden' : 'block'}`} />
         {isOpen ? <X size={28} /> : (
           <div className="relative">
-            <Heart size={28} className="relative z-10 text-emerald-500 fill-emerald-500 animate-pulse" />
+            <Heart size={28} className="relative z-10 text-emerald-500 animate-pulse" />
             <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-emerald-500 rounded-full border-2 border-white animate-ping" />
           </div>
         )}

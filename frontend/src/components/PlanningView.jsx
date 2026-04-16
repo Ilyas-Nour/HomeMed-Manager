@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Calendar, CheckCircle2, Circle, Clock, 
-  Sun, Sunrise, Sunset, Moon, Coffee,
-  AlertCircle, ChevronRight, TrendingUp
+  ChevronRight, TrendingUp
 } from 'lucide-react';
+import { 
+  SunHorizon, Sun, CloudSun, MoonStars, ChartLineUp,
+  CheckCircle, WarningCircle, Circle as PhosphorCircle
+} from '@phosphor-icons/react';
 import api from '../services/api';
 
 /**
@@ -123,11 +126,11 @@ export default function PlanningView({ showToast, activeProfileId, initialData =
   };
 
   const moments = [
-    { id: 'matin', label: 'Matin', icon: <Sunrise size={20} />, color: 'text-orange-500', bg: 'bg-orange-50' },
-    { id: 'midi', label: 'Midi', icon: <Sun size={20} />, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    { id: 'apres-midi', label: 'Après-midi', icon: <Coffee size={20} />, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { id: 'soir', label: 'Soir', icon: <Sunset size={20} />, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { id: 'coucher', label: 'Coucher', icon: <Moon size={20} />, color: 'text-slate-600', bg: 'bg-slate-50' },
+    { id: 'matin', label: 'Matin', icon: <SunHorizon size={20} weight="duotone" />, color: 'text-orange-500', bg: 'bg-orange-50' },
+    { id: 'midi', label: 'Midi', icon: <Sun size={20} weight="duotone" />, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    { id: 'apres-midi', label: 'Après-midi', icon: <CloudSun size={20} weight="duotone" />, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { id: 'soir', label: 'Soir', icon: <MoonStars size={20} weight="duotone" />, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { id: 'coucher', label: 'Coucher', icon: <MoonStars size={20} weight="duotone" />, color: 'text-slate-600', bg: 'bg-slate-50' },
     { id: 'libre', label: 'Libre', icon: <Calendar size={20} />, color: 'text-slate-400', bg: 'bg-white' }
   ];
 
@@ -187,7 +190,7 @@ export default function PlanningView({ showToast, activeProfileId, initialData =
                                     ? 'bg-rose-100 text-rose-600 animate-pulse' 
                                     : 'bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-brand-blue'
                                 }`}>
-                                 {item.pris ? <CheckCircle2 size={24} /> : isMissed ? <AlertCircle size={24} /> : <Circle size={24} />}
+                                 {item.pris ? <CheckCircle size={24} weight="fill" /> : isMissed ? <WarningCircle size={24} weight="fill" /> : <PhosphorCircle size={24} weight="bold" />}
                               </div>
                               <div className="space-y-1">
                                  <h4 className={`text-base font-black tracking-tight transition-all duration-500 ${

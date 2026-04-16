@@ -13,7 +13,7 @@ const echo = new Echo({
     wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
     enabledTransports: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https' ? ['wss'] : ['ws'],
-    authorizer: (channel, options) => {
+    authorizer: (channel) => {
         return {
             authorize: (socketId, callback) => {
                 api.post('/broadcasting/auth', {

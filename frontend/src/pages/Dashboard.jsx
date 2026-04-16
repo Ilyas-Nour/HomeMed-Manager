@@ -130,6 +130,10 @@ export default function Dashboard() {
     }
   };
 
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
   useEffect(() => {
     if (dashboardData?.collaboration_unread_count !== undefined) {
       setCollabUnreadCount(dashboardData.collaboration_unread_count);
@@ -144,7 +148,7 @@ export default function Dashboard() {
             playNotificationSound();
         })
         .listen('.message.sent', (e) => {
-            if (activeRequest?.id !== e.request_id) {
+            if (e.sender_id !== user.id && activeRequest?.id !== e.request_id) {
                 setCollabUnreadCount(prev => prev + 1);
                 showToast(`Nouveau message de ${e.sender_name}`, 'info');
                 playNotificationSound();
@@ -160,9 +164,6 @@ export default function Dashboard() {
     };
   }, [user, activeRequest?.id]);
 
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-  };
 
   const handleEdit = (med) => {
     setMedicamentToEdit(med);
@@ -203,7 +204,7 @@ export default function Dashboard() {
         return (
           <div className="space-y-8 animate-fade-up relative">
             {/* Header / Greeting — Compact & Precision */}
-            <div className="flex flex-col gap-5 px-1">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5 px-1">
                 <div className="space-y-2">
                    <div className="flex items-center gap-3">
                       {greeting.icon}
@@ -212,19 +213,19 @@ export default function Dashboard() {
                       </h1>
                    </div>
                    
-                   {/* Centred Action Trigger */}
-                   <div className="py-2">
-                     <button 
-                       onClick={() => { setMedicamentToEdit(null); setIsFormOpen(true); }}
-                       className="bg-brand-blue text-white h-10 px-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-brand-blue/20 hover:shadow-brand-blue/30 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2.5 active:scale-95 whitespace-nowrap"
-                     >
-                        <Plus size={16} weight="bold" /> Nouveau Médicament
-                     </button>
-                   </div>
-
                    <p className="text-base font-medium text-slate-500 max-w-2xl leading-relaxed">
                      Aujourd'hui, nous veillons sur <span className="text-brand-blue font-bold px-1.5 py-0.5 bg-brand-blue/5 rounded-lg">{profilActif?.nom}</span>. Voici le programme.
                    </p>
+                </div>
+
+                {/* Right Aligned Action Trigger */}
+                <div className="py-2 shrink-0 max-md:self-start">
+                  <button 
+                    onClick={() => { setMedicamentToEdit(null); setIsFormOpen(true); }}
+                    className="bg-brand-blue text-white h-10 px-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-brand-blue/20 hover:shadow-brand-blue/30 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2.5 active:scale-95 whitespace-nowrap"
+                  >
+                     <Plus size={16} weight="bold" /> Nouveau Médicament
+                  </button>
                 </div>
             </div>
 

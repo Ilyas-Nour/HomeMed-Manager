@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import api from '../services/api';
 import { 
   ShieldCheck, Mail, Lock, User, ArrowRight, 
   CheckCircle2, AlertCircle, Eye, EyeOff
