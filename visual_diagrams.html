@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisation Complète UML - HomeMed Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            width: 300px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            padding-left: 10px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: all 0.2s;
+            color: var(--text-dim);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Main Content Area */
+        main {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.07), transparent);
+        }
+
+        header {
+            margin-bottom: 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .title-group h1 {
+            font-size: 2.4rem;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+        }
+
+        .title-group p {
+            color: var(--text-dim);
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-accent { background: var(--accent); color: white; }
+
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        /* Diagram Viewport */
+        .diagram-view {
+            display: none;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .diagram-view.active { display: block; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+            margin-top: 10px;
+        }
+
+        .mermaid {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            margin-top: 20px;
+            overflow-x: auto;
+            border: 2px solid #e2e8f0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .info-box {
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border-left: 4px solid var(--primary);
+        }
+
+        .info-box h3 { margin: 0 0 10px 0; font-size: 1rem; color: var(--text-main); }
+        .info-box p { margin: 0; font-size: 0.9rem; color: var(--text-dim); line-height: 1.5; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 11-4-7-4 7Z"/><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+            HomeMed Vision
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-label">Analyse Globale</div>
+            <div class="nav-item active" onclick="showTab('usecase', this)">📋 Cas d'Utilisation (Complet)</div>
+            <div class="nav-item" onclick="showTab('architecture', this)">🏢 Composants Système</div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">Structure Technique</div>
+            <div class="nav-item" onclick="showTab('class', this)">🏗️ Modèle de Données (Full)</div>
+            <div class="nav-item" onclick="showTab('er', this)">🗄️ Schéma Entité-Relation</div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">Dynamique & Flux</div>
+            <div class="nav-item" onclick="showTab('state', this)">🔄 Cycle de Vie Traitements</div>
+            <div class="nav-item" onclick="showTab('sequence', this)">⚡ Séquences Critiques</div>
+            <div class="nav-item" onclick="showTab('activity', this)">🏃 Flux d'Activité (App)</div>
+        </div>
+
+        <div style="margin-top: auto; padding: 20px; border-radius: 15px; background: rgba(99, 102, 241, 0.1);">
+            <div style="font-weight: 600; font-size: 0.9rem; color: #818cf8;">Mode Présentation</div>
+            <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 5px;">Utilisez les onglets pour naviguer entre les différentes couches de l'application.</p>
+        </div>
+    </aside>
+
+    <main>
+        <header>
+            <div class="title-group">
+                <h1 id="tab-title">Diagramme de Cas d'Utilisation</h1>
+                <p id="tab-desc">Vision exhaustive des acteurs et des services du système complet.</p>
+            </div>
+            <div class="actions">
+                <button class="btn btn-accent" onclick="window.print()">Exporter PDF</button>
+            </div>
+        </header>
+
+        <!-- USE CASE VIEW -->
+        <div id="usecase-view" class="diagram-view active">
+            <div class="card">
+                <div class="mermaid">
+                    useCaseDiagram
+                        actor Utilisateur
+                        actor Administrateur
+                        actor IA
+                        subgraph "Systéme HomeMed Manager"
+                            usecase UC1 as "Gérer Santé & Inventaire"
+                            usecase UC2 as "Rappels & Prises"
+                            usecase UC3 as "Groupes & Collaboration"
+                            usecase UC4 as "Assistant IA & OCR"
+                            usecase UC5 as "Logistique & Liste Achats"
+                            usecase UC6 as "Audit Logs & Master Meds"
+                        end
+                        Utilisateur --> UC1
+                        Utilisateur --> UC2
+                        Utilisateur --> UC3
+                        Utilisateur --> UC4
+                        Utilisateur --> UC5
+                        Administrateur --|> Utilisateur
+                        Administrateur --> UC6
+                        IA --> UC4
+                </div>
+            </div>
+        </div>
+
+        <!-- CLASS VIEW -->
+        <div id="class-view" class="diagram-view">
+            <div class="card">
+                <div class="mermaid">
+                    classDiagram
+                        direction TB
+                        class User {
+                            +int id
+                            +string name
+                            +string role
+                            +isAdmin()
+                        }
+                        class Profil {
+                            +int id
+                            +string nom
+                            +string relation
+                        }
+                        class Medicament {
+                            +int id
+                            +string nom
+                            +int quantite
+                            +isStockLow()
+                        }
+                        class MasterMed {
+                            +int id
+                            +string nom
+                            +string dosage
+                        }
+                        class Rappel {
+                            +int id
+                            +time heure
+                        }
+                        class Prise {
+                            +int id
+                            +bool pris
+                        }
+                        class Groupe {
+                            +int id
+                            +string nom
+                        }
+                        class Request {
+                            +int id
+                            +string status
+                        }
+                        class Achat {
+                            +int id
+                            +int quantite
+                        }
+
+                        User "1" -- "*" Profil
+                        Profil "1" -- "*" Medicament
+                        Medicament "1" -- "*" Rappel
+                        Medicament "*" -- "0..1" MasterMed
+                        Rappel "1" -- "*" Prise
+                        Medicament "1" -- "*" Achat
+                        User "1" -- "*" Groupe
+                        Groupe "1" -- "*" Request
+                        Medicament "1" -- "*" Request
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE VIEW -->
+        <div id="state-view" class="diagram-view">
+            <div class="card">
+                <div class="mermaid">
+                    stateDiagram-v2
+                        [*] --> EnStock
+                        EnStock --> StockFaible : Consommation
+                        StockFaible --> Rupture : "Quantité = 0"
+                        Rupture --> EnStock : "Réapprovisionnement"
+                        StockFaible --> EnStock : "Réapprovisionnement"
+                        EnStock --> Expiré : "Date Dépassée"
+                        Expiré --> [*]
+                </div>
+            </div>
+        </div>
+
+        <!-- SEQUENCE VIEW -->
+        <div id="sequence-view" class="diagram-view">
+            <div class="card">
+                <div class="mermaid">
+                    sequenceDiagram
+                        autonumber
+                        participant U as Utilisateur
+                        participant F as App (Frontend)
+                        participant API as Laravel (Backend)
+                        participant DB as Database
+                        
+                        U->>F: Coche 'Médicament pris'
+                        F->>API: POST /api/toggle-prise
+                        activate API
+                        API->>DB: Update Prise & Stock
+                        DB-->>API: Success
+                        API-->>F: data: {new_stock}
+                        deactivate API
+                        F-->>U: Mise à jour UI
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIVITY VIEW -->
+        <div id="activity-view" class="diagram-view">
+            <div class="card">
+                <div class="mermaid">
+                    flowchart TD
+                        Start([Début]) --> Login[Connexion]
+                        Login --> Choice{Profil existant?}
+                        Choice -- Non --> Create[Créer Profil]
+                        Choice -- Oui --> Dash[Tableau de Bord]
+                        Create --> Dash
+                        Dash --> Add[Ajouter Médicament]
+                        Add --> Scan[Scan QR ou Manuel]
+                        Scan --> Save[Enregistrer]
+                        Save --> End([Fin])
+                </div>
+            </div>
+        </div>
+
+        <!-- ER VIEW -->
+        <div id="er-view" class="diagram-view">
+            <div class="card">
+                <div class="mermaid">
+                    erDiagram
+                        USER ||--o{ PROFIL : "gère"
+                        PROFIL ||--o{ MEDICAMENT : "possède"
+                        MEDICAMENT ||--o{ RAPPEL : "planifie"
+                        RAPPEL ||--o{ PRISE : "enregistre"
+                        USER ||--o{ GROUPE : "appartient"
+                </div>
+            </div>
+        </div>
+
+        <!-- ARCHITECTURE VIEW -->
+        <div id="architecture-view" class="diagram-view">
+            <div class="card">
+                <div class="mermaid">
+                    graph LR
+                        subgraph "Client Side"
+                            React[React SPA]
+                        end
+                        subgraph "Server Side"
+                            Laravel[Laravel API]
+                            Reverb[WS Reverb]
+                        end
+                        subgraph "Storage"
+                            DB[(MySQL)]
+                        end
+                        
+                        React -->|REST| Laravel
+                        Laravel -->|Eloquent| DB
+                        Reverb -->|Realtime| React
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialisation de Mermaid avec auto-rendu désactivé
+        mermaid.initialize({ 
+            startOnLoad: false,
+            theme: 'base',
+            securityLevel: 'loose',
+            themeVariables: {
+                primaryColor: '#6366f1',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#4f46e5',
+                lineColor: '#6366f1',
+                secondaryColor: '#10b981',
+                tertiaryColor: '#f8fafc',
+                fontSize: '14px'
+            }
+        });
+
+        // Rendu initial pour l'onglet par défaut (Use Case)
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTabDiagram('usecase');
+        });
+
+        async function showTab(tabId, el) {
+            // Mise à jour de la navigation
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+
+            // Mise à jour des vues
+            document.querySelectorAll('.diagram-view').forEach(v => v.classList.remove('active'));
+            document.getElementById(tabId + '-view').classList.add('active');
+
+            // Mise à jour des textes
+            const meta = {
+                'usecase': ['Cas d\'Utilisation', 'Vision exhaustive des acteurs et des services du système complet.'],
+                'architecture': ['Architecture Logicielle', 'Vue d\'ensemble des composants (Frontend, API, Persistence).'],
+                'class': ['Modèle de Données', 'Détail complet des classes, attributs et multiplicités.'],
+                'er': ['Schéma Entité-Relation', 'Relations physiques entre les tables de la base de données.'],
+                'state': ['Cycle de Vie & Traitement', 'Automate gérant l\'état des médicaments et l\'observance.'],
+                'sequence': ['Processus Critiques', 'Détail des échanges de messages pour les actions clés.'],
+                'activity': ['Flux d\'Activité App', 'Logique de navigation utilisateur et onboarding.']
+            };
+            
+            document.getElementById('tab-title').innerText = meta[tabId][0];
+            document.getElementById('tab-desc').innerText = meta[tabId][1];
+
+            // Rendu du diagramme spécifique à l'onglet
+            renderTabDiagram(tabId);
+        }
+
+        async function renderTabDiagram(tabId) {
+            const container = document.querySelector(`#${tabId}-view .mermaid`);
+            if (container && !container.getAttribute('data-processed')) {
+                try {
+                    // Utilisation de mermaid.run pour un rendu propre à la vue
+                    await mermaid.run({
+                        nodes: [container],
+                        suppressErrors: true
+                    });
+                } catch (err) {
+                    console.error("Erreur de rendu Mermaid:", err);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

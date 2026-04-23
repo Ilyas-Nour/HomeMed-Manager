@@ -59,8 +59,12 @@ function ProfilePanel({ onBack, showToast }) {
         {/* Avatar Section */}
         <div className="flex items-center gap-6 p-6 bg-white border border-slate-100 rounded-3xl shadow-sm relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 transition-transform duration-700 group-hover:scale-125"></div>
-          <div className="h-20 w-20 bg-slate-900 text-white flex items-center justify-center text-2xl font-black rounded-2xl shadow-xl shadow-slate-900/10 relative z-10 transition-transform group-hover:rotate-3">
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
+          <div className={`h-20 w-20 flex-shrink-0 flex items-center justify-center text-2xl font-black rounded-2xl shadow-xl relative z-10 transition-transform group-hover:rotate-3 overflow-hidden ${user?.avatar ? 'bg-white border border-slate-100 shadow-slate-200/50' : 'bg-slate-900 text-white shadow-slate-900/10'}`}>
+            {user?.avatar ? (
+              <img src={user.avatar} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+            ) : (
+              user?.name?.charAt(0).toUpperCase() || 'U'
+            )}
           </div>
           <div className="relative z-10">
             <p className="text-lg font-black text-slate-900 tracking-tight">{user?.name}</p>
@@ -497,8 +501,12 @@ export default function SettingsView({ showToast, settingsPanel, setSettingsPane
       {/* User profile card */}
       <div className="bg-white border border-slate-100 p-6 rounded-[32px] flex items-center gap-6 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 group-hover:scale-125 transition-transform duration-700 opacity-50"></div>
-        <div className="h-20 w-20 bg-slate-900 text-white flex items-center justify-center text-2xl font-black rounded-2xl shadow-xl shadow-slate-900/10 relative transition-transform group-hover:rotate-3 shrink-0">
-          {user?.name?.charAt(0).toUpperCase() || 'U'}
+        <div className={`h-20 w-20 flex-shrink-0 flex items-center justify-center text-2xl font-black rounded-2xl shadow-xl relative transition-transform group-hover:rotate-3 overflow-hidden ${user?.avatar ? 'bg-white border border-slate-100 shadow-slate-200/50' : 'bg-slate-900 text-white shadow-slate-900/10'}`}>
+          {user?.avatar ? (
+            <img src={user.avatar} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+          ) : (
+            user?.name?.charAt(0).toUpperCase() || 'U'
+          )}
         </div>
         <div className="flex-1 min-w-0 relative">
           <p className="text-lg font-black text-slate-900 tracking-tight truncate">{user?.name || 'Utilisateur'}</p>
