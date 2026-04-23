@@ -22,107 +22,102 @@ export default function Login() {
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch {
-      setError('Identifiants incorrects. Veuillez réessayer.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Identifiants incorrects. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans selection:bg-brand-blue/10 flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden text-slate-900">
-      
-      {/* Background Blobs subtils pour le relief */}
-      <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-brand-blue/5 rounded-full blur-3xl opacity-50 pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-violet-500/5 rounded-full blur-3xl opacity-50 pointer-events-none" />
+    <div className="h-[100dvh] w-full relative overflow-hidden flex items-center font-sans">
+      {/* Full Page Wavy Background */}
+      <img 
+        src="/image.png" 
+        alt="" 
+        className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
+      />
 
-      <div className="w-full max-w-[440px] animate-fade-up">
+      {/* Form — floats directly on the open left area */}
+      <div className="relative z-10 w-full max-w-[380px] ml-[7vw] xl:ml-[10vw] animate-fade-up">
         
-        <div className="space-y-2 mb-10 text-center">
-           <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Bienvenue.</h1>
-           <p className="text-slate-500 font-medium text-lg italic tracking-tight">Heureux de vous revoir sur HomeMed.</p>
+        {/* Logo + Brand */}
+        <div className="flex items-center gap-3 mb-10">
+          <img src="/HomeMed-Logo.png" alt="HomeMed" className="h-14 object-contain" />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Heading */}
+        <div className="mb-8">
+          <h1 className="text-5xl font-black text-slate-900 tracking-tighter leading-none mb-2">Bienvenue.</h1>
+          <p className="text-slate-500 text-sm font-medium">Heureux de vous revoir sur HomeMed.</p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl flex items-center gap-3 animate-fade-in">
-              <AlertCircle size={18} />
-              <span className="text-sm font-bold tracking-tight">{error}</span>
+            <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl flex items-center gap-3">
+              <AlertCircle size={15} className="shrink-0" />
+              <span className="text-xs font-bold">{error}</span>
             </div>
           )}
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Identifiant</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Email</label>
             <div className="relative group">
               <input 
-                type="email" 
-                required
-                placeholder="nom@exemple.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="auth-input !bg-slate-50/50"
+                type="email" required placeholder="nom@exemple.com"
+                value={email} onChange={e => setEmail(e.target.value)}
+                className="w-full h-[52px] px-5 pr-12 bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:shadow-[0_2px_20px_rgba(79,70,229,0.12)] focus:border-brand-blue/30 outline-none transition-all duration-200"
               />
-              <Mail className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-blue transition-colors" size={18} />
+              <Mail className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-blue transition-colors" size={16} />
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between px-1">
-               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mot de passe</label>
-               <button type="button" className="text-[10px] font-bold text-brand-blue uppercase tracking-widest hover:text-blue-700">Oublié ?</button>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mot de passe</label>
+              <Link to="/forgot-password" className="text-[10px] font-black text-brand-blue uppercase tracking-widest hover:opacity-70 transition-opacity">Oublié ?</Link>
             </div>
             <div className="relative group">
               <input 
-                type={showPassword ? "text" : "password"} 
-                required
-                placeholder="••••••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="auth-input !bg-slate-50/50"
+                type={showPassword ? "text" : "password"} required placeholder="••••••••••••"
+                value={password} onChange={e => setPassword(e.target.value)}
+                className="w-full h-[52px] px-5 pr-12 bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:shadow-[0_2px_20px_rgba(79,70,229,0.12)] focus:border-brand-blue/30 outline-none transition-all duration-200"
               />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
-          <button 
-            type="submit"
-            disabled={loading}
-            className="auth-btn flex items-center justify-center gap-3 bg-[#20835b] hover:bg-[#1a6b4a] text-white shadow-2xl shadow-slate-200"
+          <button type="submit" disabled={loading}
+            className="w-full h-[52px] mt-2 flex items-center justify-center gap-3 bg-slate-900 hover:bg-brand-blue text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 active:scale-[0.98] disabled:opacity-50 shadow-[0_8px_30px_rgba(15,23,42,0.25)] hover:shadow-[0_8px_30px_rgba(79,70,229,0.35)] group"
           >
-            {loading ? (
-              <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <span className="uppercase tracking-widest text-xs font-black">S'identifier</span>
-                <ArrowRight size={18} />
-              </>
-            )}
+            {loading 
+              ? <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              : <><span>S'identifier</span><ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" /></>
+            }
           </button>
         </form>
 
-        <div className="relative flex items-center justify-center my-10">
-          <div className="w-full h-px bg-slate-100" />
-          <span className="absolute px-4 bg-white text-[10px] font-black text-slate-300 uppercase tracking-widest">Ou continuer avec</span>
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">Ou</span>
+          <div className="flex-1 h-px bg-slate-200" />
         </div>
 
-        <div className="flex flex-col gap-4">
-           <button className="h-12 border border-slate-100 bg-white rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm w-full">
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-5 w-5" alt="Google" />
-              <span className="text-[11px] font-black uppercase tracking-wider">Se connecter avec Google</span>
-           </button>
-        </div>
+        <button 
+          onClick={() => window.location.href = 'http://localhost:8000/api/auth/google/redirect'}
+          className="h-[52px] w-full bg-white rounded-2xl flex items-center justify-center gap-3 shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.1)] transition-all active:scale-[0.98]"
+        >
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-5 w-5" alt="Google" />
+          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Continuer avec Google</span>
+        </button>
 
-        <p className="text-center text-sm font-medium text-slate-500 mt-12">
-          Nouveau sur la plateforme ?{' '}
-          <Link to="/register" className="text-brand-blue font-bold hover:text-blue-700 underline underline-offset-4 decoration-2">
-            Créer un compte
-          </Link>
+        <p className="text-center text-xs text-slate-400 mt-8">
+          Nouveau ?{' '}
+          <Link to="/register" className="text-slate-700 font-bold hover:text-brand-blue transition-colors">Créer un compte →</Link>
         </p>
       </div>
     </div>
