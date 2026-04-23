@@ -45,6 +45,11 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const socialLogin = (newToken) => {
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
+    };
+
     const login = async (email, password) => {
         const response = await api.post('/auth/connexion', { email, password });
         const { token, utilisateur } = response.data;
@@ -97,6 +102,16 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const sendVerificationCode = async (email) => {
+        const response = await api.post('/auth/envoyer-code', { email });
+        return response.data;
+    };
+
+    const verifyCode = async (email, code) => {
+        const response = await api.post('/auth/verifier-code', { email, code });
+        return response.data;
+    };
+
     const value = React.useMemo(() => ({
         user,
         token,
@@ -104,9 +119,12 @@ export const AuthProvider = ({ children }) => {
         loading,
         fetchUser,
         login,
+        socialLogin,
         register,
         logout,
         changerProfil,
+        sendVerificationCode,
+        verifyCode,
         isAuthenticated: !!user && !!token,
     }), [user, token, profilActif, loading]);
 
