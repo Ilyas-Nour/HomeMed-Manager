@@ -111,7 +111,7 @@ export default function Register() {
 
       <button 
         type="button"
-        onClick={() => window.location.href = 'http://localhost:8000/api/auth/google/redirect'}
+        onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/redirect`}
         className="h-12 border border-slate-200 bg-white/50 rounded-xl flex items-center justify-center gap-3 hover:bg-white hover:border-slate-300 transition-all active:scale-[0.98] shadow-sm w-full group"
       >
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-5 w-5 group-hover:scale-110 transition-transform" alt="Google" />

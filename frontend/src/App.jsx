@@ -13,6 +13,8 @@ import AIChatbot from './components/AIChatbot';
 // Chargement paresseux (Lazy Loading) pour une expérience professionnelle fluide
 const Login    = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 
 /**
@@ -51,6 +53,8 @@ function App() {
                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                             <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                            <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+                            <Route path="/auth/callback" element={<AuthCallback />} />
                             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />
                         </Routes>

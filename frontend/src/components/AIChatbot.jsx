@@ -14,13 +14,6 @@ export default function AIChatbot() {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
   
-  // Hide chatbot on login, register, or when app is loading
-  const isAuthPage = ['/login', '/register'].includes(location.pathname);
-  
-  if (!isAuthenticated || loading || isAuthPage) {
-    return null;
-  }
-
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Bonjour ! Je suis HomeMed Assistant. Comment puis-je vous aider avec vos médicaments aujourd\'hui ?' }
@@ -92,6 +85,11 @@ export default function AIChatbot() {
   };
 
   const isInitialState = messages.length <= 1;
+  const isAuthPage = ['/login', '/register'].includes(location.pathname);
+  
+  if (!isAuthenticated || loading || isAuthPage) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-[2000] flex flex-col items-end">

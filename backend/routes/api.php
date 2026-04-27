@@ -49,6 +49,17 @@ Route::prefix('auth')->group(function () {
 
     // Connexion avec email et mot de passe
     Route::post('/connexion', [AuthController::class, 'login']);
+
+    // Vérification d'e-mail avant inscription
+    Route::post('/envoyer-code', [AuthController::class, 'sendVerificationCode']);
+    Route::post('/verifier-code', [AuthController::class, 'verifyCode']);
+
+    // Google Social Login
+    Route::get('/google/redirect', [\App\Http\Controllers\SocialAuthController::class, 'redirectToGoogle']);
+    Route::get('/google/callback', [\App\Http\Controllers\SocialAuthController::class, 'handleGoogleCallback']);
+    // Mot de passe oublié
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
 // ——————————————————————————————————————————

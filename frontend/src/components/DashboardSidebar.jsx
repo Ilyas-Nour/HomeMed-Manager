@@ -128,8 +128,14 @@ export default function DashboardSidebar({
             isProfileMenuOpen ? 'bg-slate-50 shadow-inner' : 'hover:bg-slate-50'
           }`}
         >
-          <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-brand-blue text-white shadow-lg shadow-brand-blue/20">
-            <span className="font-black text-sm">{activeProfile?.nom?.charAt(0).toUpperCase() || 'P'}</span>
+          <div className={`h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl font-black text-sm shadow-lg overflow-hidden transition-all ${
+            activeProfile?.photo ? 'bg-white border border-slate-100 shadow-slate-200/50' : 'bg-brand-blue text-white shadow-brand-blue/20'
+          }`}>
+            {activeProfile?.photo ? (
+              <img src={activeProfile.photo} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+            ) : (
+              activeProfile?.nom?.charAt(0).toUpperCase() || 'P'
+            )}
           </div>
           <div className="flex-1 text-left min-w-0">
             <p className="text-xs font-black text-slate-900 truncate tracking-tight">{activeProfile?.nom || 'Chargement...'}</p>
@@ -157,10 +163,14 @@ export default function DashboardSidebar({
                         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    <div className={`h-8 w-8 flex items-center justify-center rounded-xl text-[10px] font-bold transition-all ${
+                    <div className={`h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-xl text-[10px] font-bold transition-all overflow-hidden ${
                       activeProfileId === profil.id ? 'bg-brand-blue text-white shadow-md shadow-brand-blue/20' : 'bg-slate-100 text-slate-400'
                     }`}>
-                      {profil.nom.charAt(0).toUpperCase()}
+                      {profil.photo ? (
+                        <img src={profil.photo} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                      ) : (
+                        profil.nom.charAt(0).toUpperCase()
+                      )}
                     </div>
                     <span className="text-xs font-bold flex-1 truncate">{profil.nom}</span>
                     {activeProfileId === profil.id && <div className="h-1.5 w-1.5 rounded-full bg-brand-blue" />}

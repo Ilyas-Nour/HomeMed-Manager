@@ -255,8 +255,12 @@ export default function DashboardHeader({
               onClick={() => setIsProfileOpen(!isProfileOpen)}
               className="flex items-center gap-3 p-1 rounded-2xl border border-transparent hover:bg-slate-50 hover:border-slate-100 transition-all pr-3"
             >
-              <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xs shadow-lg shadow-slate-900/10">
-                {user?.name?.charAt(0).toUpperCase() || 'H'}
+              <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-black text-xs shadow-lg overflow-hidden ${user?.avatar ? 'bg-white border border-slate-100 shadow-slate-200/50' : 'bg-slate-900 text-white shadow-slate-900/10'}`}>
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0).toUpperCase() || 'H'
+                )}
               </div>
               <div className="hidden lg:block text-left">
                  <p className="text-xs font-black text-slate-900 leading-none truncate max-w-[100px]">{user?.name.split(' ')[0]}</p>
@@ -268,8 +272,12 @@ export default function DashboardHeader({
               <div className="absolute right-0 mt-4 w-64 bg-white border border-slate-100 rounded-[28px] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] overflow-hidden z-50 animate-fade-up">
                  {/* Premium Profile Header */}
                  <div className="px-6 py-5 bg-slate-50/50 border-b border-slate-100/50 flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-slate-900/20 shrink-0">
-                        {user?.name?.charAt(0).toUpperCase()}
+                    <div className="h-12 w-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-slate-900/20 shrink-0 overflow-hidden">
+                        {user?.avatar ? (
+                          <img src={user.avatar} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                        ) : (
+                          user?.name?.charAt(0).toUpperCase()
+                        )}
                     </div>
                     <div className="min-w-0">
                         <p className="text-[13px] font-black text-slate-900 truncate tracking-tight">{user?.name}</p>

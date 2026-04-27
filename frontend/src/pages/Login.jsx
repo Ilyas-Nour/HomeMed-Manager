@@ -108,7 +108,7 @@ export default function Login() {
         </div>
 
         <button 
-          onClick={() => window.location.href = 'http://localhost:8000/api/auth/google/redirect'}
+          onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/auth/google/redirect`}
           className="h-[52px] w-full bg-white rounded-2xl flex items-center justify-center gap-3 shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.1)] transition-all active:scale-[0.98]"
         >
           <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-5 w-5" alt="Google" />
