@@ -17,7 +17,7 @@ class AchatController extends Controller
     public function index(Request $request)
     {
         $statut = $request->query('statut');
-        $profilId = $request->header('X-Profil-Id');
+        $profilId = (int) $request->header('X-Profil-Id');
 
         if (!$profilId) {
             return response()->json(['message' => 'Profil non spécifié'], 400);
@@ -43,6 +43,7 @@ class AchatController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info('AchatController@store started', ['payload' => $request->all(), 'headers' => $request->headers->all()]);
         $validated = $request->validate([
             'medicament_id'       => 'nullable|exists:medicaments,id',
             'medicament_nom_temp' => 'nullable|string|max:100|required_without:medicament_id',
@@ -54,7 +55,7 @@ class AchatController extends Controller
             'date_achat'          => 'nullable|date',
         ]);
 
-        $profilId = $request->header('X-Profil-Id');
+        $profilId = (int) $request->header('X-Profil-Id');
         if (!$profilId) {
             return response()->json(['message' => 'Profil non spécifié'], 400);
         }
@@ -103,7 +104,11 @@ class AchatController extends Controller
             Cache::forget("medicaments_{$profilId}");
             Cache::forget("dashboard_summary_{$profilId}_" . now()->toDateString());
 
-            broadcast(new DataChanged('inventory_updated', $profilId))->toOthers();
+            try {
+                broadcast(new DataChanged('inventory_updated', $profilId))->toOthers();
+            } catch (\Exception $e) {
+                \Log::error("Broadcasting failed in AchatController@store: " . $e->getMessage());
+            }
 
             return response()->json($achat->load('medicament'), 201);
         });
@@ -189,7 +194,11 @@ class AchatController extends Controller
             // Invalider le cache
             $profilId = $achat->profil_id;
             Cache::forget("medicaments_{$profilId}");
-            broadcast(new DataChanged('inventory_updated', $achat->profil_id))->toOthers();
+            try {
+                broadcast(new DataChanged('inventory_updated', $achat->profil_id))->toOthers();
+            } catch (\Exception $e) {
+                \Log::error("Broadcasting failed in AchatController@update: " . $e->getMessage());
+            }
 
             return response()->json($achat->load('medicament'));
         });
@@ -221,7 +230,11 @@ class AchatController extends Controller
 
             // Invalider le cache
             Cache::forget("medicaments_{$profilId}");
-            broadcast(new DataChanged('inventory_updated', $profilId))->toOthers();
+            try {
+                broadcast(new DataChanged('inventory_updated', $profilId))->toOthers();
+            } catch (\Exception $e) {
+                \Log::error("Broadcasting failed in AchatController@destroy: " . $e->getMessage());
+            }
 
             return response()->json(['message' => 'Supprimé avec succès']);
         });

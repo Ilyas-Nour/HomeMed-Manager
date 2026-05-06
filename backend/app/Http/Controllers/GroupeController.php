@@ -88,7 +88,11 @@ class GroupeController extends Controller
 
         ActivityLog::log('GROUP_ADD', "Groupe créé : {$groupe->nom}");
 
-        broadcast(new DataChanged('group_updated', $request->user()->id, true))->toOthers();
+        try {
+            broadcast(new DataChanged('group_updated', $request->user()->id, true))->toOthers();
+        } catch (\Exception $e) {
+            \Log::error("Broadcasting failed in GroupeController@store: " . $e->getMessage());
+        }
 
         return response()->json($groupe->load('participants:id,name,email'), 201);
     }
@@ -187,7 +191,11 @@ class GroupeController extends Controller
         
         ActivityLog::log('GROUP_MEMBER_JOIN', "Utilisateur a rejoint le groupe {$groupe->nom} via invitation.");
 
-        broadcast(new DataChanged('group_updated', $request->user()->id, true))->toOthers();
+        try {
+            broadcast(new DataChanged('group_updated', $request->user()->id, true))->toOthers();
+        } catch (\Exception $e) {
+            \Log::error("Broadcasting failed in GroupeController@acceptInvite: " . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Vous avez rejoint le groupe avec succès !', 'groupe_id' => $groupe->id]);
     }
@@ -203,7 +211,11 @@ class GroupeController extends Controller
 
         ActivityLog::log('GROUP_DELETE', "Groupe supprimé : {$nom}");
 
-        broadcast(new DataChanged('group_updated', $request->user()->id, true))->toOthers();
+        try {
+            broadcast(new DataChanged('group_updated', $request->user()->id, true))->toOthers();
+        } catch (\Exception $e) {
+            \Log::error("Broadcasting failed in GroupeController@destroy: " . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Groupe supprimé avec succès.']);
     }
